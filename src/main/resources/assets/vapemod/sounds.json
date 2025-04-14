@@ -1,0 +1,14 @@
+{
+  "smoking_breathe_sound": {
+    "subtitle": "sounds.vapemod.smoking_breathe_sound",
+    "sounds": [
+      "vapemod:smoking_breathe_sound"
+    ]
+  },
+  "vape_resistance": {
+    "subtitle": "sounds.vapemod.vape_resistance",
+    "sounds": [
+      "vapemod:vape_resistance"
+    ]
+  }
+}
