@@ -84,7 +84,9 @@ public class Vape extends Item {
                     item.hurtAndBreak(1, player, player1 -> player.broadcastBreakEvent(player.getUsedItemHand()));
                 }
 
-                smokeParticles(player);
+                if (level.isClientSide) {
+                    smokeParticles(player);
+                }
             }
         } else if (livingEntity instanceof Player player && player.isUnderWater()) {
             stopSounds();

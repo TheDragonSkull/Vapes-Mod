@@ -10,14 +10,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.thedragonskull.vapemod.item.ModItems;
 
 public class VapeSmokeParticles extends TextureSheetParticle {
     private boolean hasColorGradient = false;
-    private static final int[] GRADIENT_START = {185, 109, 191};
-    private static final int[] GRADIENT_END = {72, 189, 155};
+    private static final int[] GRADIENT_START = {220, 164, 224};
+    private static final int[] GRADIENT_END = {130, 217, 192};
 
     protected VapeSmokeParticles(ClientLevel pLevel, double pX, double pY, double pZ, SpriteSet spriteSet,
-                                 double pXSpeed, double pYSpeed, double pZSpeed, Item sourceItem) {
+                                 double pXSpeed, double pYSpeed, double pZSpeed) {
         super(pLevel, pX, pY, pZ, pXSpeed, pYSpeed, pZSpeed);
 
         this.scale(3.0F);
@@ -29,61 +30,45 @@ public class VapeSmokeParticles extends TextureSheetParticle {
         this.yd = pYSpeed + (double)(this.random.nextFloat() / 500.0F);
         this.zd = pZSpeed;
 
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null) {
-
-            if (sourceItem == Items.DIAMOND) {
-                this.setHasColorGradient(true);
-                this.setRGBColor(185 / 255f, 109 / 255f, 191 / 255f);
-            } else {
-                int[] rgb = SmokeParticleColorManager.getColorForItem(sourceItem);
-                this.setRGBColor(rgb[0] / 255.0f, rgb[1] / 255.0f, rgb[2] / 255.0f);
-            }
-
-        }
         this.setAlpha(0.65F);
-
         this.pickSprite(spriteSet);
     }
 
-    public void setRGBColor(float red, float green, float blue) {
-        this.rCol = red;
-        this.gCol = green;
-        this.bCol = blue;
+    public void setRGBColor(int red, int green, int blue) {
+        this.rCol = red / 255.0f;
+        this.gCol = green / 255.0f;
+        this.bCol = blue / 255.0f;
     }
 
-    public void setHasColorGradient(boolean hasGradient) {
-        this.hasColorGradient = hasGradient;
+    public void setColorGradientActive(boolean active) {
+        this.hasColorGradient = active;
     }
 
     @Override
     public void tick() {
-        this.xo = this.x;
-        this.yo = this.y;
-        this.zo = this.z;
+        xo = x;
+        yo = y;
+        zo = z;
 
-        if (this.age++ < this.lifetime && !(this.alpha <= 0.0F)) {
-            this.xd += this.random.nextFloat() / 5000.0F * (this.random.nextBoolean() ? 1 : -1);
-            this.zd += this.random.nextFloat() / 5000.0F * (this.random.nextBoolean() ? 1 : -1);
-            this.yd -= this.gravity;
-            this.move(this.xd, this.yd, this.zd);
+        if (age++ < lifetime && alpha > 0.0F) {
+            xd += random.nextFloat() / 5000.0F * (random.nextBoolean() ? 1 : -1);
+            zd += random.nextFloat() / 5000.0F * (random.nextBoolean() ? 1 : -1);
+            yd -= gravity;
+            move(xd, yd, zd);
 
-            if (this.age >= this.lifetime - 60 && this.alpha > 0.01F) {
-                this.alpha -= 0.015F;
+            if (age >= lifetime - 60 && alpha > 0.01F) {
+                alpha -= 0.015F;
             }
 
-            if (this.hasColorGradient) {
-                float ageFraction = (float) this.age / (float) this.lifetime;
-
-                float red = GRADIENT_START[0] + ageFraction * (GRADIENT_END[0] - GRADIENT_START[0]);
-                float green = GRADIENT_START[1] + ageFraction * (GRADIENT_END[1] - GRADIENT_START[1]);
-                float blue = GRADIENT_START[2] + ageFraction * (GRADIENT_END[2] - GRADIENT_START[2]);
-
-                setRGBColor((int) red, (int) green, (int) blue);
+            if (hasColorGradient) {
+                float progress = (float) age / lifetime;
+                int red = (int) (GRADIENT_START[0] + progress * (GRADIENT_END[0] - GRADIENT_START[0]));
+                int green = (int) (GRADIENT_START[1] + progress * (GRADIENT_END[1] - GRADIENT_START[1]));
+                int blue = (int) (GRADIENT_START[2] + progress * (GRADIENT_END[2] - GRADIENT_START[2]));
+                setRGBColor(red, green, blue);
             }
-
         } else {
-            this.remove();
+            remove();
         }
     }
 
@@ -100,18 +85,28 @@ public class VapeSmokeParticles extends TextureSheetParticle {
             this.sprites = spriteSet;
         }
 
+
         @Override
         public Particle createParticle(SimpleParticleType type, ClientLevel level,
-                                       double x, double y, double z,
-                                       double dx, double dy, double dz) {
-            LocalPlayer player = Minecraft.getInstance().player;
-            Item item = Items.AIR;
+                                       double x, double y, double z, double dx, double dy, double dz) {
+            VapeSmokeParticles particle = new VapeSmokeParticles(level, x, y, z, sprites, dx, dy, dz);
 
-            if (player != null) {
-                item = player.getMainHandItem().getItem();
+            LocalPlayer player = Minecraft.getInstance().player;
+            Item item = (player != null) ? player.getMainHandItem().getItem() : null;
+
+            if (item == ModItems.VAPE_RAINBOW.get()) {
+                float t = level.random.nextFloat();
+                int red = (int) (GRADIENT_START[0] + t * (GRADIENT_END[0] - GRADIENT_START[0]));
+                int green = (int) (GRADIENT_START[1] + t * (GRADIENT_END[1] - GRADIENT_START[1]));
+                int blue = (int) (GRADIENT_START[2] + t * (GRADIENT_END[2] - GRADIENT_START[2]));
+                particle.setRGBColor(red, green, blue);
+                particle.setColorGradientActive(true);
+            } else {
+                int[] rgb = SmokeParticleColorManager.getColorForItem(item);
+                particle.setRGBColor(rgb[0], rgb[1], rgb[2]);
             }
 
-            return new VapeSmokeParticles(level, x, y, z, sprites, dx, dy, dz, item);
+            return particle;
         }
 
     }

@@ -11,6 +11,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.thedragonskull.vapemod.item.ModCreativeModeTabs;
 import net.thedragonskull.vapemod.item.ModItems;
 import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.sound.ModSounds;
@@ -26,6 +27,7 @@ public class VapeMod {
         IEventBus modEventBus = context.getModEventBus();
 
         ModItems.register(modEventBus);
+        ModCreativeModeTabs.register(modEventBus);
         ModSounds.register(modEventBus);
         ModParticles.register(modEventBus);
 

@@ -1,5 +1,13 @@
 {
-  "item.vapemod.vape_steel": "QVape Pen (Iron Ingot)",
+  "item.vapemod.vape": "QVape Pen V2 (Flint)",
+  "item.vapemod.vape_yellow": "QVape Pen V2 (Golden Apple)",
+  "item.vapemod.vape_red": "QVape Pen V2 (Apple)",
+  "item.vapemod.vape_steel": "QVape Pen V2 (Iron Ingot)",
+  "item.vapemod.vape_blue": "QVape Pen V2 (Lapis)",
+  "item.vapemod.vape_rainbow": "QVape Pen V2 (Enchantment Glint)",
+  "item.vapemod.vape_metal": "QVape Pen V2 (Gunpowder)",
+
+  "creativetab.vaping_tab": "Vaping Stuff",
 
   "message.vapemod.cant_smoke_underwater": "You cant smoke under the water!"
 }
