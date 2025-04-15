@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "vapemod:block/vape_expositor" },
+    "facing=east": { "model": "vapemod:block/vape_expositor", "y": 90 },
+    "facing=south": { "model": "vapemod:block/vape_expositor", "y": 180 },
+    "facing=west": { "model": "vapemod:block/vape_expositor", "y": 270 }
+  }
+}

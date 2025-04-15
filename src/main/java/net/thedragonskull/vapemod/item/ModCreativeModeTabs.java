@@ -8,6 +8,7 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 import net.thedragonskull.vapemod.VapeMod;
+import net.thedragonskull.vapemod.block.ModBlocks;
 
 public class ModCreativeModeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
@@ -25,7 +26,7 @@ public class ModCreativeModeTabs {
                         pOutput.accept(ModItems.VAPE_RAINBOW.get());
                         pOutput.accept(ModItems.VAPE_METAL.get());
 
-                        //pOutput.accept(ModBlocks.VAPE_EXPOSITOR.get());
+                        pOutput.accept(ModBlocks.VAPE_EXPOSITOR.get());
                     })
                     .build());
 

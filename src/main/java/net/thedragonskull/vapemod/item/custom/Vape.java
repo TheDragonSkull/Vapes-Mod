@@ -125,11 +125,6 @@ public class Vape extends Item {
         }, 300);
     }
 
-    @Override
-    public boolean onEntitySwing(ItemStack stack, LivingEntity entity) {
-        return true;
-    }
-
     @OnlyIn(Dist.CLIENT)
     private void stopSounds() {
         SoundManager sm = Minecraft.getInstance().getSoundManager();
