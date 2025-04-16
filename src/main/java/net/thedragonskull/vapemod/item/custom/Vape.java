@@ -9,7 +9,9 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -19,15 +21,20 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.thedragonskull.vapemod.capability.VapeEnergyProvider;
 import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.sound.ModSounds;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Consumer;
@@ -49,15 +56,74 @@ public class Vape extends Item {
     }
 
     @Override
+    public @org.jetbrains.annotations.Nullable ICapabilityProvider initCapabilities(ItemStack stack, @org.jetbrains.annotations.Nullable CompoundTag nbt) {
+        return new VapeEnergyProvider();
+    }
+
+    @Override
+    public boolean isBarVisible(ItemStack pStack) {
+        return true;
+    }
+
+    @Override
+    public int getBarWidth(ItemStack stack) {
+        return stack.getCapability(ForgeCapabilities.ENERGY)
+                .map(e -> Math.round(13.0F * e.getEnergyStored() / e.getMaxEnergyStored()))
+                .orElse(0);
+    }
+
+    @Override
+    public int getBarColor(ItemStack stack) {
+        return stack.getCapability(ForgeCapabilities.ENERGY).map(storage -> {
+            float percent = (float) storage.getEnergyStored() / storage.getMaxEnergyStored();
+            // Verde (0x00FF00) a rojo (0xFF0000)
+            int red = (int)((1.0f - percent) * 255);
+            int green = (int)(percent * 255);
+            return (red << 16) | (green << 8); // RGB
+        }).orElse(0xFF0000); // Por defecto, rojo
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, level, tooltip, flag);
+
+        stack.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
+            int energy = storage.getEnergyStored();
+            int max = storage.getMaxEnergyStored();
+            int percent = Math.round(((float) energy / max) * 100);
+
+            float ratio = (float) energy / max;
+            int red = (int) ((1.0f - ratio) * 255);
+            int green = (int) (ratio * 255);
+            int color = (red << 16) | (green << 8); // RGB
+
+            MutableComponent label = Component.literal("Energy: ").withStyle(ChatFormatting.DARK_AQUA);
+            MutableComponent value = Component.literal(percent + "%").withStyle(style -> style.withColor(color));
+
+            tooltip.add(label.append(value));
+        });
+    }
+
+    @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack item = player.getItemInHand(hand);
 
         if (hand == InteractionHand.MAIN_HAND) {
             player.startUsingItem(hand);
         } else {
             player.stopUsingItem();
             if (level.isClientSide) stopSounds();
-            return super.use(level, player, hand);
+            return InteractionResultHolder.fail(item);
         }
+
+        if (!item.getCapability(ForgeCapabilities.ENERGY).map(energy -> energy.getEnergyStored() > 0).orElse(false)) {
+            if (level.isClientSide) {
+                stopSounds();
+            }
+            return InteractionResultHolder.fail(item);
+        }
+
+        player.startUsingItem(hand);
 
         if (level.isClientSide && !player.isUnderWater()) {
             if (!Minecraft.getInstance().getSoundManager().isActive(breatheSound) || !Minecraft.getInstance().getSoundManager().isActive(resistanceSound)) {
@@ -73,33 +139,46 @@ public class Vape extends Item {
 
     @Override
     public void onUseTick(Level level, LivingEntity livingEntity, ItemStack item, int count) {
-        if (livingEntity instanceof Player player && !player.isUnderWater()) {
-            if (player.getTicksUsingItem() >= getUseDuration(item) - 1) {
-                player.stopUsingItem();
 
-                player.addEffect(new MobEffectInstance(vapeEffect));
-                player.getCooldowns().addCooldown(this, 100);
+        if (!(livingEntity instanceof Player player)) return;
 
-                if (!player.getAbilities().instabuild) {
-                    item.hurtAndBreak(1, player, player1 -> player.broadcastBreakEvent(player.getUsedItemHand()));
-                }
-
-                if (level.isClientSide) {
-                    smokeParticles(player);
-                }
-            }
-        } else if (livingEntity instanceof Player player && player.isUnderWater()) {
+        if (player.isUnderWater()) {
             stopSounds();
             player.stopUsingItem();
             player.displayClientMessage(Component.translatable(MESSAGE_CANT_SMOKE_UNDERWATER).withStyle(ChatFormatting.DARK_RED), true);
+            return;
         }
+
+        if (player.getTicksUsingItem() >= getUseDuration(item) - 1) {
+            item.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
+                int energy = storage.getEnergyStored();
+
+                if (energy > 0) {
+                    player.addEffect(new MobEffectInstance(vapeEffect));
+                    player.getCooldowns().addCooldown(this, 100);
+
+                    if (!player.getAbilities().instabuild) {
+                        storage.extractEnergy(1, false);
+                    }
+
+                    if (level.isClientSide) {
+                        smokeParticles(player);
+                    }
+                } else {
+                    player.displayClientMessage(
+                            Component.literal("¡No energy!").withStyle(ChatFormatting.DARK_RED),
+                            true
+                    );
+                }
+            });
+        }
+
     }
 
 
     @Override
     public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeCharged) {
         if (level.isClientSide) stopSounds();
-        super.releaseUsing(stack, level, entity, timeCharged);
     }
 
     public void smokeParticles(Player player) {
