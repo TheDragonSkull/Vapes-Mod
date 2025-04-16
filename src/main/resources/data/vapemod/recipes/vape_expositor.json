@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "XXX",
+    "# #",
+    "XXX"
+  ],
+  "key": {
+    "#": {
+      "item": "minecraft:iron_ingot"
+    },
+    "X":{
+      "item": "minecraft:white_concrete"
+    }
+  },
+  "result": {
+    "item": "vapemod:vape_expositor",
+    "count": 1
+  },
+  "show_notification": true
+}
