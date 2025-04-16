@@ -57,6 +57,10 @@ public class VapeExpositorBE extends BlockEntity implements MenuProvider {
         Containers.dropContents(this.level, this.worldPosition, inv);
     }
 
+    public ItemStackHandler getInventory() {
+        return inventory;
+    }
+
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
         if(cap == ForgeCapabilities.ITEM_HANDLER) {

@@ -8,9 +8,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 import net.thedragonskull.vapemod.block.ModBlocks;
 import net.thedragonskull.vapemod.block.entity.VapeExpositorBE;
+import net.thedragonskull.vapemod.item.custom.Vape;
+import org.jetbrains.annotations.NotNull;
 
 public class VapeExpositorMenu extends AbstractContainerMenu {
     public final VapeExpositorBE blockEntity;
@@ -25,16 +28,7 @@ public class VapeExpositorMenu extends AbstractContainerMenu {
         this.blockEntity = ((VapeExpositorBE) blockEntity);
         this.level = inv.player.level();
 
-        this.blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(iItemHandler -> {
-            int startX = 44;
-            int startY = 30;
-            int spacing = 30;
-
-            for (int i = 0; i < 5; i++) {
-                this.addSlot(new SlotItemHandler(iItemHandler, i, startX + i * spacing, startY));
-            }
-        });
-
+        addExpositorInventory();
         addPlayerHotbar(inv);
         addPlayerInventory(inv);
     }
@@ -82,6 +76,23 @@ public class VapeExpositorMenu extends AbstractContainerMenu {
     public boolean stillValid(Player pPlayer) {
         return stillValid(ContainerLevelAccess.create(level, blockEntity.getBlockPos()),
                 pPlayer, ModBlocks.VAPE_EXPOSITOR.get());
+    }
+
+    private void addExpositorInventory() {
+        this.blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(iItemHandler -> {
+            int startX = 8;
+            int startY = 38;
+            int spacing = 36;
+
+            for (int i = 0; i < 5; i++) {
+                this.addSlot(new SlotItemHandler(iItemHandler, i, startX + i * spacing, startY) {
+                    @Override
+                    public boolean mayPlace(@NotNull ItemStack stack) {
+                        return stack.getItem() instanceof Vape;
+                    }
+                });
+            }
+        });
     }
 
     private void addPlayerInventory(Inventory playerInventory) {
