@@ -18,6 +18,7 @@ import net.thedragonskull.vapemod.item.ModItems;
 import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.screen.ModMenuTypes;
 import net.thedragonskull.vapemod.sound.ModSounds;
+import net.thedragonskull.vapemod.villager.ModVillagers;
 import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/mods.toml file
@@ -36,6 +37,7 @@ public class VapeMod {
         ModSounds.register(modEventBus);
         ModParticles.register(modEventBus);
         ModMenuTypes.register(modEventBus);
+        ModVillagers.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
 

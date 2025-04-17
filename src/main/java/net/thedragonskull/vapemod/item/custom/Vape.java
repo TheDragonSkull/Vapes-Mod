@@ -56,11 +56,11 @@ public class Vape extends Item {
     }
 
     @Override
-    public @org.jetbrains.annotations.Nullable ICapabilityProvider initCapabilities(ItemStack stack, @org.jetbrains.annotations.Nullable CompoundTag nbt) {
+    public @Nullable ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundTag nbt) {
         return new VapeEnergyProvider();
     }
 
-    @Override
+/*    @Override
     public boolean isBarVisible(ItemStack pStack) {
         return true;
     }
@@ -76,12 +76,11 @@ public class Vape extends Item {
     public int getBarColor(ItemStack stack) {
         return stack.getCapability(ForgeCapabilities.ENERGY).map(storage -> {
             float percent = (float) storage.getEnergyStored() / storage.getMaxEnergyStored();
-            // Verde (0x00FF00) a rojo (0xFF0000)
             int red = (int)((1.0f - percent) * 255);
             int green = (int)(percent * 255);
             return (red << 16) | (green << 8); // RGB
-        }).orElse(0xFF0000); // Por defecto, rojo
-    }
+        }).orElse(0xFF0000);
+    }*/
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {

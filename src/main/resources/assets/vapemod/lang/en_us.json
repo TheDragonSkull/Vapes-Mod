@@ -9,6 +9,8 @@
 
   "block.vapemod.vape_expositor": "Vape Expositor",
 
+  "entity.minecraft.villager.vapemod.vape_shopkeeper" : "Vape Shopkeeper",
+
   "creativetab.vaping_tab": "Vaping Stuff",
 
   "message.vapemod.cant_smoke_underwater": "You cant smoke under the water!"
