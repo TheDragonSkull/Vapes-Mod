@@ -16,6 +16,7 @@ import net.thedragonskull.vapemod.block.entity.ModBlockEntities;
 import net.thedragonskull.vapemod.item.ModCreativeModeTabs;
 import net.thedragonskull.vapemod.item.ModItems;
 import net.thedragonskull.vapemod.particle.ModParticles;
+import net.thedragonskull.vapemod.recipe.ModRecipes;
 import net.thedragonskull.vapemod.screen.ModMenuTypes;
 import net.thedragonskull.vapemod.sound.ModSounds;
 import net.thedragonskull.vapemod.villager.ModVillagers;
@@ -38,6 +39,7 @@ public class VapeMod {
         ModParticles.register(modEventBus);
         ModMenuTypes.register(modEventBus);
         ModVillagers.register(modEventBus);
+        ModRecipes.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
 

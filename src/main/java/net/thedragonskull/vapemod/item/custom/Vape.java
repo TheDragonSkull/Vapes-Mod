@@ -23,6 +23,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -41,7 +43,6 @@ import java.util.function.Consumer;
 
 public class Vape extends Item {
     private static final String MESSAGE_CANT_SMOKE_UNDERWATER = "message.vapemod.cant_smoke_underwater";
-    private final MobEffectInstance vapeEffect;
 
     @Nullable
     @OnlyIn(Dist.CLIENT)
@@ -50,9 +51,8 @@ public class Vape extends Item {
     @Nullable @OnlyIn(Dist.CLIENT)
     protected SimpleSoundInstance resistanceSound;
 
-    public Vape(Properties pProperties, MobEffectInstance vapeEffect) {
+    public Vape(Properties pProperties) {
         super(pProperties);
-        this.vapeEffect = vapeEffect;
     }
 
     @Override
@@ -60,7 +60,12 @@ public class Vape extends Item {
         return new VapeEnergyProvider();
     }
 
-/*    @Override
+    @Override
+    public ItemStack getDefaultInstance() {
+        return PotionUtils.setPotion(super.getDefaultInstance(), Potions.WATER);
+    }
+
+    /*    @Override
     public boolean isBarVisible(ItemStack pStack) {
         return true;
     }
@@ -96,11 +101,17 @@ public class Vape extends Item {
             int green = (int) (ratio * 255);
             int color = (red << 16) | (green << 8); // RGB
 
-            MutableComponent label = Component.literal("Energy: ").withStyle(ChatFormatting.DARK_AQUA);
+            MutableComponent label = Component.literal("Capacity: ").withStyle(ChatFormatting.DARK_AQUA);
             MutableComponent value = Component.literal(percent + "%").withStyle(style -> style.withColor(color));
 
             tooltip.add(label.append(value));
         });
+
+        PotionUtils.addPotionTooltip(stack, tooltip, 0.125F);
+    }
+
+    public String getDescriptionId(ItemStack pStack) {
+        return PotionUtils.getPotion(pStack).getName(this.getDescriptionId() + ".effect.");
     }
 
     @Override
@@ -153,7 +164,11 @@ public class Vape extends Item {
                 int energy = storage.getEnergyStored();
 
                 if (energy > 0) {
-                    player.addEffect(new MobEffectInstance(vapeEffect));
+
+                    for (MobEffectInstance effect : PotionUtils.getMobEffects(item)) {
+                        player.addEffect(new MobEffectInstance(effect.getEffect(), 200, 0, false, true));
+                    }
+
                     player.getCooldowns().addCooldown(this, 100);
 
                     if (!player.getAbilities().instabuild) {
@@ -165,7 +180,7 @@ public class Vape extends Item {
                     }
                 } else {
                     player.displayClientMessage(
-                            Component.literal("¡No energy!").withStyle(ChatFormatting.DARK_RED),
+                            Component.literal("¡Empty tank, refill!").withStyle(ChatFormatting.DARK_RED),
                             true
                     );
                 }
