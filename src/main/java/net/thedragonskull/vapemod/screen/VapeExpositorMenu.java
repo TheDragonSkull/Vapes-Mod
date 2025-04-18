@@ -9,8 +9,6 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.items.SlotItemHandler;
 import net.thedragonskull.vapemod.block.ModBlocks;
 import net.thedragonskull.vapemod.block.entity.VapeExpositorBE;
 import net.thedragonskull.vapemod.item.custom.Vape;
@@ -69,21 +67,20 @@ public class VapeExpositorMenu extends AbstractContainerMenu {
     }
 
     private void addExpositorInventory() {
-        this.blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(iItemHandler -> {
-            int startX = 8;
-            int startY = 38;
-            int spacing = 36;
+        int startX = 8;
+        int startY = 38;
+        int spacing = 36;
 
-            for (int i = 0; i < 5; i++) {
-                this.addSlot(new SlotItemHandler(iItemHandler, i, startX + i * spacing, startY) {
-                    @Override
-                    public boolean mayPlace(@NotNull ItemStack stack) {
-                        return stack.getItem() instanceof Vape;
-                    }
-                });
-            }
-        });
+        for (int i = 0; i < 5; i++) {
+            this.addSlot(new Slot(blockEntity, i, startX + i * spacing, startY) {
+                @Override
+                public boolean mayPlace(@NotNull ItemStack stack) {
+                    return stack.getItem() instanceof Vape;
+                }
+            });
+        }
     }
+
 
     private void addPlayerInventory(Inventory playerInventory) {
         for (int i = 0; i < 3; ++i) {

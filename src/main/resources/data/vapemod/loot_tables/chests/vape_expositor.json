@@ -8,8 +8,9 @@
       },
       "entries": [
         {
-          "type": "minecraft:item",
-          "name": "vapemod:vape"
+          "type": "minecraft:tag",
+          "name": "vapemod:vapes",
+          "expand": true
         }
       ]
     }

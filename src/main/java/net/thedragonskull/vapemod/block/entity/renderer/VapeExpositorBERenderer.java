@@ -7,6 +7,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Direction;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
@@ -20,6 +21,10 @@ public class VapeExpositorBERenderer implements BlockEntityRenderer<VapeExposito
 
     @Override
     public void render(VapeExpositorBE be, float pPartialTick, PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight, int pPackedOverlay) {
+
+        be.unpackLootTable(null);
+
+
         Direction facing = be.getBlockState().getValue(HorizontalDirectionalBlock.FACING);
 
         for (int i = 0; i < 5; i++) {

@@ -6,10 +6,10 @@ import net.thedragonskull.vapemod.block.entity.VapeExpositorBE;
 public class VapeExpositorUtil {
 
     public static ItemStack getVapeInSlot(VapeExpositorBE be, int slot) {
-        if (be == null || be.getInventory() == null || slot < 0 || slot >= be.getInventory().getSlots()) {
+        if (be == null || slot < 0 || slot >= be.getContainerSize()) {
             return ItemStack.EMPTY;
         }
-        return be.getInventory().getStackInSlot(slot);
+        return be.getItem(slot);
     }
 
     public static boolean isSlotOccupied(VapeExpositorBE be, int slot) {
