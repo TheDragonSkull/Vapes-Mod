@@ -15,4 +15,5 @@ public class VapeExpositorUtil {
     public static boolean isSlotOccupied(VapeExpositorBE be, int slot) {
         return !getVapeInSlot(be, slot).isEmpty();
     }
+
 }

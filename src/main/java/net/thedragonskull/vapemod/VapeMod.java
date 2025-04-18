@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 @Mod(VapeMod.MOD_ID)
 public class VapeMod {
     public static final String MOD_ID = "vapemod";
-    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     public VapeMod(FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();

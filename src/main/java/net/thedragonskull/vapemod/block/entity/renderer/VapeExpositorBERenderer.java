@@ -34,7 +34,8 @@ public class VapeExpositorBERenderer implements BlockEntityRenderer<VapeExposito
         poseStack.pushPose();
 
         float spacing = 0.2f;
-        float offsetX = (index - 2) * spacing;
+        int renderIndex = 4 - index;
+        float offsetX = (renderIndex - 2) * spacing;
 
         poseStack.translate(0.5, 0.1, 0.5);
 
