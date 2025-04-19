@@ -12,6 +12,8 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -105,29 +107,29 @@ public class Vape extends Item {
             MutableComponent value = Component.literal(percent + "%").withStyle(style -> style.withColor(color));
 
             tooltip.add(label.append(value));
-        });
 
-        List<MobEffectInstance> effects = PotionUtils.getMobEffects(stack);
-        if (!effects.isEmpty()) {
+            List<MobEffectInstance> effects = PotionUtils.getMobEffects(stack);
+            if (!effects.isEmpty()) {
 
-            for (MobEffectInstance effect : effects) {
-                MutableComponent effectName = Component.translatable(effect.getDescriptionId());
+                for (MobEffectInstance effect : effects) {
+                    MutableComponent effectName = Component.translatable(effect.getDescriptionId());
 
-                if (effect.getAmplifier() > 0) {
-                    effectName.append(" ").append(Component.translatable("potion.potency." + effect.getAmplifier()));
+                    if (effect.getAmplifier() > 0) {
+                        effectName.append(" ").append(Component.translatable("potion.potency." + effect.getAmplifier()));
+                    }
+
+                    int adjustedDuration = (int)(effect.getDuration() / storage.getMaxEnergyStored());
+                    if (adjustedDuration > 20) {
+                        String time = formatDuration(adjustedDuration);
+                        effectName.append(" (").append(Component.literal(time)).append(")");
+                    }
+
+                    tooltip.add(effectName.withStyle(ChatFormatting.BLUE));
                 }
-
-                int adjustedDuration = (int)(effect.getDuration() * 0.1F);
-                if (adjustedDuration > 20) {
-                    String time = formatDuration(adjustedDuration);
-                    effectName.append(" (").append(Component.literal(time)).append(")");
-                }
-
-                tooltip.add(effectName.withStyle(ChatFormatting.BLUE));
+            } else {
+                tooltip.add(Component.literal("No Effects").withStyle(ChatFormatting.GRAY));
             }
-        } else {
-            tooltip.add(Component.literal("No Effects").withStyle(ChatFormatting.GRAY));
-        }
+        });
     }
 
     private String formatDuration(int ticks) {
@@ -154,6 +156,15 @@ public class Vape extends Item {
         }
 
         return baseName;
+    }
+
+    @Override
+    public void onCraftedBy(ItemStack stack, Level level, Player player) {
+        super.onCraftedBy(stack, level, player);
+
+        if (!level.isClientSide) {
+            level.playSound(null, player.blockPosition(), SoundEvents.BOTTLE_FILL, SoundSource.PLAYERS, 1.0f, 1.0f);
+        }
     }
 
     @Override
@@ -212,10 +223,15 @@ public class Vape extends Item {
                 if (energy > 0) {
 
                     for (MobEffectInstance effect : PotionUtils.getMobEffects(item)) {
-                        int duration = (int)(effect.getDuration() * 0.1F);
-                        int amplifier = effect.getAmplifier();
-                        player.addEffect(new MobEffectInstance(effect.getEffect(), duration, amplifier, false, true));
+                        if (effect.getEffect().isInstantenous()) {
+                            effect.getEffect().applyInstantenousEffect(player, player, player, effect.getAmplifier(), 1.0);
+                        } else {
+                            int duration = (int)(effect.getDuration() / storage.getMaxEnergyStored());
+                            int amplifier = effect.getAmplifier();
+                            player.addEffect(new MobEffectInstance(effect.getEffect(), duration, amplifier, false, true));
+                        }
                     }
+
 
                     player.getCooldowns().addCooldown(this, 100);
 
@@ -231,7 +247,6 @@ public class Vape extends Item {
         }
 
     }
-
 
     @Override
     public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeCharged) {

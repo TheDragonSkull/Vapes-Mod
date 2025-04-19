@@ -43,10 +43,6 @@ public class VapeSmokeParticles extends TextureSheetParticle {
         this.bCol = blue / 255.0f;
     }
 
-    public void setColorGradientActive(boolean active) {
-        this.hasColorGradient = active;
-    }
-
     @Override
     public void tick() {
         xo = x;
@@ -61,14 +57,6 @@ public class VapeSmokeParticles extends TextureSheetParticle {
 
             if (age >= lifetime - 60 && alpha > 0.01F) {
                 alpha -= 0.015F;
-            }
-
-            if (hasColorGradient) {
-                float progress = (float) age / lifetime;
-                int red = (int) (GRADIENT_START[0] + progress * (GRADIENT_END[0] - GRADIENT_START[0]));
-                int green = (int) (GRADIENT_START[1] + progress * (GRADIENT_END[1] - GRADIENT_START[1]));
-                int blue = (int) (GRADIENT_START[2] + progress * (GRADIENT_END[2] - GRADIENT_START[2]));
-                setRGBColor(red, green, blue);
             }
         } else {
             remove();
@@ -87,7 +75,6 @@ public class VapeSmokeParticles extends TextureSheetParticle {
         public Provider(SpriteSet spriteSet) {
             this.sprites = spriteSet;
         }
-
 
         @Override
         public Particle createParticle(SimpleParticleType type, ClientLevel level,
@@ -113,18 +100,6 @@ public class VapeSmokeParticles extends TextureSheetParticle {
                     particle.setRGBColor(red, green, blue);
                 }
             }
-
-/*            if (item == ModItems.VAPE_RAINBOW.get()) {
-                float t = level.random.nextFloat();
-                int red = (int) (GRADIENT_START[0] + t * (GRADIENT_END[0] - GRADIENT_START[0]));
-                int green = (int) (GRADIENT_START[1] + t * (GRADIENT_END[1] - GRADIENT_START[1]));
-                int blue = (int) (GRADIENT_START[2] + t * (GRADIENT_END[2] - GRADIENT_START[2]));
-                particle.setRGBColor(red, green, blue);
-                particle.setColorGradientActive(true);
-            } else {
-                int[] rgb = SmokeParticleColorManager.getColorForItem(item);
-                particle.setRGBColor(rgb[0], rgb[1], rgb[2]);
-            }*/
 
             return particle;
         }

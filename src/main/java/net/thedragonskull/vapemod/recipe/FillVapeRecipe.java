@@ -34,7 +34,7 @@ public class FillVapeRecipe extends CustomRecipe {
             if (stack.is(Items.LINGERING_POTION) || stack.is(Items.SPLASH_POTION)) return false;
 
             if (stack.getItem() instanceof PotionItem) {
-                if (!potion.isEmpty()) return false; // solo 1 poción
+                if (!potion.isEmpty()) return false;
                 potion = stack;
             } else if (stack.getItem() instanceof Vape) {
                 if (!vape.isEmpty()) return false;

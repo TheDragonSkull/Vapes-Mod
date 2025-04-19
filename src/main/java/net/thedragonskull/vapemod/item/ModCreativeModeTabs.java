@@ -45,8 +45,6 @@ public class ModCreativeModeTabs {
                         }
 
                         pOutput.accept(ModBlocks.VAPE_EXPOSITOR.get());
-
-                        pOutput.accept(ModBlocks.VAPE_EXPOSITOR.get());
                     })
                     .build());
 

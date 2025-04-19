@@ -1,0 +1,16 @@
+{
+  "type": "vapemod:clear_vape",
+  "category": "misc",
+  "ingredients": [
+    {
+      "tag": "vapemod:vapes"
+    },
+    {
+      "item": "minecraft:water_bottle"
+    }
+  ],
+  "result": {
+    "item": "vapemod:vape",
+    "count": 1
+  }
+}

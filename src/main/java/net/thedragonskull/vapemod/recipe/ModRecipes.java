@@ -15,6 +15,11 @@ public class ModRecipes {
             RECIPE_SERIALIZERS.register("fill_vape",
                     () -> new SimpleCraftingRecipeSerializer<>(FillVapeRecipe::new));
 
+    public static final RegistryObject<RecipeSerializer<ClearVapeRecipe>> CLEAR_VAPE =
+            RECIPE_SERIALIZERS.register("clear_vape",
+                    () -> new SimpleCraftingRecipeSerializer<>(ClearVapeRecipe::new));
+
+
     public static void register(IEventBus bus) {
         RECIPE_SERIALIZERS.register(bus);
     }
