@@ -33,6 +33,7 @@ public class VapeExpositor extends BaseEntityBlock {
 
     public VapeExpositor(Properties pProperties) {
         super(pProperties);
+        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 
     @Override

@@ -179,26 +179,23 @@ public class Vape extends Item {
             return InteractionResultHolder.fail(item);
         }
 
+        if (level.isClientSide && !player.isUnderWater()) {
+            if (!Minecraft.getInstance().getSoundManager().isActive(breatheSound) || !Minecraft.getInstance().getSoundManager().isActive(resistanceSound)) {
+                breatheSound = SimpleSoundInstance.forUI(ModSounds.SMOKING_BREATHE_SOUND.get(), 1.0F, 0.5F);
+                resistanceSound = SimpleSoundInstance.forUI(ModSounds.VAPE_RESISTANCE.get(), 1.0F, 1.0F);
+                Minecraft.getInstance().getSoundManager().play(resistanceSound);
+            }
+        }
+
         if (!item.getCapability(ForgeCapabilities.ENERGY).map(energy -> energy.getEnergyStored() > 0).orElse(false)) {
             if (level.isClientSide) {
-                stopSounds();
+                //stopSounds();
                 player.displayClientMessage(
                         Component.literal("¡Empty tank, refill!").withStyle(ChatFormatting.DARK_RED),
                         true
                 );
             }
             return InteractionResultHolder.fail(item);
-        }
-
-        player.startUsingItem(hand);
-
-        if (level.isClientSide && !player.isUnderWater()) {
-            if (!Minecraft.getInstance().getSoundManager().isActive(breatheSound) || !Minecraft.getInstance().getSoundManager().isActive(resistanceSound)) {
-                breatheSound = SimpleSoundInstance.forUI(ModSounds.SMOKING_BREATHE_SOUND.get(), 1.0F, 0.5F);
-                resistanceSound = SimpleSoundInstance.forUI(ModSounds.VAPE_RESISTANCE.get(), 1.0F, 1.0F);
-                Minecraft.getInstance().getSoundManager().play(breatheSound);
-                Minecraft.getInstance().getSoundManager().play(resistanceSound);
-            }
         }
 
         return super.use(level, player, hand);
@@ -361,6 +358,5 @@ public class Vape extends Item {
             }
         });
     }
-
 
 }

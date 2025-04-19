@@ -1,5 +1,6 @@
 package net.thedragonskull.vapemod.recipe;
 
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.CraftingContainer;
@@ -7,6 +8,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PotionItem;
 import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -88,6 +90,19 @@ public class FillVapeRecipe extends CustomRecipe {
         return result;
     }
 
+    @Override
+    public NonNullList<ItemStack> getRemainingItems(CraftingContainer container) {
+        NonNullList<ItemStack> remaining = NonNullList.withSize(container.getContainerSize(), ItemStack.EMPTY);
+
+        for (int i = 0; i < container.getContainerSize(); i++) {
+            ItemStack stack = container.getItem(i);
+            if (stack.getItem() instanceof PotionItem) {
+                remaining.set(i, new ItemStack(Items.GLASS_BOTTLE));
+            }
+        }
+
+        return remaining;
+    }
 
     @Override
     public boolean canCraftInDimensions(int width, int height) {
