@@ -8,9 +8,12 @@ import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.thedragonskull.vapemod.item.ModItems;
+import net.thedragonskull.vapemod.item.custom.Vape;
 
 public class VapeSmokeParticles extends TextureSheetParticle {
     private boolean hasColorGradient = false;
@@ -92,9 +95,26 @@ public class VapeSmokeParticles extends TextureSheetParticle {
             VapeSmokeParticles particle = new VapeSmokeParticles(level, x, y, z, sprites, dx, dy, dz);
 
             LocalPlayer player = Minecraft.getInstance().player;
-            Item item = (player != null) ? player.getMainHandItem().getItem() : null;
+            ItemStack stack = (player != null) ? player.getMainHandItem() : ItemStack.EMPTY;
 
-            if (item == ModItems.VAPE_RAINBOW.get()) {
+            if (stack.getItem() instanceof Vape) {
+                if (PotionUtils.getPotion(stack) == Potions.WATER) {
+                    particle.setRGBColor(255, 255, 255);
+                } else {
+                    int potionColor = PotionUtils.getColor(stack);
+                    int red = (potionColor >> 16) & 0xFF;
+                    int green = (potionColor >> 8) & 0xFF;
+                    int blue = potionColor & 0xFF;
+
+                    red = brighten(red);
+                    green = brighten(green);
+                    blue = brighten(blue);
+
+                    particle.setRGBColor(red, green, blue);
+                }
+            }
+
+/*            if (item == ModItems.VAPE_RAINBOW.get()) {
                 float t = level.random.nextFloat();
                 int red = (int) (GRADIENT_START[0] + t * (GRADIENT_END[0] - GRADIENT_START[0]));
                 int green = (int) (GRADIENT_START[1] + t * (GRADIENT_END[1] - GRADIENT_START[1]));
@@ -104,9 +124,13 @@ public class VapeSmokeParticles extends TextureSheetParticle {
             } else {
                 int[] rgb = SmokeParticleColorManager.getColorForItem(item);
                 particle.setRGBColor(rgb[0], rgb[1], rgb[2]);
-            }
+            }*/
 
             return particle;
+        }
+
+        private int brighten(int color) {
+            return Math.min(255, (int)(color * 1.1f + 30));
         }
 
     }

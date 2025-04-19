@@ -4,6 +4,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PotionItem;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
@@ -30,21 +31,22 @@ public class FillVapeRecipe extends CustomRecipe {
             ItemStack stack = inv.getItem(i);
             if (stack.isEmpty()) continue;
 
+            if (stack.is(Items.LINGERING_POTION) || stack.is(Items.SPLASH_POTION)) return false;
+
             if (stack.getItem() instanceof PotionItem) {
                 if (!potion.isEmpty()) return false; // solo 1 poción
                 potion = stack;
             } else if (stack.getItem() instanceof Vape) {
-                if (!vape.isEmpty()) return false; // solo 1 vape
+                if (!vape.isEmpty()) return false;
                 vape = stack;
 
-                // ✔️ Asegurarse de que el vape esté vacío (energía = 0)
                 boolean isEmpty = vape.getCapability(ForgeCapabilities.ENERGY)
                         .map(storage -> storage.getEnergyStored() == 0)
-                        .orElse(false); // Si no tiene energía, no sirve
+                        .orElse(false);
 
                 if (!isEmpty) return false;
             } else {
-                return false; // cualquier otro ítem invalida la receta
+                return false;
             }
         }
 
@@ -72,16 +74,14 @@ public class FillVapeRecipe extends CustomRecipe {
         ItemStack result = vapeInput.copy();
         result.setCount(1);
 
-        // 🔹 Copiar los efectos de la poción
         PotionUtils.setPotion(result, PotionUtils.getPotion(potionStack));
         PotionUtils.setCustomEffects(result, PotionUtils.getCustomEffects(potionStack));
 
-        // 🔹 Rellenar energía completamente
         result.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
             if (storage instanceof VapeEnergy ve) {
-                ve.setEnergy(ve.getMaxEnergyStored()); // forma segura si usas tu clase
+                ve.setEnergy(ve.getMaxEnergyStored());
             } else {
-                storage.receiveEnergy(storage.getMaxEnergyStored(), false); // forma genérica
+                storage.receiveEnergy(storage.getMaxEnergyStored(), false);
             }
         });
 
@@ -96,7 +96,7 @@ public class FillVapeRecipe extends CustomRecipe {
 
     @Override
     public RecipeSerializer<?> getSerializer() {
-        return ModRecipes.FILL_VAPE.get(); // Definimos esto luego
+        return ModRecipes.FILL_VAPE.get();
     }
 }
 

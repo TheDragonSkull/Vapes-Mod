@@ -107,11 +107,53 @@ public class Vape extends Item {
             tooltip.add(label.append(value));
         });
 
-        PotionUtils.addPotionTooltip(stack, tooltip, 0.125F);
+        List<MobEffectInstance> effects = PotionUtils.getMobEffects(stack);
+        if (!effects.isEmpty()) {
+
+            for (MobEffectInstance effect : effects) {
+                MutableComponent effectName = Component.translatable(effect.getDescriptionId());
+
+                if (effect.getAmplifier() > 0) {
+                    effectName.append(" ").append(Component.translatable("potion.potency." + effect.getAmplifier()));
+                }
+
+                int adjustedDuration = (int)(effect.getDuration() * 0.1F);
+                if (adjustedDuration > 20) {
+                    String time = formatDuration(adjustedDuration);
+                    effectName.append(" (").append(Component.literal(time)).append(")");
+                }
+
+                tooltip.add(effectName.withStyle(ChatFormatting.BLUE));
+            }
+        } else {
+            tooltip.add(Component.literal("No Effects").withStyle(ChatFormatting.GRAY));
+        }
+    }
+
+    private String formatDuration(int ticks) {
+        int seconds = ticks / 20;
+        int minutes = seconds / 60;
+        seconds = seconds % 60;
+
+        return minutes + ":" + String.format("%02d", seconds);
     }
 
     public String getDescriptionId(ItemStack pStack) {
         return PotionUtils.getPotion(pStack).getName(this.getDescriptionId() + ".effect.");
+    }
+
+    @Override
+    public Component getName(ItemStack stack) {
+        Component baseName = Component.translatable(this.getDescriptionId());
+
+        List<MobEffectInstance> effects = PotionUtils.getMobEffects(stack);
+        if (!effects.isEmpty()) {
+            MobEffectInstance effect = effects.get(0);
+            Component effectName = Component.translatable(effect.getDescriptionId());
+            return Component.literal("").append(baseName).append(" (").append(effectName).append(")");
+        }
+
+        return baseName;
     }
 
     @Override
@@ -129,6 +171,10 @@ public class Vape extends Item {
         if (!item.getCapability(ForgeCapabilities.ENERGY).map(energy -> energy.getEnergyStored() > 0).orElse(false)) {
             if (level.isClientSide) {
                 stopSounds();
+                player.displayClientMessage(
+                        Component.literal("¡Empty tank, refill!").withStyle(ChatFormatting.DARK_RED),
+                        true
+                );
             }
             return InteractionResultHolder.fail(item);
         }
@@ -166,7 +212,9 @@ public class Vape extends Item {
                 if (energy > 0) {
 
                     for (MobEffectInstance effect : PotionUtils.getMobEffects(item)) {
-                        player.addEffect(new MobEffectInstance(effect.getEffect(), 200, 0, false, true));
+                        int duration = (int)(effect.getDuration() * 0.1F);
+                        int amplifier = effect.getAmplifier();
+                        player.addEffect(new MobEffectInstance(effect.getEffect(), duration, amplifier, false, true));
                     }
 
                     player.getCooldowns().addCooldown(this, 100);
@@ -178,11 +226,6 @@ public class Vape extends Item {
                     if (level.isClientSide) {
                         smokeParticles(player);
                     }
-                } else {
-                    player.displayClientMessage(
-                            Component.literal("¡Empty tank, refill!").withStyle(ChatFormatting.DARK_RED),
-                            true
-                    );
                 }
             });
         }
