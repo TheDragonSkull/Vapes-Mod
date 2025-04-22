@@ -28,13 +28,10 @@ public class VapeExpositorBE extends RandomizableContainerBlockEntity implements
         super(ModBlockEntities.VAPE_EXPOSITOR_BE.get(), pos, state);
     }
 
-
     @Override
     protected NonNullList<ItemStack> getItems() {
         return items;
     }
-
-
 
     @Override
     protected void setItems(NonNullList<ItemStack> items) {

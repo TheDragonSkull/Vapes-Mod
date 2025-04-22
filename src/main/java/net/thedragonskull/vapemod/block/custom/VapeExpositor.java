@@ -79,7 +79,7 @@ public class VapeExpositor extends BaseEntityBlock {
     }
 
     @Override
-    public BlockState rotate(BlockState state, LevelAccessor level, BlockPos pos, Rotation rotation) {
+    public BlockState rotate(BlockState state, Rotation rotation) {
         return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
     }
 

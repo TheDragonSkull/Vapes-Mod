@@ -55,23 +55,23 @@ public class VillageAddition {
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
                 new ResourceLocation("minecraft:village/plains/houses"),
-                "vapemod:vape_shop", 12);
+                "vapemod:vape_shop", 10);
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
                 new ResourceLocation("minecraft:village/snowy/houses"),
-                "vapemod:vape_shop", 12);
+                "vapemod:vape_shop", 10);
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
                 new ResourceLocation("minecraft:village/savanna/houses"),
-                "vapemod:vape_shop", 12);
+                "vapemod:vape_shop", 10);
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
                 new ResourceLocation("minecraft:village/taiga/houses"),
-                "vapemod:vape_shop", 12);
+                "vapemod:vape_shop", 10);
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
                 new ResourceLocation("minecraft:village/desert/houses"),
-                "vapemod:vape_shop", 12);
+                "vapemod:vape_shop", 10);
     }
 
 }
