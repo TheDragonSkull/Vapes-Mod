@@ -7,8 +7,12 @@ public class VapeEnergy implements IEnergyStorage {
     private final int capacity;
 
     public VapeEnergy(int capacity) {
+        this(capacity, capacity);
+    }
+
+    public VapeEnergy(int capacity, int initialEnergy) {
         this.capacity = capacity;
-        this.energy = capacity;
+        this.energy = Math.min(initialEnergy, capacity);
     }
 
     @Override

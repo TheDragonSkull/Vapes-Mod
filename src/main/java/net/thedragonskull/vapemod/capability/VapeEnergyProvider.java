@@ -10,8 +10,17 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.IEnergyStorage;
 
 public class VapeEnergyProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
-    private final VapeEnergy storage = new VapeEnergy(15);
-    private final LazyOptional<IEnergyStorage> optional = LazyOptional.of(() -> storage);
+    private final VapeEnergy storage;
+    private final LazyOptional<IEnergyStorage> optional;
+
+    public VapeEnergyProvider() {
+        this(0);
+    }
+
+    public VapeEnergyProvider(int initialEnergy) {
+        this.storage = new VapeEnergy(15, initialEnergy); // ← configurable starting energy
+        this.optional = LazyOptional.of(() -> storage);
+    }
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {

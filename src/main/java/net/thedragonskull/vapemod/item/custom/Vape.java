@@ -59,7 +59,7 @@ public class Vape extends Item {
 
     @Override
     public @Nullable ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundTag nbt) {
-        return new VapeEnergyProvider();
+        return new VapeEnergyProvider(0);
     }
 
     @Override
@@ -359,4 +359,8 @@ public class Vape extends Item {
         });
     }
 
+    @Override
+    public boolean isEnchantable(ItemStack pStack) {
+        return false;
+    }
 }
