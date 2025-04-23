@@ -36,11 +36,6 @@ public class ModCreativeModeTabs {
 
                         for (RegistryObject<Item> vape : allVapes) {
                             ItemStack vapeStack = new ItemStack(vape.get());
-/*                            vapeStack.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
-                                if (storage instanceof VapeEnergy ve) {
-                                    ve.setEnergy(0);
-                                }
-                            });*/
                             pOutput.accept(vapeStack);
                         }
 

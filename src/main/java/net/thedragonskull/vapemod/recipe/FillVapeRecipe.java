@@ -13,10 +13,8 @@ import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.item.custom.Vape;
-import net.thedragonskull.vapemod.util.Constants;
 
 
 public class FillVapeRecipe extends CustomRecipe {
@@ -79,7 +77,7 @@ public class FillVapeRecipe extends CustomRecipe {
 
         result.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
             if (cap instanceof VapeEnergy e) {
-                e.setInt(e.stack, Constants.TAG_ENERGY, e.getMaxEnergyStored()); // ← max energy
+                VapeEnergy.setInt(e.stack, "Energy", e.getMaxEnergyStored()); // ← max energy
             }
         });
 

@@ -35,12 +35,6 @@ public class CommonEvents {
                     trades.get(1).add((pTrader, pRandom) -> {
                         ItemStack vape = new ItemStack(item);
 
-                        vape.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
-                            if (cap instanceof VapeEnergy) {
-                               // ((VapeEnergy) cap).setEnergy(0);
-                            }
-                        });
-
                         return new MerchantOffer(
                                 new ItemStack(Items.EMERALD, 45),
                                 vape,
@@ -52,12 +46,6 @@ public class CommonEvents {
 
             trades.get(2).add((pTrader, pRandom) -> {
                 ItemStack vape = new ItemStack(ModItems.VAPE_RAINBOW.get());
-
-                vape.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
-                    if (cap instanceof VapeEnergy) {
-                        //((VapeEnergy) cap).setEnergy(0);
-                    }
-                });
 
                 return new MerchantOffer(
                         new ItemStack(Items.EMERALD, 65),
@@ -81,12 +69,6 @@ public class CommonEvents {
 
                 genericTrades.add((pTrader, pRandom) -> {
                     ItemStack vape = new ItemStack(item);
-
-                    vape.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
-                        if (cap instanceof VapeEnergy) {
-                           // ((VapeEnergy) cap).setEnergy(0);
-                        }
-                    });
 
                     return new MerchantOffer(
                             new ItemStack(Items.EMERALD, 30),

@@ -79,33 +79,15 @@ public class VapeSmokeParticles extends TextureSheetParticle {
         @Override
         public Particle createParticle(SimpleParticleType type, ClientLevel level,
                                        double x, double y, double z, double dx, double dy, double dz) {
-            VapeSmokeParticles particle = new VapeSmokeParticles(level, x, y, z, sprites, dx, dy, dz);
+            VapeSmokeParticles particle = new VapeSmokeParticles(level, x, y, z, sprites, 0, 0, 0);
 
-            LocalPlayer player = Minecraft.getInstance().player;
-            ItemStack stack = (player != null) ? player.getMainHandItem() : ItemStack.EMPTY;
+            int red = (int)(dx * 255);
+            int green = (int)(dy * 255);
+            int blue = (int)(dz * 255);
 
-            if (stack.getItem() instanceof Vape) {
-                if (PotionUtils.getPotion(stack) == Potions.WATER) {
-                    particle.setRGBColor(255, 255, 255);
-                } else {
-                    int potionColor = PotionUtils.getColor(stack);
-                    int red = (potionColor >> 16) & 0xFF;
-                    int green = (potionColor >> 8) & 0xFF;
-                    int blue = potionColor & 0xFF;
-
-                    red = brighten(red);
-                    green = brighten(green);
-                    blue = brighten(blue);
-
-                    particle.setRGBColor(red, green, blue);
-                }
-            }
+            particle.setRGBColor(red, green, blue);
 
             return particle;
-        }
-
-        private int brighten(int color) {
-            return Math.min(255, (int)(color * 1.1f + 30));
         }
 
     }

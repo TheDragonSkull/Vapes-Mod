@@ -9,7 +9,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.Direction;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -35,13 +34,11 @@ import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.capability.VapeEnergyContainer;
 import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.sound.ModSounds;
-import net.thedragonskull.vapemod.util.Constants;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -155,38 +152,6 @@ public class Vape extends Item implements VapeEnergyContainer {
     }
 
     @Override
-    public @Nullable CompoundTag getShareTag(ItemStack stack) {
-        CompoundTag tag = super.getShareTag(stack);
-        if (tag == null) tag = new CompoundTag();
-
-        CompoundTag finalTag = tag;
-        stack.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
-            if (cap instanceof INBTSerializable<?> serializable) {
-                CompoundTag energyTag = ((INBTSerializable<CompoundTag>) serializable).serializeNBT();
-                finalTag.put("VapeEnergy", energyTag);
-            }
-        });
-
-        return tag;
-    }
-
-
-    @Override
-    public void readShareTag(ItemStack stack, @Nullable CompoundTag tag) {
-        super.readShareTag(stack, tag);
-
-        if (tag != null && tag.contains("VapeEnergy")) {
-            CompoundTag vapeTag = tag.getCompound("VapeEnergy");
-            stack.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
-                if (cap instanceof INBTSerializable<?> serializable) {
-                    ((INBTSerializable<CompoundTag>) serializable).deserializeNBT(vapeTag);
-                }
-            });
-        }
-    }
-
-
-    @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack item = player.getItemInHand(hand);
 
@@ -198,12 +163,14 @@ public class Vape extends Item implements VapeEnergyContainer {
             return InteractionResultHolder.fail(item);
         }
 
-        if (level.isClientSide && !player.isUnderWater()) {
-            if (!Minecraft.getInstance().getSoundManager().isActive(breatheSound) || !Minecraft.getInstance().getSoundManager().isActive(resistanceSound)) {
-                breatheSound = SimpleSoundInstance.forUI(ModSounds.SMOKING_BREATHE_SOUND.get(), 1.0F, 0.5F);
+        if (!level.isClientSide && !player.isUnderWater()) {
+
+            level.playSound((Player) null, player.getX(), player.getY(), player.getZ(), ModSounds.VAPE_RESISTANCE.get(), SoundSource.PLAYERS, 1.0F,1.0F);
+
+/*            if (!Minecraft.getInstance().getSoundManager().isActive(resistanceSound)) {
                 resistanceSound = SimpleSoundInstance.forUI(ModSounds.VAPE_RESISTANCE.get(), 1.0F, 1.0F);
                 Minecraft.getInstance().getSoundManager().play(resistanceSound);
-            }
+            }*/
         }
 
         if (!item.getCapability(ForgeCapabilities.ENERGY).map(energy -> energy.getEnergyStored() > 0).orElse(false)) {
@@ -274,6 +241,19 @@ public class Vape extends Item implements VapeEnergyContainer {
             @Override
             public void run() {
                 Minecraft.getInstance().execute(() -> {
+
+                    ItemStack stack = player.getMainHandItem();
+                    int red = 255, green = 255, blue = 255;
+
+                    if (stack.getItem() instanceof Vape) {
+                        if (!PotionUtils.getPotion(stack).equals(Potions.WATER)) {
+                            int potionColor = PotionUtils.getColor(stack);
+                            red = (potionColor >> 16) & 0xFF;
+                            green = (potionColor >> 8) & 0xFF;
+                            blue = potionColor & 0xFF;
+                        }
+                    }
+
                     for (int i = 0; i < 10; i++) {
                         double distance = -0.5D;
                         double horizontalAngle = Math.toRadians(player.getYRot());
@@ -285,7 +265,10 @@ public class Vape extends Item implements VapeEnergyContainer {
                         double y = player.getEyeY() + yOffset;
                         double z = player.getZ() + zOffset;
 
-                        player.level().addParticle(ModParticles.VAPE_SMOKE_PARTICLES.get(), x, y, z, 0.0D, 0.0D, 0.0D);
+                        player.level().addParticle(ModParticles.VAPE_SMOKE_PARTICLES.get(),
+                                x, y, z,
+                                red / 255.0D, green / 255.0D, blue / 255.0D
+                        );
                     }
                 });
             }
@@ -383,8 +366,17 @@ public class Vape extends Item implements VapeEnergyContainer {
         return false;
     }
 
+    @Override
+    public void onCraftedBy(ItemStack stack, Level level, Player player) {
+        super.onCraftedBy(stack, level, player);
+
+        if (!level.isClientSide) {
+            level.playSound(null, player.blockPosition(), SoundEvents.BOTTLE_FILL, SoundSource.PLAYERS, 1.0f, 1.0f);
+        }
+    }
+
     private void setEnergyStored(ItemStack container, int value) {
-        container.getTag().putInt(Constants.TAG_ENERGY, clamp(value, 0, getCapacity(container)));
+        container.getTag().putInt("Energy", clamp(value, 0, getCapacity(container)));
     }
 
     @Override
@@ -403,7 +395,7 @@ public class Vape extends Item implements VapeEnergyContainer {
 
     @Override
     public int getEnergy(ItemStack container) {
-        return container.getOrCreateTag().getInt(Constants.TAG_ENERGY);
+        return container.getOrCreateTag().getInt("Energy");
     }
 
     @Override

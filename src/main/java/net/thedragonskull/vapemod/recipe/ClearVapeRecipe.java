@@ -1,24 +1,21 @@
 package net.thedragonskull.vapemod.recipe;
 
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.Container;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PotionItem;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
-import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
+import net.minecraft.world.item.crafting.CustomRecipe;
+import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.energy.IEnergyStorage;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.item.custom.Vape;
-import net.thedragonskull.vapemod.util.ModTags;
 
 public class ClearVapeRecipe extends CustomRecipe {
 
@@ -81,8 +78,8 @@ public class ClearVapeRecipe extends CustomRecipe {
         PotionUtils.setCustomEffects(result, java.util.List.of());
 
         result.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
-            if (storage instanceof VapeEnergy ve) {
-               // ve.setEnergy(0);
+            if (storage instanceof VapeEnergy e) {
+                VapeEnergy.setInt(e.stack, "Energy", 0); // ← no energy
             }
         });
 
