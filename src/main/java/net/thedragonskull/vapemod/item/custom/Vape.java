@@ -8,6 +8,7 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -31,11 +32,17 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
+import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.thedragonskull.vapemod.capability.VapeEnergyProvider;
+import net.minecraftforge.common.util.INBTSerializable;
+import net.minecraftforge.common.util.LazyOptional;
+import net.thedragonskull.vapemod.capability.VapeEnergy;
+import net.thedragonskull.vapemod.capability.VapeEnergyContainer;
 import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.sound.ModSounds;
+import net.thedragonskull.vapemod.util.Constants;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -43,7 +50,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Consumer;
 
-public class Vape extends Item {
+import static org.joml.Math.clamp;
+
+public class Vape extends Item implements VapeEnergyContainer {
     private static final String MESSAGE_CANT_SMOKE_UNDERWATER = "message.vapemod.cant_smoke_underwater";
 
     @Nullable
@@ -59,35 +68,22 @@ public class Vape extends Item {
 
     @Override
     public @Nullable ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundTag nbt) {
-        return new VapeEnergyProvider(0);
+        VapeEnergyContainer container = this;
+
+        return new ICapabilityProvider() {
+            @Override
+            public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
+                if (cap == ForgeCapabilities.ENERGY)
+                    return LazyOptional.of(() -> new VapeEnergy(stack, container)).cast();
+                return LazyOptional.empty();
+            }
+        };
     }
 
     @Override
     public ItemStack getDefaultInstance() {
         return PotionUtils.setPotion(super.getDefaultInstance(), Potions.WATER);
     }
-
-    /*    @Override
-    public boolean isBarVisible(ItemStack pStack) {
-        return true;
-    }
-
-    @Override
-    public int getBarWidth(ItemStack stack) {
-        return stack.getCapability(ForgeCapabilities.ENERGY)
-                .map(e -> Math.round(13.0F * e.getEnergyStored() / e.getMaxEnergyStored()))
-                .orElse(0);
-    }
-
-    @Override
-    public int getBarColor(ItemStack stack) {
-        return stack.getCapability(ForgeCapabilities.ENERGY).map(storage -> {
-            float percent = (float) storage.getEnergyStored() / storage.getMaxEnergyStored();
-            int red = (int)((1.0f - percent) * 255);
-            int green = (int)(percent * 255);
-            return (red << 16) | (green << 8); // RGB
-        }).orElse(0xFF0000);
-    }*/
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
@@ -159,13 +155,36 @@ public class Vape extends Item {
     }
 
     @Override
-    public void onCraftedBy(ItemStack stack, Level level, Player player) {
-        super.onCraftedBy(stack, level, player);
+    public @Nullable CompoundTag getShareTag(ItemStack stack) {
+        CompoundTag tag = super.getShareTag(stack);
+        if (tag == null) tag = new CompoundTag();
 
-        if (!level.isClientSide) {
-            level.playSound(null, player.blockPosition(), SoundEvents.BOTTLE_FILL, SoundSource.PLAYERS, 1.0f, 1.0f);
+        CompoundTag finalTag = tag;
+        stack.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
+            if (cap instanceof INBTSerializable<?> serializable) {
+                CompoundTag energyTag = ((INBTSerializable<CompoundTag>) serializable).serializeNBT();
+                finalTag.put("VapeEnergy", energyTag);
+            }
+        });
+
+        return tag;
+    }
+
+
+    @Override
+    public void readShareTag(ItemStack stack, @Nullable CompoundTag tag) {
+        super.readShareTag(stack, tag);
+
+        if (tag != null && tag.contains("VapeEnergy")) {
+            CompoundTag vapeTag = tag.getCompound("VapeEnergy");
+            stack.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
+                if (cap instanceof INBTSerializable<?> serializable) {
+                    ((INBTSerializable<CompoundTag>) serializable).deserializeNBT(vapeTag);
+                }
+            });
         }
     }
+
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
@@ -362,5 +381,33 @@ public class Vape extends Item {
     @Override
     public boolean isEnchantable(ItemStack pStack) {
         return false;
+    }
+
+    private void setEnergyStored(ItemStack container, int value) {
+        container.getTag().putInt(Constants.TAG_ENERGY, clamp(value, 0, getCapacity(container)));
+    }
+
+    @Override
+    public int receiveEnergy(ItemStack container, int maxReceive, boolean simulate) {
+        return 0;
+    }
+
+    @Override
+    public int extractEnergy(ItemStack container, int maxExtract, boolean simulate) {
+        if (1 == 0) return 0;
+        int energyStored = getEnergy(container);
+        int energyExtracted = Math.min(energyStored, Math.min(1, maxExtract));
+        if (!simulate) setEnergyStored(container, energyStored - energyExtracted);
+        return energyExtracted;
+    }
+
+    @Override
+    public int getEnergy(ItemStack container) {
+        return container.getOrCreateTag().getInt(Constants.TAG_ENERGY);
+    }
+
+    @Override
+    public int getCapacity(ItemStack container) {
+        return 15;
     }
 }

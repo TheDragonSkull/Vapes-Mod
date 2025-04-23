@@ -8,14 +8,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PotionItem;
 import net.minecraft.world.item.alchemy.PotionUtils;
-import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.item.custom.Vape;
+import net.thedragonskull.vapemod.util.Constants;
 
 
 public class FillVapeRecipe extends CustomRecipe {
@@ -55,8 +56,6 @@ public class FillVapeRecipe extends CustomRecipe {
         return !potion.isEmpty() && !vape.isEmpty();
     }
 
-
-
     @Override
     public ItemStack assemble(CraftingContainer inv, RegistryAccess registryAccess) {
         ItemStack potionStack = ItemStack.EMPTY;
@@ -73,17 +72,14 @@ public class FillVapeRecipe extends CustomRecipe {
 
         if (potionStack.isEmpty() || vapeInput.isEmpty()) return ItemStack.EMPTY;
 
-        ItemStack result = vapeInput.copy();
-        result.setCount(1);
+        ItemStack result = new ItemStack(vapeInput.getItem());
 
         PotionUtils.setPotion(result, PotionUtils.getPotion(potionStack));
         PotionUtils.setCustomEffects(result, PotionUtils.getCustomEffects(potionStack));
 
-        result.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
-            if (storage instanceof VapeEnergy ve) {
-                ve.setEnergy(ve.getMaxEnergyStored());
-            } else {
-                storage.receiveEnergy(storage.getMaxEnergyStored(), false);
+        result.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
+            if (cap instanceof VapeEnergy e) {
+                e.setInt(e.stack, Constants.TAG_ENERGY, e.getMaxEnergyStored()); // ← max energy
             }
         });
 
@@ -113,5 +109,7 @@ public class FillVapeRecipe extends CustomRecipe {
     public RecipeSerializer<?> getSerializer() {
         return ModRecipes.FILL_VAPE.get();
     }
+
+
 }
 

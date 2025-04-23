@@ -37,7 +37,7 @@ public class CommonEvents {
 
                         vape.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
                             if (cap instanceof VapeEnergy) {
-                                ((VapeEnergy) cap).setEnergy(0);
+                               // ((VapeEnergy) cap).setEnergy(0);
                             }
                         });
 
@@ -55,7 +55,7 @@ public class CommonEvents {
 
                 vape.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
                     if (cap instanceof VapeEnergy) {
-                        ((VapeEnergy) cap).setEnergy(0);
+                        //((VapeEnergy) cap).setEnergy(0);
                     }
                 });
 
@@ -84,7 +84,7 @@ public class CommonEvents {
 
                     vape.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
                         if (cap instanceof VapeEnergy) {
-                            ((VapeEnergy) cap).setEnergy(0);
+                           // ((VapeEnergy) cap).setEnergy(0);
                         }
                     });
 

@@ -9,7 +9,7 @@ import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.IEnergyStorage;
 
-public class VapeEnergyProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
+/*public class VapeEnergyProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
     private final VapeEnergy storage;
     private final LazyOptional<IEnergyStorage> optional;
 
@@ -38,4 +38,4 @@ public class VapeEnergyProvider implements ICapabilityProvider, INBTSerializable
     public void deserializeNBT(CompoundTag nbt) {
         storage.setEnergy(nbt.getInt("Energy"));
     }
-}
+}*/

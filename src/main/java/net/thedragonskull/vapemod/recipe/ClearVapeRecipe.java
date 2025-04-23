@@ -82,7 +82,7 @@ public class ClearVapeRecipe extends CustomRecipe {
 
         result.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
             if (storage instanceof VapeEnergy ve) {
-                ve.setEnergy(0);
+               // ve.setEnergy(0);
             }
         });
 
