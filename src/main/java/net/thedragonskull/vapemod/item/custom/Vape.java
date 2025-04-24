@@ -35,10 +35,14 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.network.PacketDistributor;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.capability.VapeEnergyContainer;
+import net.thedragonskull.vapemod.network.C2SResistanceSoundPacket;
+import net.thedragonskull.vapemod.network.PacketHandler;
 import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.sound.ModSounds;
+import net.thedragonskull.vapemod.sound.ResistanceSoundInstance;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -51,13 +55,6 @@ import static org.joml.Math.clamp;
 
 public class Vape extends Item implements VapeEnergyContainer {
     private static final String MESSAGE_CANT_SMOKE_UNDERWATER = "message.vapemod.cant_smoke_underwater";
-
-    @Nullable
-    @OnlyIn(Dist.CLIENT)
-    protected SimpleSoundInstance breatheSound;
-
-    @Nullable @OnlyIn(Dist.CLIENT)
-    protected SimpleSoundInstance resistanceSound;
 
     public Vape(Properties pProperties) {
         super(pProperties);
@@ -154,34 +151,36 @@ public class Vape extends Item implements VapeEnergyContainer {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack item = player.getItemInHand(hand);
+        Minecraft minecraft = Minecraft.getInstance();
 
-        if (hand == InteractionHand.MAIN_HAND) {
-            player.startUsingItem(hand);
-        } else {
-            player.stopUsingItem();
-            if (level.isClientSide) stopSounds();
-            return InteractionResultHolder.fail(item);
-        }
+        boolean hasEnergy = item.getCapability(ForgeCapabilities.ENERGY)
+                .map(energy -> energy.getEnergyStored() > 0)
+                .orElse(false);
 
-        if (!level.isClientSide && !player.isUnderWater()) {
-
-            level.playSound((Player) null, player.getX(), player.getY(), player.getZ(), ModSounds.VAPE_RESISTANCE.get(), SoundSource.PLAYERS, 1.0F,1.0F);
-
-/*            if (!Minecraft.getInstance().getSoundManager().isActive(resistanceSound)) {
-                resistanceSound = SimpleSoundInstance.forUI(ModSounds.VAPE_RESISTANCE.get(), 1.0F, 1.0F);
-                Minecraft.getInstance().getSoundManager().play(resistanceSound);
-            }*/
-        }
-
-        if (!item.getCapability(ForgeCapabilities.ENERGY).map(energy -> energy.getEnergyStored() > 0).orElse(false)) {
+        if (!hasEnergy) {
             if (level.isClientSide) {
-                //stopSounds();
                 player.displayClientMessage(
                         Component.literal("¡Empty tank, refill!").withStyle(ChatFormatting.DARK_RED),
                         true
                 );
             }
             return InteractionResultHolder.fail(item);
+        }
+
+        if (hand == InteractionHand.MAIN_HAND || hasEnergy) {
+            player.startUsingItem(hand);
+        } else {
+            player.stopUsingItem();
+            return InteractionResultHolder.fail(item);
+        }
+
+        if (!level.isClientSide) {
+            PacketHandler.INSTANCE.send(
+                    PacketDistributor.TRACKING_ENTITY.with(() -> player),
+                    new C2SResistanceSoundPacket(player.position(), player.getUUID())
+            );
+        } else {
+            Minecraft.getInstance().getSoundManager().play(new ResistanceSoundInstance(player));
         }
 
         return super.use(level, player, hand);
@@ -193,7 +192,6 @@ public class Vape extends Item implements VapeEnergyContainer {
         if (!(livingEntity instanceof Player player)) return;
 
         if (player.isUnderWater()) {
-            stopSounds();
             player.stopUsingItem();
             player.displayClientMessage(Component.translatable(MESSAGE_CANT_SMOKE_UNDERWATER).withStyle(ChatFormatting.DARK_RED), true);
             return;
@@ -215,7 +213,6 @@ public class Vape extends Item implements VapeEnergyContainer {
                         }
                     }
 
-
                     player.getCooldowns().addCooldown(this, 100);
 
                     if (!player.getAbilities().instabuild) {
@@ -229,11 +226,6 @@ public class Vape extends Item implements VapeEnergyContainer {
             });
         }
 
-    }
-
-    @Override
-    public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeCharged) {
-        if (level.isClientSide) stopSounds();
     }
 
     public void smokeParticles(Player player) {
@@ -273,21 +265,6 @@ public class Vape extends Item implements VapeEnergyContainer {
                 });
             }
         }, 300);
-    }
-
-    @OnlyIn(Dist.CLIENT)
-    private void stopSounds() {
-        SoundManager sm = Minecraft.getInstance().getSoundManager();
-
-        if (breatheSound != null) {
-            sm.stop(breatheSound);
-            breatheSound = null;
-        }
-
-        if (resistanceSound != null) {
-            sm.stop(resistanceSound);
-            resistanceSound = null;
-        }
     }
 
     @Override

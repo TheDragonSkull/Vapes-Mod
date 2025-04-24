@@ -4,15 +4,17 @@ import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
+@OnlyIn(Dist.CLIENT)
 public class ResistanceSoundInstance extends AbstractTickableSoundInstance {
     private final Player player;
-    private boolean shouldStop = false;
 
     public ResistanceSoundInstance(Player player) {
         super(ModSounds.VAPE_RESISTANCE.get(), SoundSource.PLAYERS, SoundInstance.createUnseededRandom());
         this.player = player;
-        this.looping = true;
+        this.looping = false;
         this.delay = 0;
         this.volume = 1.0F;
         this.pitch = 1.0F;
@@ -24,7 +26,7 @@ public class ResistanceSoundInstance extends AbstractTickableSoundInstance {
 
     @Override
     public void tick() {
-        if (player.isRemoved() || !player.isUsingItem() || shouldStop) {
+        if (player.isRemoved() || !player.isUsingItem() || player.isUnderWater()) {
             this.stop();
             return;
         }
@@ -34,7 +36,8 @@ public class ResistanceSoundInstance extends AbstractTickableSoundInstance {
         this.z = player.getZ();
     }
 
-    public void stopSound() {
-        this.shouldStop = true;
+    public void forceStop() {
+        this.stop();
     }
+
 }

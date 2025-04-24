@@ -1,24 +1,31 @@
 package net.thedragonskull.vapemod.event;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.world.entity.npc.VillagerTrades;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.MerchantOffer;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.village.VillagerTradesEvent;
 import net.minecraftforge.event.village.WandererTradesEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.VapeMod;
-import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.item.ModItems;
+import net.thedragonskull.vapemod.item.custom.Vape;
+import net.thedragonskull.vapemod.sound.ResistanceSoundInstance;
 import net.thedragonskull.vapemod.util.ModTags;
 import net.thedragonskull.vapemod.villager.ModVillagers;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Mod.EventBusSubscriber(modid = VapeMod.MOD_ID)
 public class CommonEvents {
@@ -79,6 +86,5 @@ public class CommonEvents {
             }
         }
     }
-
 
 }
