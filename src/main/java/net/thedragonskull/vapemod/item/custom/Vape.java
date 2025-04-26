@@ -220,10 +220,10 @@ public class Vape extends Item implements VapeEnergyContainer {
                     if (level.isClientSide) {
                         smokeParticles(player);
                     } else {
-                        level.playSound(player, player.getX(), player.getY(), player.getZ(),
+                        level.playSound(null, player.getX(), player.getY(), player.getZ(),
                                 ModSounds.VAPE_RESISTANCE_END.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
 
-                        level.playSound(player, player.getX(), player.getY(), player.getZ(),
+                        level.playSound(null, player.getX(), player.getY(), player.getZ(),
                                 ModSounds.SMOKING_BREATHE_OUT.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
                     }
                 }

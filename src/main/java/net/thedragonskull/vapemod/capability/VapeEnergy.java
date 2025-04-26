@@ -45,11 +45,11 @@ public class VapeEnergy implements IEnergyStorage {
     }
 
     public static void setInt(ItemStack stack, String key, int value) {
-        validateCompound(stack);
+        CompoundCheck(stack);
         stack.getTag().putInt(key, value);
     }
 
-    public static void validateCompound(ItemStack stack) {
+    public static void CompoundCheck(ItemStack stack) {
         if (!stack.hasTag()) {
             CompoundTag tag = new CompoundTag();
             stack.setTag(tag);
