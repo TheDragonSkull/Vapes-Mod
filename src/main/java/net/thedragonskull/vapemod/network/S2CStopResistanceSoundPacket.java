@@ -3,44 +3,38 @@ package net.thedragonskull.vapemod.network;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkEvent;
-import net.thedragonskull.vapemod.sound.ResistanceSoundInstance;
+import net.thedragonskull.vapemod.sound.ClientSoundHandler;
 
 import java.util.UUID;
 import java.util.function.Supplier;
 
-public class C2SResistanceSoundPacket {
-    private final Vec3 pos;
+public class S2CStopResistanceSoundPacket {
     private final UUID playerId;
 
-    public C2SResistanceSoundPacket(Vec3 pos, UUID playerId) {
-        this.pos = pos;
+    public S2CStopResistanceSoundPacket(UUID playerId) {
         this.playerId = playerId;
     }
 
-    public C2SResistanceSoundPacket(FriendlyByteBuf buf) {
-        this.pos = new Vec3(buf.readDouble(), buf.readDouble(), buf.readDouble());
+    public S2CStopResistanceSoundPacket(FriendlyByteBuf buf) {
         this.playerId = buf.readUUID();
     }
 
     public void encode(FriendlyByteBuf buf) {
-        buf.writeDouble(pos.x);
-        buf.writeDouble(pos.y);
-        buf.writeDouble(pos.z);
         buf.writeUUID(playerId);
     }
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
         contextSupplier.get().enqueueWork(() -> {
             Minecraft mc = Minecraft.getInstance();
+            if (mc.level == null) return;
+
             Player target = mc.level.getPlayerByUUID(this.playerId);
-            if (target != null && mc.level != null) {
-                mc.getSoundManager().play(new ResistanceSoundInstance(target));
+            if (target != null) {
+                ClientSoundHandler.stop(target);
             }
         });
         contextSupplier.get().setPacketHandled(true);
     }
-
-
 }
+

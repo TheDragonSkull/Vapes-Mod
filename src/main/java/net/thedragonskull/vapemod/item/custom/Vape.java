@@ -6,8 +6,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -28,8 +26,6 @@ import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
@@ -38,9 +34,11 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.PacketDistributor;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.capability.VapeEnergyContainer;
-import net.thedragonskull.vapemod.network.C2SResistanceSoundPacket;
+import net.thedragonskull.vapemod.network.S2CResistanceSoundPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
+import net.thedragonskull.vapemod.network.S2CStopResistanceSoundPacket;
 import net.thedragonskull.vapemod.particle.ModParticles;
+import net.thedragonskull.vapemod.sound.ClientSoundHandler;
 import net.thedragonskull.vapemod.sound.ModSounds;
 import net.thedragonskull.vapemod.sound.ResistanceSoundInstance;
 import org.jetbrains.annotations.NotNull;
@@ -177,10 +175,10 @@ public class Vape extends Item implements VapeEnergyContainer {
         if (!level.isClientSide) {
             PacketHandler.INSTANCE.send(
                     PacketDistributor.TRACKING_ENTITY.with(() -> player),
-                    new C2SResistanceSoundPacket(player.position(), player.getUUID())
+                    new S2CResistanceSoundPacket(player.getUUID())
             );
         } else {
-            Minecraft.getInstance().getSoundManager().play(new ResistanceSoundInstance(player));
+            ClientSoundHandler.start(player);
         }
 
         return super.use(level, player, hand);
@@ -221,11 +219,46 @@ public class Vape extends Item implements VapeEnergyContainer {
 
                     if (level.isClientSide) {
                         smokeParticles(player);
+                    } else {
+                        level.playSound(player, player.getX(), player.getY(), player.getZ(),
+                                ModSounds.VAPE_RESISTANCE_END.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+
+                        level.playSound(player, player.getX(), player.getY(), player.getZ(),
+                                ModSounds.SMOKING_BREATHE_OUT.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
                     }
                 }
             });
         }
 
+    }
+
+    @Override
+    public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeLeft) {
+        if (!(entity instanceof Player player)) return;
+
+        if (!level.isClientSide) {
+            PacketHandler.INSTANCE.send(
+                    PacketDistributor.TRACKING_ENTITY.with(() -> player),
+                    new S2CStopResistanceSoundPacket(player.getUUID())
+            );
+        } else {
+            ClientSoundHandler.stop(player);
+        }
+    }
+
+    @Override
+    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
+        if (entity instanceof Player player) {
+            if (!level.isClientSide) {
+                PacketHandler.INSTANCE.send(
+                        PacketDistributor.TRACKING_ENTITY.with(() -> player),
+                        new S2CStopResistanceSoundPacket(player.getUUID())
+                );
+            } else {
+                ClientSoundHandler.stop(player);
+            }
+        }
+        return super.finishUsingItem(stack, level, entity);
     }
 
     public void smokeParticles(Player player) {

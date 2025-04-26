@@ -26,9 +26,9 @@ public class ResistanceSoundInstance extends AbstractTickableSoundInstance {
 
     @Override
     public void tick() {
-        if (player.isRemoved() || !player.isUsingItem() || player.isUnderWater()) {
+        if (player.isRemoved() || player.isUnderWater()) {
             this.stop();
-            return;
+            ClientSoundHandler.clear(player.getUUID());
         }
 
         this.x = player.getX();
@@ -36,8 +36,7 @@ public class ResistanceSoundInstance extends AbstractTickableSoundInstance {
         this.z = player.getZ();
     }
 
-    public void forceStop() {
+    public void stopNow() {
         this.stop();
     }
-
 }

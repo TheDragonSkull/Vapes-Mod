@@ -19,8 +19,14 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> VAPE_RESISTANCE =
             registerSoundEvents("vape_resistance");
 
+    public static final RegistryObject<SoundEvent> VAPE_RESISTANCE_END =
+            registerSoundEvents("vape_resistance_end");
+
     public static final RegistryObject<SoundEvent> SMOKING_BREATHE_SOUND =
             registerSoundEvents("smoking_breathe_sound");
+
+    public static final RegistryObject<SoundEvent> SMOKING_BREATHE_OUT =
+            registerSoundEvents("smoking_breathe_out");
 
     public static void register(IEventBus eventBus) {
         SOUND_EVENTS.register(eventBus);

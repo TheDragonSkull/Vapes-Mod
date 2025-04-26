@@ -5,10 +5,23 @@
       "vapemod:smoking_breathe_sound"
     ]
   },
+  "smoking_breathe_out": {
+    "subtitle": "sounds.vapemod.smoking_breathe_out",
+    "sounds": [
+      "vapemod:smoking_breathe_out"
+    ]
+  },
   "vape_resistance": {
+    "stream": true,
     "subtitle": "sounds.vapemod.vape_resistance",
     "sounds": [
       "vapemod:vape_resistance"
+    ]
+  },
+  "vape_resistance_end": {
+    "subtitle": "sounds.vapemod.vape_resistance_end",
+    "sounds": [
+      "vapemod:vape_resistance_end"
     ]
   }
 }

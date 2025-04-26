@@ -17,12 +17,20 @@ public class PacketHandler {
             PROTOCOL_VERSION::equals);
 
     public static void register() {
-        INSTANCE.messageBuilder(C2SResistanceSoundPacket.class, NetworkDirection.PLAY_TO_CLIENT.ordinal())
-                .encoder(C2SResistanceSoundPacket::encode)
-                .decoder(C2SResistanceSoundPacket::new)
-                .consumerMainThread(C2SResistanceSoundPacket::handle)
+
+        INSTANCE.messageBuilder(S2CResistanceSoundPacket.class, NetworkDirection.PLAY_TO_CLIENT.ordinal())
+                .encoder(S2CResistanceSoundPacket::encode)
+                .decoder(S2CResistanceSoundPacket::new)
+                .consumerMainThread(S2CResistanceSoundPacket::handle)
+                .add();
+
+        INSTANCE.messageBuilder(S2CStopResistanceSoundPacket.class, NetworkDirection.PLAY_TO_CLIENT.ordinal() + 1)
+                .encoder(S2CStopResistanceSoundPacket::encode)
+                .decoder(S2CStopResistanceSoundPacket::new)
+                .consumerMainThread(S2CStopResistanceSoundPacket::handle)
                 .add();
     }
+
 
     public static void sendToServer(Object msg) {
         INSTANCE.send(PacketDistributor.SERVER.noArg(), msg);
