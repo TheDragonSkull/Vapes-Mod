@@ -14,10 +14,10 @@ Introducing a new way to manage potion effects by using vapes of various colors.
 ⭐ Features:
 
 
-- Vapes - A new item that lets you vape the minecraft potions, literally.
+- Vapes - A new item that lets you vape the Minecraft potions, literally.
 - Vape Shopkeeper - A new NPC that sells colored vapes.
 
- You can comment your ideas and maybe i'll end up including them in the mod.     
+ You can comment on your ideas and maybe I'll end up including them in the mod.     
  If you find bugs please report so I can try to fix them.
 
  ---
