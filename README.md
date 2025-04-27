@@ -19,3 +19,11 @@ Introducing a new way to use potion effects by using vapes of various colors.
 
  You can comment your ideas and maybe i'll end up including them in the mod.     
  If you find bugs please report so I can try to fix them.
+
+ ---
+
+🖋 Dependencies:
+
+**Forge**
+
+- [Minecraft Forge](https://files.minecraftforge.net/net/minecraftforge/forge/)
