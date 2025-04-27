@@ -7,7 +7,7 @@
 
 Wanted to vape in Minecraft? This is your mod!
 
-Introducing a new way to use potion effects by using vapes of various colors.
+Introducing a new way to manage potion effects by using vapes of various colors.
 
 ---
 
