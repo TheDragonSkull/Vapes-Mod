@@ -1,5 +1,8 @@
 ![vapes_mod_banner](https://github.com/user-attachments/assets/6a8d51b6-c2ac-4279-be42-1a38cae9fbff)
 
+[![CurseForge Versions](https://cf.way2muchnoise.eu/versions/1253084.svg)](https://www.curseforge.com/minecraft/mc-mods/thedragons-vapes)
+[![CurseForge Downloads](https://cf.way2muchnoise.eu/short_1253084_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/thedragons-vapes) 
+
 ---
 
 📖 About:
