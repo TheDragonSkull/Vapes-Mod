@@ -171,11 +171,11 @@ public class Vape extends Item implements VapeEnergyContainer {
             player.stopUsingItem();
             return InteractionResultHolder.fail(item);
         }
-
+        //todo: comprobar packets
         if (!level.isClientSide) {
             PacketHandler.INSTANCE.send(
                     new S2CResistanceSoundPacket(player.getUUID()),
-                    PacketDistributor.TRACKING_ENTITY.with(() -> player)
+                    PacketDistributor.TRACKING_ENTITY.with(player)
             );
         } else {
             ClientSoundHandler.start(player);
@@ -238,8 +238,8 @@ public class Vape extends Item implements VapeEnergyContainer {
 
         if (!level.isClientSide) {
             PacketHandler.INSTANCE.send(
-                    PacketDistributor.TRACKING_ENTITY.with(() -> player),
-                    new S2CStopResistanceSoundPacket(player.getUUID())
+                    new S2CStopResistanceSoundPacket(player.getUUID()),
+                    PacketDistributor.TRACKING_ENTITY.with(player)
             );
         } else {
             ClientSoundHandler.stop(player);
@@ -251,8 +251,8 @@ public class Vape extends Item implements VapeEnergyContainer {
         if (entity instanceof Player player) {
             if (!level.isClientSide) {
                 PacketHandler.INSTANCE.send(
-                        PacketDistributor.TRACKING_ENTITY.with(() -> player),
-                        new S2CStopResistanceSoundPacket(player.getUUID())
+                        new S2CStopResistanceSoundPacket(player.getUUID()),
+                        PacketDistributor.TRACKING_ENTITY.with(player)
                 );
             } else {
                 ClientSoundHandler.stop(player);

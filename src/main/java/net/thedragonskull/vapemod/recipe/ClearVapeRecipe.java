@@ -19,10 +19,9 @@ import net.thedragonskull.vapemod.item.custom.Vape;
 
 public class ClearVapeRecipe extends CustomRecipe {
 
-    public ClearVapeRecipe(ResourceLocation id, CraftingBookCategory category) {
-        super(id, category);
+    public ClearVapeRecipe(CraftingBookCategory pCategory) {
+        super(pCategory);
     }
-
 
     @Override
     public boolean matches(CraftingContainer inv, Level level) {

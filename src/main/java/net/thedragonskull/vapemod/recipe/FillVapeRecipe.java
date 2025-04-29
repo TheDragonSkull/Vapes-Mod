@@ -19,8 +19,8 @@ import net.thedragonskull.vapemod.item.custom.Vape;
 
 public class FillVapeRecipe extends CustomRecipe {
 
-    public FillVapeRecipe(ResourceLocation id, CraftingBookCategory category) {
-        super(id, category);
+    public FillVapeRecipe(CraftingBookCategory category) {
+        super(category);
     }
 
     @Override
