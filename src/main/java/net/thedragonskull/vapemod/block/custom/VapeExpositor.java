@@ -1,5 +1,6 @@
 package net.thedragonskull.vapemod.block.custom;
 
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,7 +23,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.network.NetworkHooks;
 import net.thedragonskull.vapemod.block.entity.ModBlockEntities;
 import net.thedragonskull.vapemod.block.entity.VapeExpositorBE;
 import org.jetbrains.annotations.Nullable;
@@ -30,10 +30,16 @@ import org.jetbrains.annotations.Nullable;
 public class VapeExpositor extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final VoxelShape SHAPE = Block.box(0, 0, 4, 16, 8, 12);
+    public static final MapCodec<VapeExpositor> CODEC = simpleCodec(VapeExpositor::new);
 
     public VapeExpositor(Properties pProperties) {
         super(pProperties);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
+    }
+
+    @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
     }
 
     @Override
@@ -53,7 +59,7 @@ public class VapeExpositor extends BaseEntityBlock {
         if (!pLevel.isClientSide()) {
             BlockEntity entity = pLevel.getBlockEntity(pPos);
             if(entity instanceof VapeExpositorBE) {
-                NetworkHooks.openScreen(((ServerPlayer)pPlayer), (VapeExpositorBE)entity, pPos);
+                pPlayer.openMenu((VapeExpositorBE)entity);
             } else {
                 throw new IllegalStateException("Our Container provider is missing!");
             }

@@ -174,8 +174,8 @@ public class Vape extends Item implements VapeEnergyContainer {
 
         if (!level.isClientSide) {
             PacketHandler.INSTANCE.send(
-                    PacketDistributor.TRACKING_ENTITY.with(() -> player),
-                    new S2CResistanceSoundPacket(player.getUUID())
+                    new S2CResistanceSoundPacket(player.getUUID()),
+                    PacketDistributor.TRACKING_ENTITY.with(() -> player)
             );
         } else {
             ClientSoundHandler.start(player);
