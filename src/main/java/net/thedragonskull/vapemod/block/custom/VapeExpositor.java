@@ -56,16 +56,18 @@ public class VapeExpositor extends BaseEntityBlock {
 
     @Override
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
-        if (!pLevel.isClientSide()) {
-            BlockEntity entity = pLevel.getBlockEntity(pPos);
-            if(entity instanceof VapeExpositorBE) {
-                pPlayer.openMenu((VapeExpositorBE)entity);
-            } else {
-                throw new IllegalStateException("Our Container provider is missing!");
-            }
+        BlockEntity be = pLevel.getBlockEntity(pPos);
+        if (!(be instanceof VapeExpositorBE blockEntity))
+            return InteractionResult.PASS;
+
+        if (pLevel.isClientSide())
+            return InteractionResult.SUCCESS;
+
+        if (pPlayer instanceof ServerPlayer sPlayer) {
+            sPlayer.openMenu(blockEntity, pPos);
         }
 
-        return InteractionResult.sidedSuccess(pLevel.isClientSide());
+        return InteractionResult.CONSUME;
     }
 
     @Override

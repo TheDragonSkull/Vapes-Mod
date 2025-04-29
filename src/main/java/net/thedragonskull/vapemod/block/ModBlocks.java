@@ -22,7 +22,6 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> VAPE_EXPOSITOR = registerBlock("vape_expositor",
             () -> new VapeExpositor(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE).sound(SoundType.STONE).noOcclusion().requiresCorrectToolForDrops()));
-    //todo: ofFullCopy revision
 
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {
