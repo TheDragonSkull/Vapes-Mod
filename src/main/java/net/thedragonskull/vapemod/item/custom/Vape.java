@@ -171,7 +171,7 @@ public class Vape extends Item implements VapeEnergyContainer {
             player.stopUsingItem();
             return InteractionResultHolder.fail(item);
         }
-        //todo: comprobar packets
+
         if (!level.isClientSide) {
             PacketHandler.INSTANCE.send(
                     new S2CResistanceSoundPacket(player.getUUID()),
