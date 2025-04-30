@@ -17,6 +17,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -25,14 +26,13 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.alchemy.PotionContents;
-import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
+import net.minecraftforge.common.capabilities.*;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.energy.EnergyStorage;
+import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.network.PacketDistributor;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.capability.VapeEnergyContainer;
@@ -44,8 +44,8 @@ import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.sound.ClientSoundHandler;
 import net.thedragonskull.vapemod.sound.ModSounds;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -61,20 +61,6 @@ public class Vape extends Item implements VapeEnergyContainer {
     }
 
     @Override
-    public @Nullable ICapabilityProvider initCapabilities(ItemStack stack, @Nullable CompoundTag nbt) {
-        VapeEnergyContainer container = this;
-
-        return new ICapabilityProvider() {
-            @Override
-            public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
-                if (cap == ForgeCapabilities.ENERGY)
-                    return LazyOptional.of(() -> new VapeEnergy(stack, container)).cast();
-                return LazyOptional.empty();
-            }
-        };
-    }
-
-    @Override
     public ItemStack getDefaultInstance() {
         ItemStack stack = new ItemStack(this);
         stack.set(DataComponents.POTION_CONTENTS, PotionContents.EMPTY.withPotion(Potions.WATER));
@@ -82,9 +68,25 @@ public class Vape extends Item implements VapeEnergyContainer {
         return stack;
     }
 
+    @Nullable
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-        super.appendHoverText(stack, level, tooltip, flag);
+    public ICapabilityProvider getCapabilityProvider(ItemStack stack) {
+        VapeEnergyContainer container = this;
+
+        return new ICapabilityProvider() {
+            @Override
+            public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
+                if (cap == ForgeCapabilities.ENERGY) {
+                    return LazyOptional.of(() -> new VapeEnergy(stack, container)).cast();
+                }
+                return LazyOptional.empty();
+            }
+        };
+    }
+
+    @Override
+    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, context, tooltip, flag);
 
         stack.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
             int energy = storage.getEnergyStored();
@@ -94,24 +96,23 @@ public class Vape extends Item implements VapeEnergyContainer {
             float ratio = (float) energy / max;
             int red = (int) ((1.0f - ratio) * 255);
             int green = (int) (ratio * 255);
-            int color = (red << 16) | (green << 8); // RGB
+            int color = (red << 16) | (green << 8);
 
             MutableComponent label = Component.literal("Capacity: ").withStyle(ChatFormatting.DARK_AQUA);
             MutableComponent value = Component.literal(percent + "%").withStyle(style -> style.withColor(color));
 
             tooltip.add(label.append(value));
 
-            List<MobEffectInstance> effects = PotionUtils.getMobEffects(stack);
-            if (!effects.isEmpty()) {
-
-                for (MobEffectInstance effect : effects) {
+            PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
+            if (contents != null && !contents.customEffects().isEmpty()) {
+                for (MobEffectInstance effect : contents.customEffects()) {
                     MutableComponent effectName = Component.translatable(effect.getDescriptionId());
 
                     if (effect.getAmplifier() > 0) {
                         effectName.append(" ").append(Component.translatable("potion.potency." + effect.getAmplifier()));
                     }
 
-                    int adjustedDuration = (int)(effect.getDuration() / storage.getMaxEnergyStored());
+                    int adjustedDuration = (int)(effect.getDuration() / (float) max);
                     if (adjustedDuration > 20) {
                         String time = formatDuration(adjustedDuration);
                         effectName.append(" (").append(Component.literal(time)).append(")");
@@ -134,18 +135,22 @@ public class Vape extends Item implements VapeEnergyContainer {
     }
 
     public String getDescriptionId(ItemStack pStack) {
-        return PotionUtils.getPotion(pStack).getName(this.getDescriptionId() + ".effect.");
+        //return PotionUtils.getPotion(pStack).getName(this.getDescriptionId() + ".effect."); //todo check
+        return pStack.get(DataComponents.POTION_CONTENTS).getAllEffects() + ".effect.";
     }
 
     @Override
     public Component getName(ItemStack stack) {
         Component baseName = Component.translatable(this.getDescriptionId());
 
-        List<MobEffectInstance> effects = PotionUtils.getMobEffects(stack);
-        if (!effects.isEmpty()) {
-            MobEffectInstance effect = effects.get(0);
-            Component effectName = Component.translatable(effect.getDescriptionId());
-            return Component.literal("").append(baseName).append(" (").append(effectName).append(")");
+        PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
+        if (contents != null) {
+            List<MobEffectInstance> effects = stack.get(DataComponents.POTION_CONTENTS).potion().get().value().getEffects(); //todo es correcto?
+            if (!effects.isEmpty()) {
+                MobEffectInstance effect = effects.get(0);
+                Component effectName = Component.translatable(effect.getDescriptionId());
+                return Component.literal("").append(baseName).append(" (").append(effectName).append(")");
+            }
         }
 
         return baseName;
@@ -162,10 +167,7 @@ public class Vape extends Item implements VapeEnergyContainer {
 
         if (!hasEnergy) {
             if (level.isClientSide) {
-                player.displayClientMessage(
-                        Component.literal("¡Empty tank, refill!").withStyle(ChatFormatting.DARK_RED),
-                        true
-                );
+                player.displayClientMessage(Component.literal("¡Empty tank, refill!").withStyle(ChatFormatting.DARK_RED), true);
             }
             return InteractionResultHolder.fail(item);
         }
@@ -205,10 +207,9 @@ public class Vape extends Item implements VapeEnergyContainer {
                 int energy = storage.getEnergyStored();
 
                 if (energy > 0) {
-
-                    for (MobEffectInstance effect : PotionUtils.getMobEffects(item)) {
-                        if (effect.getEffect().isInstantenous()) {
-                            effect.getEffect().applyInstantenousEffect(player, player, player, effect.getAmplifier(), 1.0);
+                    for (MobEffectInstance effect : item.get(DataComponents.POTION_CONTENTS).potion().get().value().getEffects()) {//todo es correcto?
+                        if (effect.getEffect().value().isInstantenous()) {//todo es correcto?
+                            effect.getEffect().value().applyInstantenousEffect(player, player, player, effect.getAmplifier(), 1.0);//todo es correcto?
                         } else {
                             int duration = (int)(effect.getDuration() / storage.getMaxEnergyStored());
                             int amplifier = effect.getAmplifier();
@@ -276,8 +277,9 @@ public class Vape extends Item implements VapeEnergyContainer {
                     int red = 255, green = 255, blue = 255;
 
                     if (stack.getItem() instanceof Vape) {
-                        if (!PotionUtils.getPotion(stack).equals(Potions.WATER)) {
-                            int potionColor = PotionUtils.getColor(stack);
+                        PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
+                        if (!(contents.potion().get() == Potions.WATER)) {
+                            int potionColor = stack.get(DataComponents.POTION_CONTENTS).getColor(); //todo: es correcto?
                             red = (potionColor >> 16) & 0xFF;
                             green = (potionColor >> 8) & 0xFF;
                             blue = potionColor & 0xFF;
@@ -410,7 +412,14 @@ public class Vape extends Item implements VapeEnergyContainer {
 
     @Override
     public int getEnergy(ItemStack container) {
-        return container.get(ModDataComponentTypes.ENERGY.get());
+        Integer energy = container.get(ModDataComponentTypes.ENERGY.get());
+
+        if (energy == null) {
+            energy = 0;
+            container.set(ModDataComponentTypes.ENERGY.get(), energy);
+        }
+
+        return energy;
     }
 
     @Override

@@ -1,6 +1,5 @@
 package net.thedragonskull.vapemod.capability;
 
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.thedragonskull.vapemod.component.ModDataComponentTypes;
