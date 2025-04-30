@@ -24,3 +24,4 @@ authors="${mod_authors}"
     versionRange="${minecraft_version_range}"
     ordering="NONE"
     side="BOTH"
+

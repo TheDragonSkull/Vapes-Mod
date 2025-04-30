@@ -85,6 +85,12 @@ mixin {
     config('vapemod.mixin.json')
 }
 
+sourceSets {
+    main {
+        ext.refMap = "vapemod.mixin-refmap.json"
+    }
+}
+
 tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
             minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
@@ -108,7 +114,8 @@ tasks.named('jar', Jar).configure {
                 'Specification-Version'   : '1',
                 'Implementation-Title'    : project.name,
                 'Implementation-Version'  : project.jar.archiveVersion,
-                'Implementation-Vendor'   : mod_authors
+                'Implementation-Vendor'   : mod_authors,
+                'MixinConfigs'            : "${mod_id}.mixin.json"
         ])
     }
 }
