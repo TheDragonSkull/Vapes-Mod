@@ -25,6 +25,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
@@ -104,8 +105,8 @@ public class Vape extends Item implements VapeEnergyContainer {
             tooltip.add(label.append(value));
 
             PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
-            if (contents != null && !contents.customEffects().isEmpty()) {
-                for (MobEffectInstance effect : contents.customEffects()) {
+            if (contents != null && !stack.get(DataComponents.POTION_CONTENTS).potion().get().value().getEffects().isEmpty()) {
+                for (MobEffectInstance effect : stack.get(DataComponents.POTION_CONTENTS).potion().get().value().getEffects()) {
                     MutableComponent effectName = Component.translatable(effect.getDescriptionId());
 
                     if (effect.getAmplifier() > 0) {
@@ -135,8 +136,7 @@ public class Vape extends Item implements VapeEnergyContainer {
     }
 
     public String getDescriptionId(ItemStack pStack) {
-        //return PotionUtils.getPotion(pStack).getName(this.getDescriptionId() + ".effect."); //todo check
-        return pStack.get(DataComponents.POTION_CONTENTS).getAllEffects() + ".effect.";
+        return Potion.getName(pStack.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY).potion(), this.getDescriptionId() + ".effect.");
     }
 
     @Override
@@ -145,7 +145,7 @@ public class Vape extends Item implements VapeEnergyContainer {
 
         PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
         if (contents != null) {
-            List<MobEffectInstance> effects = stack.get(DataComponents.POTION_CONTENTS).potion().get().value().getEffects(); //todo es correcto?
+            List<MobEffectInstance> effects = stack.get(DataComponents.POTION_CONTENTS).potion().get().value().getEffects();
             if (!effects.isEmpty()) {
                 MobEffectInstance effect = effects.get(0);
                 Component effectName = Component.translatable(effect.getDescriptionId());
@@ -207,9 +207,9 @@ public class Vape extends Item implements VapeEnergyContainer {
                 int energy = storage.getEnergyStored();
 
                 if (energy > 0) {
-                    for (MobEffectInstance effect : item.get(DataComponents.POTION_CONTENTS).potion().get().value().getEffects()) {//todo es correcto?
-                        if (effect.getEffect().value().isInstantenous()) {//todo es correcto?
-                            effect.getEffect().value().applyInstantenousEffect(player, player, player, effect.getAmplifier(), 1.0);//todo es correcto?
+                    for (MobEffectInstance effect : item.get(DataComponents.POTION_CONTENTS).potion().get().value().getEffects()) {
+                        if (effect.getEffect().value().isInstantenous()) {
+                            effect.getEffect().value().applyInstantenousEffect(player, player, player, effect.getAmplifier(), 1.0);
                         } else {
                             int duration = (int)(effect.getDuration() / storage.getMaxEnergyStored());
                             int amplifier = effect.getAmplifier();
@@ -279,7 +279,7 @@ public class Vape extends Item implements VapeEnergyContainer {
                     if (stack.getItem() instanceof Vape) {
                         PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
                         if (!(contents.potion().get() == Potions.WATER)) {
-                            int potionColor = stack.get(DataComponents.POTION_CONTENTS).getColor(); //todo: es correcto?
+                            int potionColor = stack.get(DataComponents.POTION_CONTENTS).getColor();
                             red = (potionColor >> 16) & 0xFF;
                             green = (potionColor >> 8) & 0xFF;
                             blue = potionColor & 0xFF;
