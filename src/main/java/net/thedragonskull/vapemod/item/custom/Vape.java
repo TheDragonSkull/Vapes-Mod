@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -23,6 +24,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
+import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
@@ -34,13 +36,13 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.PacketDistributor;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.capability.VapeEnergyContainer;
+import net.thedragonskull.vapemod.component.ModDataComponentTypes;
 import net.thedragonskull.vapemod.network.S2CResistanceSoundPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
 import net.thedragonskull.vapemod.network.S2CStopResistanceSoundPacket;
 import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.sound.ClientSoundHandler;
 import net.thedragonskull.vapemod.sound.ModSounds;
-import net.thedragonskull.vapemod.sound.ResistanceSoundInstance;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -74,7 +76,10 @@ public class Vape extends Item implements VapeEnergyContainer {
 
     @Override
     public ItemStack getDefaultInstance() {
-        return PotionUtils.setPotion(super.getDefaultInstance(), Potions.WATER);
+        ItemStack stack = new ItemStack(this);
+        stack.set(DataComponents.POTION_CONTENTS, PotionContents.EMPTY.withPotion(Potions.WATER));
+
+        return stack;
     }
 
     @Override
@@ -386,7 +391,7 @@ public class Vape extends Item implements VapeEnergyContainer {
     }
 
     private void setEnergyStored(ItemStack container, int value) {
-        container.getTag().putInt("Energy", clamp(value, 0, getCapacity(container)));
+        container.set(ModDataComponentTypes.ENERGY.get(), clamp(value, 0, getCapacity(container)));
     }
 
     @Override
@@ -405,7 +410,7 @@ public class Vape extends Item implements VapeEnergyContainer {
 
     @Override
     public int getEnergy(ItemStack container) {
-        return container.getOrCreateTag().getInt("Energy");
+        return container.get(ModDataComponentTypes.ENERGY.get());
     }
 
     @Override

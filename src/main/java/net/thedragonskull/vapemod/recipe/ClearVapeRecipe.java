@@ -85,11 +85,12 @@ public class ClearVapeRecipe extends CustomRecipe {
 
         result.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
             if (storage instanceof VapeEnergy e) {
-                VapeEnergy.setInt(e.stack, "Energy", 0); // ← no energy
+                VapeEnergy.setInt(e.stack, 0); // ← no energy
             }
         });
 
-        return result;    }
+        return result;
+    }
 
     @Override
     public NonNullList<ItemStack> getRemainingItems(CraftingContainer container) {

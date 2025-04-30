@@ -13,6 +13,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.thedragonskull.vapemod.block.ModBlocks;
 import net.thedragonskull.vapemod.block.entity.ModBlockEntities;
+import net.thedragonskull.vapemod.component.ModDataComponentTypes;
 import net.thedragonskull.vapemod.item.ModCreativeModeTabs;
 import net.thedragonskull.vapemod.item.ModItems;
 import net.thedragonskull.vapemod.particle.ModParticles;
@@ -40,6 +41,7 @@ public class VapeMod {
         ModMenuTypes.register(modEventBus);
         ModVillagers.register(modEventBus);
         ModRecipes.register(modEventBus);
+        ModDataComponentTypes.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
 

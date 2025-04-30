@@ -3,6 +3,7 @@ package net.thedragonskull.vapemod.capability;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.energy.IEnergyStorage;
+import net.thedragonskull.vapemod.component.ModDataComponentTypes;
 
 public class VapeEnergy implements IEnergyStorage {
 
@@ -44,15 +45,7 @@ public class VapeEnergy implements IEnergyStorage {
         return true;
     }
 
-    public static void setInt(ItemStack stack, String key, int value) {
-        CompoundCheck(stack);
-        stack.getTag().putInt(key, value);
-    }
-
-    public static void CompoundCheck(ItemStack stack) {
-        if (!stack.hasTag()) {
-            CompoundTag tag = new CompoundTag();
-            stack.setTag(tag);
-        }
+    public static void setInt(ItemStack stack, int value) {
+        stack.set(ModDataComponentTypes.ENERGY.get(), value);
     }
 }

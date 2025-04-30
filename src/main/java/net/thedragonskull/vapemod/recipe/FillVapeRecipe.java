@@ -2,6 +2,7 @@ package net.thedragonskull.vapemod.recipe;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -71,12 +72,14 @@ public class FillVapeRecipe extends CustomRecipe {
 
         ItemStack result = new ItemStack(vapeInput.getItem());
 
-        PotionUtils.setPotion(result, PotionUtils.getPotion(potionStack));
-        PotionUtils.setCustomEffects(result, PotionUtils.getCustomEffects(potionStack));
+        PotionContents contents = potionStack.get(DataComponents.POTION_CONTENTS);
+        if (contents != null) {
+            result.set(DataComponents.POTION_CONTENTS, contents);
+        }
 
         result.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
             if (cap instanceof VapeEnergy e) {
-                VapeEnergy.setInt(e.stack, "Energy", e.getMaxEnergyStored()); // ← max energy
+                VapeEnergy.setInt(e.stack, e.getMaxEnergyStored()); // ← max energy
             }
         });
 
