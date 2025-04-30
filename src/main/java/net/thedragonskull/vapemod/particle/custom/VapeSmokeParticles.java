@@ -1,19 +1,10 @@
 package net.thedragonskull.vapemod.particle.custom;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.*;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.particles.SimpleParticleType;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.alchemy.PotionUtils;
-import net.minecraft.world.item.alchemy.Potions;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.thedragonskull.vapemod.item.ModItems;
-import net.thedragonskull.vapemod.item.custom.Vape;
 
 public class VapeSmokeParticles extends TextureSheetParticle {
     private boolean hasColorGradient = false;

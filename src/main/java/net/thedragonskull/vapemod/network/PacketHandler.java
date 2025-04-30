@@ -8,7 +8,7 @@ import net.thedragonskull.vapemod.VapeMod;
 public class PacketHandler {
     private static final String PROTOCOL_VERSION = "1";
     public static final SimpleChannel INSTANCE = ChannelBuilder.named(
-            new ResourceLocation(VapeMod.MOD_ID, "main"))
+            ResourceLocation.fromNamespaceAndPath(VapeMod.MOD_ID, "main"))
             .serverAcceptedVersions((status, version) -> true)
             .clientAcceptedVersions((status, version) -> true)
             .networkProtocolVersion(1)
@@ -16,13 +16,13 @@ public class PacketHandler {
 
     public static void register() {
 
-        INSTANCE.messageBuilder(S2CResistanceSoundPacket.class, NetworkDirection.PLAY_TO_CLIENT.ordinal())
+        INSTANCE.messageBuilder(S2CResistanceSoundPacket.class, NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(S2CResistanceSoundPacket::encode)
                 .decoder(S2CResistanceSoundPacket::new)
                 .consumerMainThread(S2CResistanceSoundPacket::handle)
                 .add();
 
-        INSTANCE.messageBuilder(S2CStopResistanceSoundPacket.class, NetworkDirection.PLAY_TO_CLIENT.ordinal() + 1)
+        INSTANCE.messageBuilder(S2CStopResistanceSoundPacket.class, NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(S2CStopResistanceSoundPacket::encode)
                 .decoder(S2CStopResistanceSoundPacket::new)
                 .consumerMainThread(S2CStopResistanceSoundPacket::handle)

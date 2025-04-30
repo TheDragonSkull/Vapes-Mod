@@ -5,13 +5,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.block.ModBlocks;
-import net.thedragonskull.vapemod.capability.VapeEnergy;
 
 import java.util.List;
 

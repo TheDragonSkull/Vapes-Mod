@@ -1,13 +1,14 @@
 package net.thedragonskull.vapemod.recipe;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PotionItem;
-import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CustomRecipe;
@@ -42,8 +43,12 @@ public class ClearVapeRecipe extends CustomRecipe {
 
                 if (!hasEnergy) return false;
 
-            } else if (stack.getItem() instanceof PotionItem &&
-                    PotionUtils.getPotion(stack) == Potions.WATER) {
+            } else if (stack.getItem() instanceof PotionItem) {
+
+                PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
+                if (contents == null ||contents.potion().isEmpty() || !contents.potion().get().is(Potions.WATER)) {
+                    return false;
+                }
 
                 if (!waterBottle.isEmpty()) return false;
                 waterBottle = stack;
@@ -57,24 +62,26 @@ public class ClearVapeRecipe extends CustomRecipe {
     }
 
     @Override
-    public ItemStack assemble(CraftingContainer inv, RegistryAccess access) {
+    public ItemStack assemble(CraftingContainer inv, HolderLookup.Provider pRegistries) {
         ItemStack vapeInput = ItemStack.EMPTY;
+        PotionContents potionContents = null;
 
         for (int i = 0; i < inv.getContainerSize(); i++) {
             ItemStack stack = inv.getItem(i);
+
             if (stack.getItem() instanceof Vape) {
                 vapeInput = stack;
-                break;
+            } else if (stack.getItem() instanceof PotionItem) {
+                potionContents = stack.get(DataComponents.POTION_CONTENTS);
             }
         }
 
-        if (vapeInput.isEmpty()) return ItemStack.EMPTY;
+        if (vapeInput.isEmpty() || potionContents == null) return ItemStack.EMPTY;
 
         ItemStack result = vapeInput.copy();
         result.setCount(1);
 
-        PotionUtils.setPotion(result, Potions.EMPTY);
-        PotionUtils.setCustomEffects(result, java.util.List.of());
+        result.set(DataComponents.POTION_CONTENTS, potionContents);
 
         result.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
             if (storage instanceof VapeEnergy e) {
@@ -82,8 +89,7 @@ public class ClearVapeRecipe extends CustomRecipe {
             }
         });
 
-        return result;
-    }
+        return result;    }
 
     @Override
     public NonNullList<ItemStack> getRemainingItems(CraftingContainer container) {
@@ -91,15 +97,18 @@ public class ClearVapeRecipe extends CustomRecipe {
 
         for (int i = 0; i < container.getContainerSize(); i++) {
             ItemStack stack = container.getItem(i);
-            if (stack.getItem() instanceof PotionItem &&
-                    PotionUtils.getPotion(stack) == Potions.WATER) {
-                remaining.set(i, new ItemStack(Items.GLASS_BOTTLE));
+
+            if (stack.getItem() instanceof PotionItem) {
+                PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
+
+                if (contents != null && contents.potion().isPresent() && contents.potion().get() == Potions.WATER) {
+                    remaining.set(i, new ItemStack(Items.GLASS_BOTTLE));
+                }
             }
         }
 
         return remaining;
     }
-
 
     @Override
     public boolean canCraftInDimensions(int width, int height) {
