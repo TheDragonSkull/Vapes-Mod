@@ -24,8 +24,6 @@ minecraft {
 
     copyIdeResources = true
 
-    reobf = false
-
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     runs {
