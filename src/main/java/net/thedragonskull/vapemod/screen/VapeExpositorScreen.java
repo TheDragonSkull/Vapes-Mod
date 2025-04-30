@@ -11,7 +11,7 @@ import net.thedragonskull.vapemod.VapeMod;
 
 public class VapeExpositorScreen extends AbstractContainerScreen<VapeExpositorMenu> {
     private static final ResourceLocation TEXTURE =
-            new ResourceLocation(VapeMod.MOD_ID, "textures/gui/vape_expositor_screen.png");
+            ResourceLocation.fromNamespaceAndPath(VapeMod.MOD_ID, "textures/gui/vape_expositor_screen.png");
 
     public VapeExpositorScreen(VapeExpositorMenu pMenu, Inventory pPlayerInventory, Component pTitle) {
         super(pMenu, pPlayerInventory, pTitle);
