@@ -1,9 +1,11 @@
 package net.thedragonskull.vapemod.capability;
 
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.capabilities.AutoRegisterCapability;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.thedragonskull.vapemod.component.ModDataComponentTypes;
 
+@AutoRegisterCapability
 public class VapeEnergy implements IEnergyStorage {
 
     public ItemStack stack;

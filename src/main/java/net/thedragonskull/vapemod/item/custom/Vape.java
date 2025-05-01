@@ -202,7 +202,7 @@ public class Vape extends Item implements VapeEnergyContainer {
             return;
         }
 
-        if (player.getTicksUsingItem() >= getUseDuration(item) - 1) {
+        if (player.getTicksUsingItem() >= getUseDuration(item, livingEntity) - 1) {
             item.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
                 int energy = storage.getEnergyStored();
 
@@ -313,7 +313,7 @@ public class Vape extends Item implements VapeEnergyContainer {
     }
 
     @Override
-    public int getUseDuration(ItemStack stack) {
+    public int getUseDuration(ItemStack pStack, LivingEntity pEntity) {
         return 32;
     }
 
@@ -355,7 +355,7 @@ public class Vape extends Item implements VapeEnergyContainer {
 
                 if (player.getUseItem() == itemInHand && player.isUsingItem() && !player.isUnderWater()) {
                     float f = (float)player.getUseItemRemainingTicks() - partialTick + 1.0F;
-                    float f1 = f / (float)itemInHand.getUseDuration();
+                    float f1 = f / (float)itemInHand.getUseDuration(player);
                     float f3 = 1.0F - (float)Math.pow((double)f1, 27.0D);
 
                     pPoseStack.translate(i * -0.4F, 0.1F + equipProcess, 0.0F);
