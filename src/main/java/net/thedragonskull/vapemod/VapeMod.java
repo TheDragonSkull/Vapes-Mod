@@ -15,7 +15,6 @@ import net.thedragonskull.vapemod.sound.ModSounds;
 import net.thedragonskull.vapemod.villager.ModVillagers;
 import org.slf4j.Logger;
 
-// The value here should match an entry in the META-INF/mods.toml file
 @Mod(VapeMod.MOD_ID)
 public class VapeMod {
     public static final String MOD_ID = "vapemod";

@@ -4,7 +4,6 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.thedragonskull.vapemod.component.ModDataComponentTypes;
 
-@AutoRegisterCapability
 public class VapeEnergy implements IEnergyStorage {
 
     public ItemStack stack;

@@ -12,7 +12,7 @@ import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.item.custom.Vape;
 
@@ -41,9 +41,8 @@ public class FillVapeRecipe extends CustomRecipe {
                 if (!vape.isEmpty()) return false;
                 vape = stack;
 
-                boolean isEmpty = vape.getCapability(ForgeCapabilities.ENERGY)
-                        .map(storage -> storage.getEnergyStored() == 0)
-                        .orElse(false);
+                var cap = vape.getCapability(Capabilities.EnergyStorage.ITEM); //todo Optional?
+                boolean isEmpty = cap != null && cap.getEnergyStored() == 0;
 
                 if (!isEmpty) return false;
             } else {
@@ -77,11 +76,10 @@ public class FillVapeRecipe extends CustomRecipe {
             result.set(DataComponents.POTION_CONTENTS, contents);
         }
 
-        result.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
-            if (cap instanceof VapeEnergy e) {
-                VapeEnergy.setInt(e.stack, e.getMaxEnergyStored()); // ← max energy
-            }
-        });
+        var cap = result.getCapability(Capabilities.EnergyStorage.ITEM); //todo Optional?
+        if (cap instanceof VapeEnergy energy) {
+            VapeEnergy.setInt(energy.stack, energy.getMaxEnergyStored()); // ← max energy
+        }
 
         return result;
     }

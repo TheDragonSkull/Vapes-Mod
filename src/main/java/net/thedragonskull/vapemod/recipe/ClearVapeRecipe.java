@@ -2,9 +2,7 @@ package net.thedragonskull.vapemod.recipe;
 
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PotionItem;
@@ -15,7 +13,7 @@ import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.item.custom.Vape;
 
@@ -38,9 +36,8 @@ public class ClearVapeRecipe extends CustomRecipe {
                 if (!vape.isEmpty()) return false;
                 vape = stack;
 
-                boolean hasEnergy = vape.getCapability(ForgeCapabilities.ENERGY)
-                        .map(storage -> storage.getEnergyStored() > 0)
-                        .orElse(false);
+                var cap = vape.getCapability(Capabilities.EnergyStorage.ITEM); //todo Optional?
+                boolean hasEnergy = cap != null && cap.getEnergyStored() > 0;
 
                 if (!hasEnergy) return false;
 
@@ -84,11 +81,10 @@ public class ClearVapeRecipe extends CustomRecipe {
 
         result.set(DataComponents.POTION_CONTENTS, potionContents);
 
-        result.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
-            if (storage instanceof VapeEnergy e) {
-                VapeEnergy.setInt(e.stack, 0); // ← no energy
-            }
-        });
+        var cap = result.getCapability(Capabilities.EnergyStorage.ITEM); //todo Optional?
+        if (cap instanceof VapeEnergy energy) {
+            VapeEnergy.setInt(energy.stack, 0); // ← no energy
+        }
 
         return result;
     }
