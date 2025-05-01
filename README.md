@@ -20,6 +20,8 @@ Introducing a new way to manage potion effects by using vapes of various colors.
 - Vapes - A new item that lets you vape the Minecraft potions, literally.
 - Vape Shopkeeper - A new NPC that sells colored vapes.
 
+- For more info visit the mod [Wiki](https://github.com/TheDragonSkull/Vapes-Mod/wiki).
+
  You can comment on your ideas and maybe I'll end up including them in the mod.     
  If you find bugs please report so I can try to fix them.
 
