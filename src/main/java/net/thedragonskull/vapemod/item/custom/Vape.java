@@ -29,12 +29,8 @@ import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.client.extensions.common.IClientItemExtensions;
-import net.minecraftforge.common.capabilities.*;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.energy.EnergyStorage;
-import net.minecraftforge.energy.IEnergyStorage;
-import net.minecraftforge.network.PacketDistributor;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.capability.VapeEnergyContainer;
 import net.thedragonskull.vapemod.component.ModDataComponentTypes;
@@ -69,29 +65,14 @@ public class Vape extends Item implements VapeEnergyContainer {
         return stack;
     }
 
-    @Nullable
-    @Override
-    public ICapabilityProvider getCapabilityProvider(ItemStack stack) {
-        VapeEnergyContainer container = this;
-
-        return new ICapabilityProvider() {
-            @Override
-            public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
-                if (cap == ForgeCapabilities.ENERGY) {
-                    return LazyOptional.of(() -> new VapeEnergy(stack, container)).cast();
-                }
-                return LazyOptional.empty();
-            }
-        };
-    }
-
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, tooltip, flag);
 
-        stack.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
-            int energy = storage.getEnergyStored();
-            int max = storage.getMaxEnergyStored();
+        var cap = stack.getCapability(Capabilities.EnergyStorage.ITEM, null);  //todo Optional?
+        if (cap != null) {
+            int energy = cap.getEnergyStored();
+            int max = cap.getMaxEnergyStored();
             int percent = Math.round(((float) energy / max) * 100);
 
             float ratio = (float) energy / max;
@@ -124,7 +105,7 @@ public class Vape extends Item implements VapeEnergyContainer {
             } else {
                 tooltip.add(Component.literal("No Effects").withStyle(ChatFormatting.GRAY));
             }
-        });
+        }
     }
 
     private String formatDuration(int ticks) {
@@ -160,10 +141,8 @@ public class Vape extends Item implements VapeEnergyContainer {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack item = player.getItemInHand(hand);
         Minecraft minecraft = Minecraft.getInstance();
-
-        boolean hasEnergy = item.getCapability(ForgeCapabilities.ENERGY)
-                .map(energy -> energy.getEnergyStored() > 0)
-                .orElse(false);
+        var cap = item.getCapability(Capabilities.EnergyStorage.ITEM, null);  //todo Optional?
+        boolean hasEnergy = cap != null && cap.getEnergyStored() > 0;
 
         if (!hasEnergy) {
             if (level.isClientSide) {
@@ -203,15 +182,17 @@ public class Vape extends Item implements VapeEnergyContainer {
         }
 
         if (player.getTicksUsingItem() >= getUseDuration(item, livingEntity) - 1) {
-            item.getCapability(ForgeCapabilities.ENERGY).ifPresent(storage -> {
-                int energy = storage.getEnergyStored();
+            var cap = item.getCapability(Capabilities.EnergyStorage.ITEM, null);  //todo Optional?
+
+            if (cap != null) {
+                int energy = cap.getEnergyStored();
 
                 if (energy > 0) {
                     for (MobEffectInstance effect : item.get(DataComponents.POTION_CONTENTS).potion().get().value().getEffects()) {
                         if (effect.getEffect().value().isInstantenous()) {
                             effect.getEffect().value().applyInstantenousEffect(player, player, player, effect.getAmplifier(), 1.0);
                         } else {
-                            int duration = (int)(effect.getDuration() / storage.getMaxEnergyStored());
+                            int duration = (int)(effect.getDuration() / cap.getMaxEnergyStored());
                             int amplifier = effect.getAmplifier();
                             player.addEffect(new MobEffectInstance(effect.getEffect(), duration, amplifier, false, true));
                         }
@@ -220,7 +201,7 @@ public class Vape extends Item implements VapeEnergyContainer {
                     player.getCooldowns().addCooldown(this, 100);
 
                     if (!player.getAbilities().instabuild) {
-                        storage.extractEnergy(1, false);
+                        cap.extractEnergy(1, false);
                     }
 
                     if (level.isClientSide) {
@@ -233,7 +214,7 @@ public class Vape extends Item implements VapeEnergyContainer {
                                 ModSounds.SMOKING_BREATHE_OUT.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
                     }
                 }
-            });
+            }
         }
 
     }

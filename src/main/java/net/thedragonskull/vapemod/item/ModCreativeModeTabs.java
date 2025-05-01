@@ -23,18 +23,18 @@ public class ModCreativeModeTabs {
                     .title(Component.translatable("creativetab.vaping_tab"))
                     .displayItems((pParameters, pOutput) -> {
 
-                        List<RegistryObject<Item>> allVapes = List.of(
-                                ModItems.VAPE,
-                                ModItems.VAPE_RED,
-                                ModItems.VAPE_YELLOW,
-                                ModItems.VAPE_BLUE,
-                                ModItems.VAPE_RAINBOW,
-                                ModItems.VAPE_METAL,
-                                ModItems.VAPE_STEEL
+                        List<Item> allVapes = List.of(
+                                ModItems.VAPE.get(),
+                                ModItems.VAPE_RED.get(),
+                                ModItems.VAPE_YELLOW.get(),
+                                ModItems.VAPE_BLUE.get(),
+                                ModItems.VAPE_RAINBOW.get(),
+                                ModItems.VAPE_METAL.get(),
+                                ModItems.VAPE_STEEL.get()
                         );
 
-                        for (RegistryObject<Item> vape : allVapes) {
-                            ItemStack vapeStack = new ItemStack(vape.get());
+                        for (Item vape : allVapes) {
+                            ItemStack vapeStack = new ItemStack(vape);
                             pOutput.accept(vapeStack);
                         }
 

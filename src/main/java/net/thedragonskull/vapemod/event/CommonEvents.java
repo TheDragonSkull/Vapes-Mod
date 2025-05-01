@@ -1,6 +1,7 @@
 package net.thedragonskull.vapemod.event;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.npc.VillagerTrades;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -26,7 +27,7 @@ public class CommonEvents {
         if (event.getType() == ModVillagers.VAPE_SHOPKEEPER.get()) {
             Int2ObjectMap<List<VillagerTrades.ItemListing>> trades = event.getTrades();
 
-            for (Item item : ForgeRegistries.ITEMS.getValues()) {
+            for (Item item : BuiltInRegistries.ITEM) { //todo: es correcto?
                 if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)
                         && item != ModItems.VAPE_RAINBOW.get()) {
 
@@ -61,7 +62,7 @@ public class CommonEvents {
         List<VillagerTrades.ItemListing> genericTrades = event.getGenericTrades();
         List<VillagerTrades.ItemListing> rareTrades = event.getRareTrades();
 
-        for (Item item : ForgeRegistries.ITEMS.getValues()) {
+        for (Item item : BuiltInRegistries.ITEM) {
             if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)
                     && item != ModItems.VAPE_RAINBOW.get()) {
 

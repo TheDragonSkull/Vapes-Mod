@@ -1,11 +1,10 @@
 package net.thedragonskull.vapemod.event;
 
-import net.minecraft.client.gui.screens.MenuScreens;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.block.entity.ModBlockEntities;
@@ -19,10 +18,8 @@ import net.thedragonskull.vapemod.screen.VapeExpositorScreen;
 public class ClientModEvents {
 
     @SubscribeEvent
-    public static void clientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(() -> {
-            MenuScreens.register(ModMenuTypes.VAPE_EXPOSITOR_MENU.get(), VapeExpositorScreen::new);
-        });
+    public static void registerScreens(RegisterMenuScreensEvent event) {
+        event.register(ModMenuTypes.VAPE_EXPOSITOR_MENU.get(), VapeExpositorScreen::new);
     }
 
     @SubscribeEvent
