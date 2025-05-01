@@ -1,12 +1,12 @@
 package net.thedragonskull.vapemod.event;
 
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.EntityRenderersEvent;
-import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.block.entity.ModBlockEntities;
 import net.thedragonskull.vapemod.block.entity.renderer.VapeExpositorBERenderer;
@@ -15,7 +15,7 @@ import net.thedragonskull.vapemod.particle.custom.VapeSmokeParticles;
 import net.thedragonskull.vapemod.screen.ModMenuTypes;
 import net.thedragonskull.vapemod.screen.VapeExpositorScreen;
 
-@Mod.EventBusSubscriber(modid = VapeMod.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = VapeMod.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ClientModEvents {
 
     @SubscribeEvent

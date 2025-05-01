@@ -1,31 +1,32 @@
 package net.thedragonskull.vapemod.sound;
 
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredRegister;
 import net.thedragonskull.vapemod.VapeMod;
+
+import java.util.function.Supplier;
 
 public class ModSounds {
     public static final DeferredRegister<SoundEvent> SOUND_EVENTS =
-            DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, VapeMod.MOD_ID);
+            DeferredRegister.create(Registries.SOUND_EVENT, VapeMod.MOD_ID);
 
-    private static RegistryObject<SoundEvent> registerSoundEvents(String name) {
+    private static Supplier<SoundEvent> registerSoundEvents(String name) {
         return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(VapeMod.MOD_ID, name)));
     }
 
-    public static final RegistryObject<SoundEvent> VAPE_RESISTANCE =
+    public static final Supplier<SoundEvent> VAPE_RESISTANCE =
             registerSoundEvents("vape_resistance");
 
-    public static final RegistryObject<SoundEvent> VAPE_RESISTANCE_END =
+    public static final Supplier<SoundEvent> VAPE_RESISTANCE_END =
             registerSoundEvents("vape_resistance_end");
 
-    public static final RegistryObject<SoundEvent> SMOKING_BREATHE_SOUND =
+    public static final Supplier<SoundEvent> SMOKING_BREATHE_SOUND =
             registerSoundEvents("smoking_breathe_sound");
 
-    public static final RegistryObject<SoundEvent> SMOKING_BREATHE_OUT =
+    public static final Supplier<SoundEvent> SMOKING_BREATHE_OUT =
             registerSoundEvents("smoking_breathe_out");
 
     public static void register(IEventBus eventBus) {

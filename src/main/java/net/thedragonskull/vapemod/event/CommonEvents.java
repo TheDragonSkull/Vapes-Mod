@@ -7,11 +7,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
-import net.minecraftforge.event.village.VillagerTradesEvent;
-import net.minecraftforge.event.village.WandererTradesEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.village.VillagerTradesEvent;
+import net.neoforged.neoforge.event.village.WandererTradesEvent;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.item.ModItems;
 import net.thedragonskull.vapemod.util.ModTags;
@@ -19,7 +18,7 @@ import net.thedragonskull.vapemod.villager.ModVillagers;
 
 import java.util.List;
 
-@Mod.EventBusSubscriber(modid = VapeMod.MOD_ID)
+@EventBusSubscriber(modid = VapeMod.MOD_ID)
 public class CommonEvents {
 
     @SubscribeEvent

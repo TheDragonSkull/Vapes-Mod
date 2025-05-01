@@ -1,8 +1,7 @@
 package net.thedragonskull.vapemod.capability;
 
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.capabilities.AutoRegisterCapability;
-import net.minecraftforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.thedragonskull.vapemod.component.ModDataComponentTypes;
 
 @AutoRegisterCapability
