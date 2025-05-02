@@ -1,5 +1,6 @@
 package net.thedragonskull.vapemod.event;
 
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.neoforged.api.distmarker.Dist;

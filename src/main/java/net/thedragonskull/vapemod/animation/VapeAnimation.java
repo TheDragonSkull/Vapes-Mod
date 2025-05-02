@@ -9,11 +9,15 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.jetbrains.annotations.NotNull;
 
 public class VapeAnimation implements IClientItemExtensions {
-    public static final HumanoidModel.ArmPose VAPING_POSE = HumanoidModel.ArmPose.valueOf("VAPING_ARM_POSE");
+
+    @OnlyIn(Dist.CLIENT)
+    public static final HumanoidModel.ArmPose VAPING_POSE = HumanoidModel.ArmPose.valueOf("vaping");
 
     // Third Person
     @Override
