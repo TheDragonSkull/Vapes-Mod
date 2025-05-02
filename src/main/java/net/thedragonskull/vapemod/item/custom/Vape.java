@@ -137,7 +137,7 @@ public class Vape extends Item implements VapeEnergyContainer {
             return InteractionResultHolder.fail(item);
         }
 
-        if (hand == InteractionHand.MAIN_HAND || hasEnergy) {
+        if (hasEnergy) {
             player.startUsingItem(hand);
         } else {
             player.stopUsingItem();
@@ -187,9 +187,7 @@ public class Vape extends Item implements VapeEnergyContainer {
                         cap.extractEnergy(1, false);
                     }
 
-                    if (level.isClientSide) {
-                        smokeParticles(player);
-                    } else {
+                    if (!level.isClientSide) {
                         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                                 ModSounds.VAPE_RESISTANCE_END.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
 
@@ -219,12 +217,17 @@ public class Vape extends Item implements VapeEnergyContainer {
         if (entity instanceof Player player) {
             if (!level.isClientSide) {
                 PacketDistributor.sendToPlayersTrackingEntity(player, new S2CStopResistanceSoundPacket(player.getUUID())); //todo: funciona?
+                smokeParticles(player);
+
             } else {
                 ClientSoundHandler.stop(player);
+                smokeParticles(player);
             }
         }
         return super.finishUsingItem(stack, level, entity);
     }
+
+
 
     public void smokeParticles(Player player) {
         new Timer().schedule(new TimerTask() {
@@ -232,18 +235,24 @@ public class Vape extends Item implements VapeEnergyContainer {
             public void run() {
                 Minecraft.getInstance().execute(() -> {
 
-                    ItemStack stack = player.getMainHandItem();
+                    ItemStack stack = ItemStack.EMPTY;
+
+                    if (player.getMainHandItem().getItem() instanceof Vape) {
+                        stack = player.getMainHandItem();
+                    } else if (player.getOffhandItem().getItem() instanceof Vape) {
+                        stack = player.getOffhandItem();
+                    }
+
                     int red = 255, green = 255, blue = 255;
 
-                    if (stack.getItem() instanceof Vape) {
-                        PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
-                        if (!(contents.potion().get() == Potions.WATER)) {
-                            int potionColor = stack.get(DataComponents.POTION_CONTENTS).getColor();
-                            red = (potionColor >> 16) & 0xFF;
-                            green = (potionColor >> 8) & 0xFF;
-                            blue = potionColor & 0xFF;
-                        }
+                    PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
+                    if (!(contents.potion().get() == Potions.WATER)) {
+                        int potionColor = stack.get(DataComponents.POTION_CONTENTS).getColor();
+                        red = (potionColor >> 16) & 0xFF;
+                        green = (potionColor >> 8) & 0xFF;
+                        blue = potionColor & 0xFF;
                     }
+
 
                     for (int i = 0; i < 10; i++) {
                         double distance = -0.5D;

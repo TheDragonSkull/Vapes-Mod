@@ -22,9 +22,9 @@ public class VapePoseParams {
             armPart.yRot = (float) Math.toRadians(-30);
             armPart.zRot = (float) Math.toRadians(20);
         } else {
-            armPart.xRot = (float) Math.toRadians(-30);
-            armPart.yRot = (float) Math.toRadians(-10);
-            armPart.zRot = (float) Math.toRadians(-15);
+            armPart.xRot = (float) Math.toRadians(-90);
+            armPart.yRot = (float) Math.toRadians(30);
+            armPart.zRot = (float) Math.toRadians(-20);
         }
     }
 }

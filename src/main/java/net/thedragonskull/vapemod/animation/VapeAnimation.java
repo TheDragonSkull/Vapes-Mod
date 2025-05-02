@@ -40,13 +40,12 @@ public class VapeAnimation implements IClientItemExtensions {
 
         int i = usingArm == HumanoidArm.RIGHT ? 1 : -1;
 
-        pPoseStack.translate(i * 0.5F, -0.52F, -0.72F);
-
         if (player.isUsingItem() && player.getUseItemRemainingTicks() > 0 && usingArm == arm && itemInHand.getUseAnimation() == VAPING_ANIMATION && !player.isUnderWater()) {
             float f = (float)player.getUseItemRemainingTicks() - partialTick + 1.0F;
             float f1 = f / (float)itemInHand.getUseDuration(player);
             float f3 = 1.0F - (float)Math.pow(f1, 27.0D);
 
+            pPoseStack.translate(i * 0.5F, -0.52F, -0.72F);
             pPoseStack.translate(i * -0.4F, 0.1F + equipProcess, 0.0F);
 
             pPoseStack.mulPose(Axis.YP.rotationDegrees(i * f3 * 45.0F));
@@ -54,13 +53,6 @@ public class VapeAnimation implements IClientItemExtensions {
             pPoseStack.mulPose(Axis.ZP.rotationDegrees(i * f3 * 30.0F));
         } else {
             pPoseStack.translate(i * -0.0F, 0.0F + equipProcess * -0.6F, -0.0F);
-
-            float f = Mth.sin(swingProcess * swingProcess * (float)Math.PI);
-            pPoseStack.mulPose(Axis.YP.rotationDegrees((float)i * (45.0F + f * -20.0F)));
-            float f1 = Mth.sin(Mth.sqrt(swingProcess) * (float)Math.PI);
-            pPoseStack.mulPose(Axis.ZP.rotationDegrees(i * f1 * -20.0F));
-            pPoseStack.mulPose(Axis.XP.rotationDegrees(f1 * -80.0F));
-            pPoseStack.mulPose(Axis.YP.rotationDegrees((float)i * -5.0F));
         }
 
         return false;
