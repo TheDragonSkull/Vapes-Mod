@@ -6,9 +6,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.sounds.SoundEvents;
@@ -17,7 +15,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -31,17 +28,16 @@ import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
-import net.thedragonskull.vapemod.capability.VapeEnergy;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.thedragonskull.vapemod.capability.VapeEnergyContainer;
 import net.thedragonskull.vapemod.component.ModDataComponentTypes;
+import net.thedragonskull.vapemod.network.ClientPayloadHandler;
+import net.thedragonskull.vapemod.network.PayloadRegister;
 import net.thedragonskull.vapemod.network.S2CResistanceSoundPacket;
-import net.thedragonskull.vapemod.network.PacketHandler;
 import net.thedragonskull.vapemod.network.S2CStopResistanceSoundPacket;
 import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.sound.ClientSoundHandler;
 import net.thedragonskull.vapemod.sound.ModSounds;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Timer;
@@ -159,10 +155,8 @@ public class Vape extends Item implements VapeEnergyContainer {
         }
 
         if (!level.isClientSide) {
-            PacketHandler.INSTANCE.send(
-                    new S2CResistanceSoundPacket(player.getUUID()),
-                    PacketDistributor.TRACKING_ENTITY.with(player)
-            );
+            PacketDistributor.sendToPlayersTrackingEntity(player, new S2CResistanceSoundPacket(player.getUUID()));
+
         } else {
             ClientSoundHandler.start(player);
         }
@@ -224,7 +218,7 @@ public class Vape extends Item implements VapeEnergyContainer {
         if (!(entity instanceof Player player)) return;
 
         if (!level.isClientSide) {
-            PacketHandler.INSTANCE.send(
+            PayloadRegister.INSTANCE.send(
                     new S2CStopResistanceSoundPacket(player.getUUID()),
                     PacketDistributor.TRACKING_ENTITY.with(player)
             );
@@ -237,7 +231,7 @@ public class Vape extends Item implements VapeEnergyContainer {
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         if (entity instanceof Player player) {
             if (!level.isClientSide) {
-                PacketHandler.INSTANCE.send(
+                PayloadRegister.INSTANCE.send(
                         new S2CStopResistanceSoundPacket(player.getUUID()),
                         PacketDistributor.TRACKING_ENTITY.with(player)
                 );

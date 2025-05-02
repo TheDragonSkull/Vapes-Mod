@@ -11,14 +11,14 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.capability.VapeEnergyContainer;
-import net.thedragonskull.vapemod.network.PacketHandler;
+import net.thedragonskull.vapemod.network.PayloadRegister;
 
 @EventBusSubscriber(modid = VapeMod.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class CommonModEvents {
 
     @SubscribeEvent
     public static void commonSetup(FMLCommonSetupEvent event) {
-        event.enqueueWork(PacketHandler::register);
+        event.enqueueWork(PayloadRegister::register);
     }
 
     @SubscribeEvent
