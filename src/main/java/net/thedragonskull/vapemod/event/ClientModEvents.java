@@ -14,6 +14,7 @@ import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.animation.VapeAnimation;
 import net.thedragonskull.vapemod.block.entity.ModBlockEntities;
 import net.thedragonskull.vapemod.block.entity.renderer.VapeExpositorBERenderer;
+import net.thedragonskull.vapemod.item.ModItems;
 import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.particle.custom.VapeSmokeParticles;
 import net.thedragonskull.vapemod.screen.ModMenuTypes;
@@ -38,17 +39,22 @@ public class ClientModEvents {
         event.registerBlockEntityRenderer(ModBlockEntities.VAPE_EXPOSITOR_BE.get(), VapeExpositorBERenderer::new);
     }
 
-
     @SubscribeEvent
     public static void registerClientExtensions(RegisterClientExtensionsEvent event) {
-        for (Item item : BuiltInRegistries.ITEM) {
+
+        event.registerItem(
+                new VapeAnimation(),
+                ModItems.VAPE
+        );
+
+/*        for (Item item : BuiltInRegistries.ITEM) {
             if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)) {
                 event.registerItem(
                         new VapeAnimation(),
                         item
                 );
             }
-        }
+        }*/
     }
 
 

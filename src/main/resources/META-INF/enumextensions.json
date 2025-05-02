@@ -2,7 +2,7 @@
   "entries": [
     {
       "enum": "net/minecraft/client/model/HumanoidModel$ArmPose",
-      "name": "vapemod_vaping",
+      "name": "vapemod_arm_pose",
       "constructor": "(ZLnet/neoforged/neoforge/client/IArmPoseTransformer;)V",
       "parameters": {
         "class": "net/thedragonskull/vapemod/client/VapePoseParams",
