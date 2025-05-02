@@ -23,4 +23,14 @@ public class ClientPayloadHandler {
         }
     }
 
+    public void handleStopResistanceSound(final S2CStopResistanceSoundPacket data, final IPayloadContext ctx) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) return;
+
+        Player target = mc.level.getPlayerByUUID(data.playerId());
+        if (target != null) {
+            ClientSoundHandler.stop(target);
+        }
+    }
+
 }

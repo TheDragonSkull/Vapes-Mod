@@ -1,7 +1,5 @@
 package net.thedragonskull.vapemod.network;
 
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -21,6 +19,12 @@ public class PayloadRegister {
                 S2CResistanceSoundPacket.STREAM_CODEC,
                 ClientPayloadHandler.getInstance()::handleResistanceSound
                 );
+
+        registrar.playToClient(
+                S2CStopResistanceSoundPacket.TYPE,
+                S2CStopResistanceSoundPacket.STREAM_CODEC,
+                ClientPayloadHandler.getInstance()::handleStopResistanceSound
+        );
 
     }
 }

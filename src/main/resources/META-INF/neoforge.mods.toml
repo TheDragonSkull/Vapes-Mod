@@ -10,6 +10,7 @@ displayName="${mod_name}"
 description='''${mod_description}'''
 logoFile = "logo.png"
 authors="${mod_authors}"
+enumExtensions="META-INF/enumextensions.json"
 
 [[dependencies.${mod_id}]]
 modId="neoforge"

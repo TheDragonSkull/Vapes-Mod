@@ -1,38 +1,28 @@
 package net.thedragonskull.vapemod.network;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.network.CustomPayloadEvent;
-import net.thedragonskull.vapemod.sound.ClientSoundHandler;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.thedragonskull.vapemod.VapeMod;
 
 import java.util.UUID;
 
-public class S2CStopResistanceSoundPacket {
-    private final UUID playerId;
+public record S2CStopResistanceSoundPacket(UUID playerId) implements CustomPacketPayload {
 
-    public S2CStopResistanceSoundPacket(UUID playerId) {
-        this.playerId = playerId;
-    }
+    public static final CustomPacketPayload.Type<S2CStopResistanceSoundPacket> TYPE =
+            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(VapeMod.MOD_ID, "stop_resistance_sound_packet"));
 
-    public S2CStopResistanceSoundPacket(FriendlyByteBuf buf) {
-        this.playerId = buf.readUUID();
-    }
+    public static final StreamCodec<RegistryFriendlyByteBuf, S2CStopResistanceSoundPacket> STREAM_CODEC =
+            StreamCodec.composite(
+                    UUIDUtil.STREAM_CODEC,
+                    S2CStopResistanceSoundPacket::playerId,
+                    S2CStopResistanceSoundPacket::new);
 
-    public void encode(FriendlyByteBuf buf) {
-        buf.writeUUID(playerId);
-    }
-
-    public void handle(CustomPayloadEvent.Context context) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.level == null) return;
-
-        Player target = mc.level.getPlayerByUUID(this.playerId);
-        if (target != null) {
-            ClientSoundHandler.stop(target);
-        }
-
-        context.setPacketHandled(true);
+    @Override
+    public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 }
 
