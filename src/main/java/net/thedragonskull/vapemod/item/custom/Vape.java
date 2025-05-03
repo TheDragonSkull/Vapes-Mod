@@ -3,10 +3,15 @@ package net.thedragonskull.vapemod.item.custom;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -22,17 +27,18 @@ import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.network.PacketDistributor;
+import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.capability.VapeEnergyContainer;
 import net.thedragonskull.vapemod.component.ModDataComponentTypes;
 import net.thedragonskull.vapemod.network.S2CResistanceSoundPacket;
 import net.thedragonskull.vapemod.network.S2CStopResistanceSoundPacket;
+import net.thedragonskull.vapemod.network.S2CVapeParticlesPacket;
 import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.sound.ClientSoundHandler;
 import net.thedragonskull.vapemod.sound.ModSounds;
+import net.thedragonskull.vapemod.util.ModTags;
 
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import static org.joml.Math.clamp;
 
@@ -126,7 +132,16 @@ public class Vape extends Item implements VapeEnergyContainer {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack item = player.getItemInHand(hand);
-        Minecraft minecraft = Minecraft.getInstance();
+
+        for (InteractionHand h : InteractionHand.values()) {
+            ItemStack held = player.getItemInHand(h);
+            if (held.getItem() instanceof Vape vape) {
+                if (player.getCooldowns().isOnCooldown(held.getItem())) {
+                    return InteractionResultHolder.fail(item);
+                }
+            }
+        }
+
         var cap = item.getCapability(Capabilities.EnergyStorage.ITEM, null);  //todo Optional?
         boolean hasEnergy = cap != null && cap.getEnergyStored() > 0;
 
@@ -165,7 +180,7 @@ public class Vape extends Item implements VapeEnergyContainer {
         }
 
         if (player.getTicksUsingItem() >= getUseDuration(item, livingEntity) - 1) {
-            var cap = item.getCapability(Capabilities.EnergyStorage.ITEM, null);  //todo Optional?
+            var cap = item.getCapability(Capabilities.EnergyStorage.ITEM, null);
 
             if (cap != null) {
                 int energy = cap.getEnergyStored();
@@ -181,7 +196,35 @@ public class Vape extends Item implements VapeEnergyContainer {
                         }
                     }
 
-                    player.getCooldowns().addCooldown(this, 100);
+                    // Cooldowns
+                    Set<Item> cooldownItems = new HashSet<>();
+                    for (ItemStack stack : player.getInventory().items) {
+                        if (stack.getItem() instanceof Vape) {
+                            cooldownItems.add(stack.getItem());
+                        }
+                    }
+
+                    for (ItemStack handStack : List.of(player.getMainHandItem(), player.getOffhandItem())) {
+                        if (handStack.getItem() instanceof Vape) {
+                            cooldownItems.add(handStack.getItem());
+                        }
+                    }
+
+                    for (Item itemToCooldown : cooldownItems) {
+                        player.getCooldowns().addCooldown(itemToCooldown, 100);
+                    }
+
+                    int color = 0xFFFFFF;
+                    PotionContents contents = item.get(DataComponents.POTION_CONTENTS);
+                    if (contents != null && contents.potion().isPresent() && contents.potion().get() != Potions.WATER) {
+                        color = contents.getColor();
+                    }
+
+                    if (player instanceof ServerPlayer serverPlayer) {
+                        PacketDistributor.sendToPlayersTrackingEntity(player, new S2CVapeParticlesPacket(player.getUUID(), color));
+                    } else {
+                        smokeParticles(player);
+                    }
 
                     if (!player.getAbilities().instabuild) {
                         cap.extractEnergy(1, false);
@@ -217,11 +260,9 @@ public class Vape extends Item implements VapeEnergyContainer {
         if (entity instanceof Player player) {
             if (!level.isClientSide) {
                 PacketDistributor.sendToPlayersTrackingEntity(player, new S2CStopResistanceSoundPacket(player.getUUID())); //todo: funciona?
-                smokeParticles(player);
 
             } else {
                 ClientSoundHandler.stop(player);
-                smokeParticles(player);
             }
         }
         return super.finishUsingItem(stack, level, entity);
@@ -230,49 +271,41 @@ public class Vape extends Item implements VapeEnergyContainer {
 
 
     public void smokeParticles(Player player) {
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Minecraft.getInstance().execute(() -> {
+        ItemStack stack = ItemStack.EMPTY;
 
-                    ItemStack stack = ItemStack.EMPTY;
+        if (player.getMainHandItem().getItem() instanceof Vape) {
+            stack = player.getMainHandItem();
+        } else if (player.getOffhandItem().getItem() instanceof Vape) {
+            stack = player.getOffhandItem();
+        }
 
-                    if (player.getMainHandItem().getItem() instanceof Vape) {
-                        stack = player.getMainHandItem();
-                    } else if (player.getOffhandItem().getItem() instanceof Vape) {
-                        stack = player.getOffhandItem();
-                    }
+        int red = 255, green = 255, blue = 255;
 
-                    int red = 255, green = 255, blue = 255;
-
-                    PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
-                    if (!(contents.potion().get() == Potions.WATER)) {
-                        int potionColor = stack.get(DataComponents.POTION_CONTENTS).getColor();
-                        red = (potionColor >> 16) & 0xFF;
-                        green = (potionColor >> 8) & 0xFF;
-                        blue = potionColor & 0xFF;
-                    }
+        PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
+        if (!(contents.potion().get() == Potions.WATER)) {
+            int potionColor = stack.get(DataComponents.POTION_CONTENTS).getColor();
+            red = (potionColor >> 16) & 0xFF;
+            green = (potionColor >> 8) & 0xFF;
+            blue = potionColor & 0xFF;
+        }
 
 
-                    for (int i = 0; i < 10; i++) {
-                        double distance = -0.5D;
-                        double horizontalAngle = Math.toRadians(player.getYRot());
-                        double verticalAngle = Math.toRadians(player.getXRot());
-                        double xOffset = distance * Math.sin(horizontalAngle) * Math.cos(verticalAngle);
-                        double yOffset = distance * Math.sin(verticalAngle);
-                        double zOffset = -distance * Math.cos(horizontalAngle) * Math.cos(verticalAngle);
-                        double x = player.getX() + xOffset;
-                        double y = player.getEyeY() + yOffset;
-                        double z = player.getZ() + zOffset;
+        for (int i = 0; i < 10; i++) {
+            double distance = -0.5D;
+            double horizontalAngle = Math.toRadians(player.getYRot());
+            double verticalAngle = Math.toRadians(player.getXRot());
+            double xOffset = distance * Math.sin(horizontalAngle) * Math.cos(verticalAngle);
+            double yOffset = distance * Math.sin(verticalAngle);
+            double zOffset = -distance * Math.cos(horizontalAngle) * Math.cos(verticalAngle);
+            double x = player.getX() + xOffset;
+            double y = player.getEyeY() + yOffset;
+            double z = player.getZ() + zOffset;
 
-                        player.level().addParticle(ModParticles.VAPE_SMOKE_PARTICLES.get(),
-                                x, y, z,
-                                red / 255.0D, green / 255.0D, blue / 255.0D
-                        );
-                    }
-                });
-            }
-        }, 300);
+            player.level().addParticle(ModParticles.VAPE_SMOKE_PARTICLES.get(),
+                    x, y, z,
+                    red / 255.0D, green / 255.0D, blue / 255.0D
+            );
+        }
     }
 
     @Override

@@ -26,5 +26,11 @@ public class PayloadRegister {
                 ClientPayloadHandler.getInstance()::handleStopResistanceSound
         );
 
+        registrar.playToClient(
+                S2CVapeParticlesPacket.TYPE,
+                S2CVapeParticlesPacket.STREAM_CODEC,
+                ClientPayloadHandler.getInstance()::handleVapeParticles
+        );
+
     }
 }
