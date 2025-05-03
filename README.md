@@ -32,3 +32,7 @@ Introducing a new way to manage potion effects by using vapes of various colors.
 **Forge**
 
 - [Minecraft Forge](https://files.minecraftforge.net/net/minecraftforge/forge/)
+
+**NeoForge**
+
+- [NeoForge](https://projects.neoforged.net/neoforged/neoforge)
