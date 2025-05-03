@@ -61,7 +61,7 @@ public class Vape extends Item implements VapeEnergyContainer {
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, tooltip, flag);
 
-        var cap = stack.getCapability(Capabilities.EnergyStorage.ITEM, null);  //todo Optional?
+        var cap = stack.getCapability(Capabilities.EnergyStorage.ITEM, null);
         if (cap != null) {
             int energy = cap.getEnergyStored();
             int max = cap.getMaxEnergyStored();
@@ -142,7 +142,7 @@ public class Vape extends Item implements VapeEnergyContainer {
             }
         }
 
-        var cap = item.getCapability(Capabilities.EnergyStorage.ITEM, null);  //todo Optional?
+        var cap = item.getCapability(Capabilities.EnergyStorage.ITEM, null);
         boolean hasEnergy = cap != null && cap.getEnergyStored() > 0;
 
         if (!hasEnergy) {
@@ -160,7 +160,7 @@ public class Vape extends Item implements VapeEnergyContainer {
         }
 
         if (!level.isClientSide) {
-            PacketDistributor.sendToPlayersTrackingEntity(player, new S2CResistanceSoundPacket(player.getUUID())); //todo: funciona?
+            PacketDistributor.sendToPlayersTrackingEntity(player, new S2CResistanceSoundPacket(player.getUUID()));
         } else {
             ClientSoundHandler.start(player);
         }
@@ -248,7 +248,7 @@ public class Vape extends Item implements VapeEnergyContainer {
         if (!(entity instanceof Player player)) return;
 
         if (!level.isClientSide) {
-            PacketDistributor.sendToPlayersTrackingEntity(player, new S2CStopResistanceSoundPacket(player.getUUID())); //todo: funciona?
+            PacketDistributor.sendToPlayersTrackingEntity(player, new S2CStopResistanceSoundPacket(player.getUUID()));
 
         } else {
             ClientSoundHandler.stop(player);
@@ -259,7 +259,7 @@ public class Vape extends Item implements VapeEnergyContainer {
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         if (entity instanceof Player player) {
             if (!level.isClientSide) {
-                PacketDistributor.sendToPlayersTrackingEntity(player, new S2CStopResistanceSoundPacket(player.getUUID())); //todo: funciona?
+                PacketDistributor.sendToPlayersTrackingEntity(player, new S2CStopResistanceSoundPacket(player.getUUID()));
 
             } else {
                 ClientSoundHandler.stop(player);

@@ -27,9 +27,9 @@ public class CommonEvents {
         if (event.getType() == ModVillagers.VAPE_SHOPKEEPER.get()) {
             Int2ObjectMap<List<VillagerTrades.ItemListing>> trades = event.getTrades();
 
-            for (Item item : BuiltInRegistries.ITEM) { //todo: es correcto?
+            for (Item item : BuiltInRegistries.ITEM) {
                 if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)
-                        && item != ModItems.VAPE_RAINBOW.get()) {
+                        && item != ModItems.VAPE_RAINBOW.get()) { //todo: basic
 
                     trades.get(1).add((pTrader, pRandom) -> {
                         ItemStack vape = new ItemStack(item);

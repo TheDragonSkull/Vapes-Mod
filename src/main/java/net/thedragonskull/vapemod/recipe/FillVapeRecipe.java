@@ -41,7 +41,7 @@ public class FillVapeRecipe extends CustomRecipe {
                 if (!vape.isEmpty()) return false;
                 vape = stack;
 
-                var cap = vape.getCapability(Capabilities.EnergyStorage.ITEM); //todo Optional?
+                var cap = vape.getCapability(Capabilities.EnergyStorage.ITEM);
                 boolean isEmpty = cap != null && cap.getEnergyStored() == 0;
 
                 if (!isEmpty) return false;
@@ -76,7 +76,7 @@ public class FillVapeRecipe extends CustomRecipe {
             result.set(DataComponents.POTION_CONTENTS, contents);
         }
 
-        var cap = result.getCapability(Capabilities.EnergyStorage.ITEM); //todo Optional?
+        var cap = result.getCapability(Capabilities.EnergyStorage.ITEM);
         if (cap instanceof VapeEnergy energy) {
             VapeEnergy.setInt(energy.stack, energy.getMaxEnergyStored()); // ← max energy
         }
