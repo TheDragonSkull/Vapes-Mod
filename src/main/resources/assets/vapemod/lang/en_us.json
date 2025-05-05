@@ -13,5 +13,9 @@
 
   "creativetab.vaping_tab": "Vaping Stuff",
 
+  "vapemod.update.title": "A new version of Vape Mod is available!",
+  "vapemod.update.message": "Your version: %s\nLatest version: %s",
+  "vapemod.update.button.close": "Close",
+
   "message.vapemod.cant_smoke_underwater": "You cant vape under the water!"
 }
