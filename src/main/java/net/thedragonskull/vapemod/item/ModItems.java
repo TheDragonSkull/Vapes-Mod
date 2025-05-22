@@ -41,7 +41,9 @@ public class ModItems {
     // DISPOSABLE VAPES
 
     public static final RegistryObject<Item> D_VAPE = ITEMS.register("d_vape",
-            () -> new DisposableVape(DyeColor.BLACK ,new Item.Properties().stacksTo(1)));
+            () -> new DisposableVape(DyeColor.ORANGE ,new Item.Properties().stacksTo(1)));
+
+
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
