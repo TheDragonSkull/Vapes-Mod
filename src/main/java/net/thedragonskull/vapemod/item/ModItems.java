@@ -10,13 +10,15 @@ import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.item.custom.DisposableVape;
 import net.thedragonskull.vapemod.item.custom.Vape;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 public class ModItems {
 
     public static final DeferredRegister<Item> ITEMS =
             DeferredRegister.create(ForgeRegistries.ITEMS, VapeMod.MOD_ID);
 
     // BASIC VAPES
-
     public static final RegistryObject<Item> VAPE_STEEL = ITEMS.register("vape_steel",
             () -> new Vape(new Item.Properties().stacksTo(1)));
 
@@ -39,9 +41,16 @@ public class ModItems {
             () -> new Vape(new Item.Properties().stacksTo(1)));
 
     // DISPOSABLE VAPES
+    public static final Map<DyeColor, RegistryObject<Item>> D_VAPES = new EnumMap<>(DyeColor.class);
 
-    public static final RegistryObject<Item> D_VAPE = ITEMS.register("d_vape",
-            () -> new DisposableVape(DyeColor.ORANGE ,new Item.Properties().stacksTo(1)));
+    static {
+        for (DyeColor dyeColor : DyeColor.values()) {
+            String name = "d_vape_" + dyeColor.getName();
+            RegistryObject<Item> item = ITEMS.register(name,
+                    () -> new DisposableVape(dyeColor, new Item.Properties().stacksTo(1)));
+            D_VAPES.put(dyeColor, item);
+        }
+    }
 
 
 

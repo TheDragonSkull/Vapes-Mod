@@ -27,8 +27,6 @@ public class DisposableVape extends Item {
         return dyeColor;
     }
 
-
-
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
         consumer.accept(new IClientItemExtensions() {

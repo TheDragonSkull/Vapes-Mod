@@ -36,11 +36,13 @@ public class ModCreativeModeTabs {
                                 ModItems.VAPE_STEEL
                         );
 
-                        pOutput.accept(ModItems.D_VAPE.get());
-
                         for (RegistryObject<Item> vape : allVapes) {
                             ItemStack vapeStack = new ItemStack(vape.get());
                             pOutput.accept(vapeStack);
+                        }
+
+                        for (RegistryObject<Item> vape : ModItems.D_VAPES.values()) {
+                            pOutput.accept(new ItemStack(vape.get()));
                         }
 
                     })
