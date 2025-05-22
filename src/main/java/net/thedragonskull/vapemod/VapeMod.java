@@ -19,6 +19,7 @@ import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.recipe.ModRecipes;
 import net.thedragonskull.vapemod.screen.ModMenuTypes;
 import net.thedragonskull.vapemod.sound.ModSounds;
+import net.thedragonskull.vapemod.util.DisposableVapesColors;
 import net.thedragonskull.vapemod.villager.ModVillagers;
 import org.slf4j.Logger;
 
@@ -65,7 +66,7 @@ public class VapeMod {
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
-
+            DisposableVapesColors.register();
         }
     }
 }

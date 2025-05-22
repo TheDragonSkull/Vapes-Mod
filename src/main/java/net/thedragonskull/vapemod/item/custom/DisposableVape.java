@@ -2,10 +2,8 @@ package net.thedragonskull.vapemod.item.custom;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
@@ -14,7 +12,6 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
-import net.thedragonskull.vapemod.item.custom.renderer.DisposableVapeRenderer;
 
 import java.util.function.Consumer;
 
@@ -30,17 +27,11 @@ public class DisposableVape extends Item {
         return dyeColor;
     }
 
+
+
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
         consumer.accept(new IClientItemExtensions() {
-
-            @Override
-            public BlockEntityWithoutLevelRenderer getCustomRenderer() {
-                return new DisposableVapeRenderer(
-                        Minecraft.getInstance().getBlockEntityRenderDispatcher(),
-                        Minecraft.getInstance().getEntityModels()
-                );
-            }
 
             private static final HumanoidModel.ArmPose VAPING = HumanoidModel.ArmPose.create("vaping", false, (model, entity, arm) -> {
                 if (!entity.isUnderWater()) {
