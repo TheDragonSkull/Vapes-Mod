@@ -9,7 +9,7 @@ import net.thedragonskull.vapemod.VapeMod;
 public class ModTags {
 
     public static class Items {
-        public static final TagKey<Item> VAPES = TagKey.create(Registries.ITEM, new ResourceLocation(VapeMod.MOD_ID, "vapes"));
+        public static final TagKey<Item> VAPES = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(VapeMod.MOD_ID, "vapes"));
     }
 
 }

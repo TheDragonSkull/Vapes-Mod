@@ -22,7 +22,7 @@ import java.util.List;
 public class VillageAddition {
 
     private static final ResourceKey<StructureProcessorList> EMPTY_PROCESSOR_LIST_KEY = ResourceKey.create(
-            Registries.PROCESSOR_LIST, new ResourceLocation("minecraft", "empty"));
+            Registries.PROCESSOR_LIST, ResourceLocation.fromNamespaceAndPath("minecraft", "empty"));
 
 
     private static void addBuildingToPool(Registry<StructureTemplatePool> templatePoolRegistry,
@@ -54,23 +54,23 @@ public class VillageAddition {
         Registry<StructureProcessorList> processorListRegistry = event.getServer().registryAccess().registry(Registries.PROCESSOR_LIST).orElseThrow();
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
-                new ResourceLocation("minecraft:village/plains/houses"),
+                ResourceLocation.parse("minecraft:village/plains/houses"),
                 "vapemod:vape_shop", 10);
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
-                new ResourceLocation("minecraft:village/snowy/houses"),
+                ResourceLocation.parse("minecraft:village/snowy/houses"),
                 "vapemod:vape_shop", 10);
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
-                new ResourceLocation("minecraft:village/savanna/houses"),
+                ResourceLocation.parse("minecraft:village/savanna/houses"),
                 "vapemod:vape_shop", 10);
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
-                new ResourceLocation("minecraft:village/taiga/houses"),
+                ResourceLocation.parse("minecraft:village/taiga/houses"),
                 "vapemod:vape_shop", 10);
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
-                new ResourceLocation("minecraft:village/desert/houses"),
+                ResourceLocation.parse("minecraft:village/desert/houses"),
                 "vapemod:vape_shop", 10);
     }
 
