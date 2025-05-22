@@ -24,6 +24,8 @@ public class ModCreativeModeTabs {
                     .title(Component.translatable("creativetab.vaping_tab"))
                     .displayItems((pParameters, pOutput) -> {
 
+                        pOutput.accept(ModBlocks.VAPE_EXPOSITOR.get());
+
                         List<RegistryObject<Item>> allVapes = List.of(
                                 ModItems.VAPE,
                                 ModItems.VAPE_RED,
@@ -39,7 +41,6 @@ public class ModCreativeModeTabs {
                             pOutput.accept(vapeStack);
                         }
 
-                        pOutput.accept(ModBlocks.VAPE_EXPOSITOR.get());
                     })
                     .build());
 

@@ -36,8 +36,7 @@ public class CommonEvents {
             Int2ObjectMap<List<VillagerTrades.ItemListing>> trades = event.getTrades();
 
             for (Item item : ForgeRegistries.ITEMS.getValues()) {
-                if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)
-                        && item != ModItems.VAPE_RAINBOW.get()) {
+                if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)) {
 
                     trades.get(1).add((pTrader, pRandom) -> {
                         ItemStack vape = new ItemStack(item);
@@ -51,17 +50,6 @@ public class CommonEvents {
                 }
             }
 
-            trades.get(2).add((pTrader, pRandom) -> {
-                ItemStack vape = new ItemStack(ModItems.VAPE_RAINBOW.get());
-
-                return new MerchantOffer(
-                        new ItemStack(Items.EMERALD, 65),
-                        vape,
-                        10, 30, 0.3f
-                );
-            });
-
-
         }
     }
 
@@ -71,8 +59,7 @@ public class CommonEvents {
         List<VillagerTrades.ItemListing> rareTrades = event.getRareTrades();
 
         for (Item item : ForgeRegistries.ITEMS.getValues()) {
-            if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)
-                    && item != ModItems.VAPE_RAINBOW.get()) {
+            if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)) {
 
                 genericTrades.add((pTrader, pRandom) -> {
                     ItemStack vape = new ItemStack(item);
