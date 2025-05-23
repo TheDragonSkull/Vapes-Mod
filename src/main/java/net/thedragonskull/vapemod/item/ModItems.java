@@ -47,7 +47,7 @@ public class ModItems {
         for (DyeColor dyeColor : DyeColor.values()) {
             String name = "d_vape_" + dyeColor.getName();
             RegistryObject<Item> item = ITEMS.register(name,
-                    () -> new DisposableVape(dyeColor, new Item.Properties().stacksTo(1)));
+                    () -> new DisposableVape(dyeColor, new Item.Properties().stacksTo(1).durability(25)));
             D_VAPES.put(dyeColor, item);
         }
     }
