@@ -27,6 +27,12 @@ public class DisposableVape extends Item {
         return dyeColor;
     }
 
+
+    @Override
+    public boolean isEnchantable(ItemStack pStack) {
+        return false;
+    }
+
     @Override
     public void initializeClient(Consumer<IClientItemExtensions> consumer) {
         consumer.accept(new IClientItemExtensions() {
