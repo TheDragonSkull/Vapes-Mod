@@ -31,11 +31,12 @@ import java.util.Map;
 public class CommonEvents {
 
     @SubscribeEvent
-    public static void addCustomTrades(VillagerTradesEvent event) {
+    public static void addCustomTrades(VillagerTradesEvent event) { // TODO: cambiar por nuevas offers
         if (event.getType() == ModVillagers.VAPE_SHOPKEEPER.get()) {
             Int2ObjectMap<List<VillagerTrades.ItemListing>> trades = event.getTrades();
 
             for (Item item : ForgeRegistries.ITEMS.getValues()) {
+
                 if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)) {
 
                     trades.get(1).add((pTrader, pRandom) -> {
@@ -45,6 +46,18 @@ public class CommonEvents {
                                 new ItemStack(Items.EMERALD, 45),
                                 vape,
                                 10, 20, 0.2f
+                        );
+                    });
+
+                } else if (item.builtInRegistryHolder().is(ModTags.Items.DISPOSABLE_VAPES)) {
+
+                    trades.get(2).add((pTrader, pRandom) -> {
+                        ItemStack vape = new ItemStack(item);
+
+                        return new MerchantOffer(
+                                new ItemStack(Items.EMERALD, 25),
+                                vape,
+                                999, 20, 0.2f
                         );
                     });
                 }
@@ -59,6 +72,7 @@ public class CommonEvents {
         List<VillagerTrades.ItemListing> rareTrades = event.getRareTrades();
 
         for (Item item : ForgeRegistries.ITEMS.getValues()) {
+
             if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)) {
 
                 genericTrades.add((pTrader, pRandom) -> {
@@ -68,6 +82,17 @@ public class CommonEvents {
                             new ItemStack(Items.EMERALD, 30),
                             vape,
                             10, 20, 0.2f
+                    );
+                });
+            }  else if (item.builtInRegistryHolder().is(ModTags.Items.DISPOSABLE_VAPES)) {
+
+                genericTrades.add((pTrader, pRandom) -> {
+                    ItemStack vape = new ItemStack(item);
+
+                    return new MerchantOffer(
+                            new ItemStack(Items.EMERALD, 15),
+                            vape,
+                            999, 20, 0.2f
                     );
                 });
             }
