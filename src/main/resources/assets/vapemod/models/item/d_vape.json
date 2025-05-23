@@ -2,7 +2,7 @@
 	"credit": "Made with Blockbench",
 	"textures": {
 		"0": "vapemod:item/d_vape/d_vape",
-		"particle": "vapemod:item/d_vape/d_vape"
+		"particle": "vapemod:item/invisible"
 	},
 	"elements": [
 		{
