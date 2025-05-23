@@ -6,6 +6,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,6 +15,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -42,7 +44,7 @@ import java.util.function.Consumer;
 
 import static net.thedragonskull.vapemod.util.VapeUtil.toRoman;
 
-public class DisposableVape extends Item {
+public class DisposableVape extends Item implements IVape {
     private static final String MESSAGE_CANT_SMOKE_UNDERWATER = "message.vapemod.cant_smoke_underwater";
     private final DyeColor dyeColor;
 
@@ -107,27 +109,11 @@ public class DisposableVape extends Item {
                 } else {
                     int duration = (int)(effect.getDuration() / maxDurability);
                     int amplifier = effect.getAmplifier();
-                    player.addEffect(new MobEffectInstance(effect.getEffect(), duration, amplifier, false, true));
+                    player.addEffect(new MobEffectInstance(effect.getEffect(), duration * 2, amplifier, false, true));
                 }
             }
 
-            //Cooldowns
-            Set<Item> cooldownItems = new HashSet<>();
-            for (ItemStack stack : player.getInventory().items) {
-                if (stack.getItem() instanceof DisposableVape) {
-                    cooldownItems.add(stack.getItem());
-                }
-            }
-
-            for (ItemStack handStack : List.of(player.getMainHandItem(), player.getOffhandItem())) {
-                if (handStack.getItem() instanceof DisposableVape) {
-                    cooldownItems.add(handStack.getItem());
-                }
-            }
-
-            for (Item itemToCooldown : cooldownItems) {
-                player.getCooldowns().addCooldown(itemToCooldown, 100);
-            }
+            VapeUtil.applyCooldownToVapes(player, 100);
 
             int color = 0xFFFFFF;
             Potion contents = PotionUtils.getPotion(item);
@@ -188,7 +174,27 @@ public class DisposableVape extends Item {
     }
 
     @Override
+    public void inventoryTick(ItemStack pStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
+        if (pLevel.isClientSide || !(pEntity instanceof Player)) return;
+
+        if (PotionUtils.getPotion(pStack) == Potions.EMPTY) {
+
+            List<Potion> potions = BuiltInRegistries.POTION.stream()
+                    .filter(p -> !p.getEffects().isEmpty() && p != Potions.EMPTY)
+                    .toList();
+
+            if (!potions.isEmpty()) {
+                Potion randomPotion = potions.get(pLevel.getRandom().nextInt(potions.size()));
+                PotionUtils.setPotion(pStack, randomPotion);
+            }
+        }
+
+    }
+
+    @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, level, tooltip, flag);
+
 
         int currentDurability = stack.getMaxDamage() - stack.getDamageValue();
         int maxDurability = stack.getMaxDamage();
@@ -216,7 +222,7 @@ public class DisposableVape extends Item {
 
                 int adjustedDuration = (int)(effect.getDuration() / stack.getMaxDamage());
                 if (adjustedDuration > 20) {
-                    String time = formatDuration(adjustedDuration);
+                    String time = formatDuration(adjustedDuration * 2);
                     effectName.append(" (").append(Component.literal(time)).append(")");
                 }
 
@@ -225,6 +231,7 @@ public class DisposableVape extends Item {
         } else {
             tooltip.add(Component.literal("Effect: ???").withStyle(ChatFormatting.BLUE));
         }
+
     }
 
     private String formatDuration(int ticks) {
@@ -248,15 +255,9 @@ public class DisposableVape extends Item {
         if (!effects.isEmpty()) {
             MobEffectInstance effect = effects.get(0);
             Component effectName = Component.translatable(effect.getDescriptionId());
-            String romanLevel = toRoman(effect.getAmplifier());
+            int level = effect.getAmplifier();
 
-            return Component.literal("")
-                    .append(baseName)
-                    .append(" (")
-                    .append(effectName)
-                    .append(" ")
-                    .append(romanLevel)
-                    .append(")");
+            return VapeUtil.formatEffectName(baseName, effectName, level);
         }
 
         return baseName;

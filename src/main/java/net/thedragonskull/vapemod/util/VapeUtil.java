@@ -1,30 +1,62 @@
 package net.thedragonskull.vapemod.util;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
+import net.thedragonskull.vapemod.item.custom.IVape;
 import net.thedragonskull.vapemod.item.custom.Vape;
 import net.thedragonskull.vapemod.particle.ModParticles;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class VapeUtil {
+
+    public static Set<Item> collectVapeItems(Player player) {
+        Set<Item> cooldownItems = new HashSet<>();
+
+        // Inventory
+        for (ItemStack stack : player.getInventory().items) {
+            if (stack.getItem() instanceof IVape) {
+                cooldownItems.add(stack.getItem());
+            }
+        }
+
+        // Hand
+        for (ItemStack handStack : List.of(player.getMainHandItem(), player.getOffhandItem())) {
+            if (handStack.getItem() instanceof IVape) {
+                cooldownItems.add(handStack.getItem());
+            }
+        }
+
+        return cooldownItems;
+    }
+
+    public static void applyCooldownToVapes(Player player, int ticks) {
+        Set<Item> cooldownItems = collectVapeItems(player);
+        for (Item itemToCooldown : cooldownItems) {
+            player.getCooldowns().addCooldown(itemToCooldown, ticks);
+        }
+    }
 
     public static void smokeParticles(Player player) {
         ItemStack stack = ItemStack.EMPTY;
 
-        if (player.getMainHandItem().getItem() instanceof Vape) {
+        if (player.getMainHandItem().getItem() instanceof IVape) {
             stack = player.getMainHandItem();
-        } else if (player.getOffhandItem().getItem() instanceof Vape) {
+        } else if (player.getOffhandItem().getItem() instanceof IVape) {
             stack = player.getOffhandItem();
         }
 
         int red = 255, green = 255, blue = 255;
 
-        if (stack.getItem() instanceof Vape) {
+        if (stack.getItem() instanceof IVape) {
             if (!PotionUtils.getPotion(stack).equals(Potions.WATER)) {
                 int potionColor = PotionUtils.getColor(stack);
                 red = (potionColor >> 16) & 0xFF;
@@ -56,10 +88,31 @@ public class VapeUtil {
     };
 
     public static String toRoman(int number) {
-        if (number >= 0 && number < ROMAN_NUMERALS.length) {
+        if (number >= 1 && number < ROMAN_NUMERALS.length) {
             return ROMAN_NUMERALS[number];
         }
-        return Integer.toString(number + 1);
+
+        return "";
     }
+
+    public static Component formatEffectName(Component baseName, Component effectName, int level) {
+        if (level < 1) {
+            return Component.literal("")
+                    .append(baseName)
+                    .append(" (")
+                    .append(effectName)
+                    .append(")");
+        } else {
+            String romanLevel = toRoman(level);
+            return Component.literal("")
+                    .append(baseName)
+                    .append(" (")
+                    .append(effectName)
+                    .append(" ")
+                    .append(romanLevel)
+                    .append(")");
+        }
+    }
+
 
 }

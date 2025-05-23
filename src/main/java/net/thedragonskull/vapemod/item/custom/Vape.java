@@ -51,7 +51,7 @@ import java.util.function.Consumer;
 import static net.thedragonskull.vapemod.util.VapeUtil.toRoman;
 import static org.joml.Math.clamp;
 
-public class Vape extends Item implements VapeEnergyContainer {
+public class Vape extends Item implements VapeEnergyContainer, IVape {
     private static final String MESSAGE_CANT_SMOKE_UNDERWATER = "message.vapemod.cant_smoke_underwater";
 
     public Vape(Properties pProperties) {
@@ -141,15 +141,9 @@ public class Vape extends Item implements VapeEnergyContainer {
         if (!effects.isEmpty()) {
             MobEffectInstance effect = effects.get(0);
             Component effectName = Component.translatable(effect.getDescriptionId());
-            String romanLevel = toRoman(effect.getAmplifier());
+            int level = effect.getAmplifier();
 
-            return Component.literal("")
-                    .append(baseName)
-                    .append(" (")
-                    .append(effectName)
-                    .append(" ")
-                    .append(romanLevel)
-                    .append(")");
+            return VapeUtil.formatEffectName(baseName, effectName, level);
         }
 
         return baseName;
@@ -229,23 +223,7 @@ public class Vape extends Item implements VapeEnergyContainer {
                         }
                     }
 
-                    //Cooldowns
-                    Set<Item> cooldownItems = new HashSet<>();
-                    for (ItemStack stack : player.getInventory().items) {
-                        if (stack.getItem() instanceof Vape) {
-                            cooldownItems.add(stack.getItem());
-                        }
-                    }
-
-                    for (ItemStack handStack : List.of(player.getMainHandItem(), player.getOffhandItem())) {
-                        if (handStack.getItem() instanceof Vape) {
-                            cooldownItems.add(handStack.getItem());
-                        }
-                    }
-
-                    for (Item itemToCooldown : cooldownItems) {
-                        player.getCooldowns().addCooldown(itemToCooldown, 100);
-                    }
+                    VapeUtil.applyCooldownToVapes(player, 100);
 
                     int color = 0xFFFFFF;
                     Potion contents = PotionUtils.getPotion(item);

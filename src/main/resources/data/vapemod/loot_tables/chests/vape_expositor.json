@@ -11,6 +11,11 @@
           "type": "minecraft:tag",
           "name": "vapemod:vapes",
           "expand": true
+        },
+        {
+          "type": "minecraft:tag",
+          "name": "vapemod:d_vapes",
+          "expand": true
         }
       ]
     }
