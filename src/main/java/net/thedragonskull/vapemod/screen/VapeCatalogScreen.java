@@ -1,5 +1,6 @@
 package net.thedragonskull.vapemod.screen;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
@@ -73,7 +74,6 @@ public class VapeCatalogScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(graphics);
-
         super.render(graphics, mouseX, mouseY, partialTicks);
 
         // Tooltips
@@ -86,29 +86,34 @@ public class VapeCatalogScreen extends Screen {
         if (!this.selectedVape.isEmpty()) {
             int centerX = this.width - 100; // Posición derecha
             int centerY = this.height / 2;
-            int scale = 50;
+            int scale = 200;
 
             PoseStack poseStack = graphics.pose();
             poseStack.pushPose();
-            poseStack.translate(centerX, centerY, 100); // Z=100 para evitar que se tape
-            poseStack.scale(scale, scale, scale);
-            poseStack.mulPose(Axis.XP.rotationDegrees(180f)); // Lo giramos para que mire hacia ti
 
-            // Rotación dinámica con tiempo
+            poseStack.translate(centerX, centerY, 100);
+            poseStack.scale(scale, scale, scale);
+
+            poseStack.mulPose(Axis.XP.rotationDegrees(180f));
+
+
             float rotation = (System.currentTimeMillis() % 3600L) / 10f;
             poseStack.mulPose(Axis.YP.rotationDegrees(rotation));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(25));
+
+            RenderSystem.disableCull();
 
             Minecraft.getInstance().getItemRenderer().renderStatic(
                     this.selectedVape,
-                    ItemDisplayContext.GUI,
-                    15728880, // luz
+                    ItemDisplayContext.GROUND,
+                    15728880,
                     OverlayTexture.NO_OVERLAY,
                     poseStack,
                     graphics.bufferSource(),
                     null,
                     0
             );
-            graphics.flush(); // Muy importante para que el ítem se dibuje
+
             poseStack.popPose();
         }
 
