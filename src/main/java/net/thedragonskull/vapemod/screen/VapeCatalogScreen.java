@@ -9,10 +9,12 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -24,11 +26,14 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.util.ModTags;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class VapeCatalogScreen extends Screen {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(VapeMod.MOD_ID, "textures/gui/vape_catalog_screen.png");
-    private final List<ItemStack> vapeList;
+    private final VapeCatalogScreen.VapeTradeButton[] tradeOfferButtons = new VapeCatalogScreen.VapeTradeButton[7];
+    private List<ItemStack> vapeList = new ArrayList<>();
+    private List<ItemStack> fullVapeList = new ArrayList<>();
     private int pageIndex = 0;
     private final int BUTTON_WIDTH = 60;
     private final int BUTTON_HEIGHT = 20;
@@ -38,10 +43,12 @@ public class VapeCatalogScreen extends Screen {
 
     private ItemStack selectedVape = ItemStack.EMPTY;
     int scrollOff;
+    private boolean isDragging = false;
 
     public VapeCatalogScreen() {
         super(Component.literal("Vape Catalog"));
-        this.vapeList = generateVapeListForPage(pageIndex);
+        this.fullVapeList = generateFullVapeList();
+        this.vapeList = paginateVapeList();
     }
 
     @Override
@@ -57,9 +64,11 @@ public class VapeCatalogScreen extends Screen {
             ItemStack costA = new ItemStack(Items.DIAMOND, 45);
             ItemStack costB = ItemStack.EMPTY;
 
-            this.addRenderableWidget(new VapeTradeButton(width + 5 , yPos, i, costA, costB, vape, (btn) -> {
-                this.selectedVape = vape;
-                attemptBuy(vape);
+            this.tradeOfferButtons[i] = this.addRenderableWidget(new VapeTradeButton(width + 5 , yPos, i, costA, costB, vape, (btn) -> {
+                if (btn instanceof VapeCatalogScreen.VapeTradeButton) {
+                    this.selectedVape = vape;
+                    attemptBuy(vape);
+                }
             }));
 
             yPos += 20;
@@ -67,11 +76,37 @@ public class VapeCatalogScreen extends Screen {
     }
 
     private void updateVapeList() {
-        this.vapeList.clear();
-        this.vapeList.addAll(generateVapeListForPage(pageIndex));
-        this.clearWidgets();
-        this.init();
+        // Genera todos los ítems disponibles
+        TagKey<Item> tag = ModTags.Items.DISPOSABLE_VAPES;
+        List<ItemStack> all = ForgeRegistries.ITEMS.getValues().stream()
+                .filter(item -> item.builtInRegistryHolder().is(tag))
+                .map(ItemStack::new)
+                .toList();
+
+        // Calcula los ítems visibles según el scroll actual
+        int from = Mth.clamp(this.scrollOff, 0, Math.max(0, all.size() - 7));
+        int to = Math.min(from + 7, all.size());
+        this.vapeList = new ArrayList<>(all); // guarda la lista entera por si se necesita más adelante
+
+        // Actualiza los botones existentes sin recrearlos
+        for (int i = 0; i < 7; i++) {
+            if (i + from < all.size()) {
+                ItemStack vape = all.get(i + from);
+                ItemStack costA = new ItemStack(Items.DIAMOND, 45); // o ajusta por ítem si quieres
+
+                VapeTradeButton button = this.tradeOfferButtons[i];
+                button.visible = true;
+                button.active = true;
+                button.setItem(vape, costA, ItemStack.EMPTY);
+            } else {
+                // Oculta botones sobrantes
+                VapeTradeButton button = this.tradeOfferButtons[i];
+                button.visible = false;
+                button.active = false;
+            }
+        }
     }
+
 
     private void attemptBuy(ItemStack vape) {
         // Aquí puedes hacer la comprobación de esmeraldas y enviar un paquete al servidor
@@ -79,21 +114,24 @@ public class VapeCatalogScreen extends Screen {
     }
 
     private void renderScroller(GuiGraphics pGuiGraphics, int pPosX, int pPosY, List<ItemStack> vapeList) {
-        int i = this.vapeList.size() + 1 - 7;
-        if (i > 1) {
-            int j = 139 - (27 + (i - 1) * 139 / i);
-            int k = 1 + j / i + 139 / i;
-            int l = 113;
-            int i1 = Math.min(113, this.scrollOff * k);
-            if (this.scrollOff == i - 1) {
-                i1 = 113;
-            }
+        int total = this.fullVapeList.size();
+        int visible = 7;
+        int maxScroll = Math.max(0, total - visible);
 
-            pGuiGraphics.blit(BACKGROUND, pPosX + 94, pPosY + 18 + i1, 0, 0.0F, 199.0F, 6, 27, 512, 256);
+        if (maxScroll > 0) {
+            int thumbHeight = 27; // Alto del pulgar
+            int trackHeight = 140;
+
+            // Relación de scroll
+            float scrollRatio = (float) this.scrollOff / maxScroll;
+            int thumbY = (int) (scrollRatio * (trackHeight - thumbHeight));
+
+            // Usa u=199, v=0 para el scroller activo
+            pGuiGraphics.blit(BACKGROUND, pPosX + 94, pPosY + 18 + thumbY, 0, 0.0F, 199.0F, 6, 27, 512, 256);
         } else {
+            // Usa u=199, v=6 para el scroller inactivo
             pGuiGraphics.blit(BACKGROUND, pPosX + 94, pPosY + 18, 0, 6.0F, 199.0F, 6, 27, 512, 256);
         }
-
     }
 
     @Override
@@ -115,8 +153,9 @@ public class VapeCatalogScreen extends Screen {
             }
         }
 
-        if (!this.selectedVape.isEmpty()) {
-            int centerX = this.width - 100; // Posición derecha
+        // 3D item
+        if (!this.selectedVape.isEmpty()) { //todo: no es centrado absoluto
+            int centerX = this.width - 100;
             int centerY = this.height / 2;
             int scale = 200;
 
@@ -151,13 +190,19 @@ public class VapeCatalogScreen extends Screen {
 
     }
 
-    private List<ItemStack> generateVapeListForPage(int pageIndex) {
+    private List<ItemStack> generateFullVapeList() {
         TagKey<Item> tag = ModTags.Items.DISPOSABLE_VAPES;
 
         return ForgeRegistries.ITEMS.getValues().stream()
                 .filter(item -> item.builtInRegistryHolder().is(tag))
                 .map(ItemStack::new)
                 .toList();
+    }
+
+    private List<ItemStack> paginateVapeList() {
+        int from = Mth.clamp(this.scrollOff, 0, Math.max(0, fullVapeList.size() - 7));
+        int to = Math.min(from + 7, fullVapeList.size());
+        return new ArrayList<>(fullVapeList.subList(from, to));
     }
 
     @Override
@@ -169,11 +214,63 @@ public class VapeCatalogScreen extends Screen {
         return pNumOffers > 7;
     }
 
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        int total = fullVapeList.size();
+
+        if (this.canScroll(total)) {
+            int maxScroll = total - 7;
+            this.scrollOff = Mth.clamp((int)(this.scrollOff - delta), 0, maxScroll);
+            this.vapeList = paginateVapeList();
+            this.clearWidgets();
+            this.init();
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        this.isDragging = false;
+        int x = (this.width - GUI_WIDTH) / 2;
+        int y = (this.height - GUI_HEIGHT) / 2;
+
+        if (this.canScroll(this.fullVapeList.size()) &&
+                mouseX > x + 94 && mouseX < x + 94 + 6 &&
+                mouseY > y + 18 && mouseY <= y + 18 + 139 + 1) {
+            this.isDragging = true;
+            return true;
+        }
+
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (this.isDragging) {
+            int y = (this.height - GUI_HEIGHT) / 2;
+            int top = y + 18;
+            int bottom = top + 139;
+
+            int maxScroll = Math.max(0, fullVapeList.size() - 7);
+            float scrollProgress = ((float)mouseY - top - 13.5F) / ((bottom - top) - 27.0F);
+            scrollProgress = Mth.clamp(scrollProgress, 0.0F, 1.0F);
+
+            this.scrollOff = Mth.clamp((int)(scrollProgress * maxScroll + 0.5F), 0, maxScroll);
+            this.vapeList = paginateVapeList();
+            this.clearWidgets();
+            this.init();
+            return true;
+        }
+
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
     @OnlyIn(Dist.CLIENT)
     public class VapeTradeButton extends Button {
-        private final ItemStack result;
-        private final ItemStack costA;
-        private final ItemStack costB;
+        private ItemStack result;
+        private ItemStack costA;
+        private ItemStack costB;
         private final int index;
 
         public VapeTradeButton(int x, int y, int index, ItemStack costA, ItemStack costB, ItemStack result, OnPress onPress) {
@@ -187,6 +284,41 @@ public class VapeCatalogScreen extends Screen {
         public int getIndex() {
             return this.index;
         }
+
+        public void setItem(ItemStack result, ItemStack costA, ItemStack costB) {
+            this.result = result;
+            this.costA = costA;
+            this.costB = costB;
+        }
+
+        @Override
+        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+            super.renderWidget(graphics, mouseX, mouseY, partialTicks);
+
+            PoseStack poseStack = graphics.pose();
+            poseStack.pushPose();
+
+            // Posiciones relativas al botón
+            int x = this.getX();
+            int y = this.getY() + 1;
+
+            // Render costA
+            graphics.renderItem(this.costA, x + 2, y);
+            graphics.renderItemDecorations(Minecraft.getInstance().font, this.costA, x + 2, y);
+
+            // Render costB (solo si no está vacío)
+            if (!this.costB.isEmpty()) {
+                graphics.renderItem(this.costB, x + 34, y);
+                graphics.renderItemDecorations(Minecraft.getInstance().font, this.costB, x + 34, y);
+            }
+
+            // Render result
+            graphics.renderItem(this.result, x + 68, y + 1);
+            graphics.renderItemDecorations(Minecraft.getInstance().font, this.result, x + 68, y);
+
+            poseStack.popPose();
+        }
+
 
         public void renderToolTip(GuiGraphics graphics, int mouseX, int mouseY, Font font) {
             if (this.isHovered) {
