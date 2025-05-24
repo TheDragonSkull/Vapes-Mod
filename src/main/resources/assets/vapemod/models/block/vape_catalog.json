@@ -1,0 +1,165 @@
+{
+	"credit": "Made with Blockbench",
+	"texture_size": [64, 32],
+	"textures": {
+		"0": "vapemod:block/vape_catalog",
+		"particle": "vapemod:block/vape_catalog"
+	},
+	"elements": [
+		{
+			"name": "cover_left_rotation",
+			"from": [5, 2.025, 2.95],
+			"to": [11, 2.025, 12.95],
+			"rotation": {"angle": 0, "axis": "y", "origin": [9.5, 1.025, 7.95]},
+			"faces": {
+				"north": {"uv": [4, 5, 4, 8], "rotation": 90, "texture": "#0"},
+				"east": {"uv": [4, 0, 4, 5], "rotation": 270, "texture": "#0"},
+				"south": {"uv": [6.5, 5, 6.5, 8], "rotation": 270, "texture": "#0"},
+				"west": {"uv": [4, 5, 4, 0], "rotation": 270, "texture": "#0"},
+				"up": {"uv": [1.5, 5, 0, 0], "texture": "#0"},
+				"down": {"uv": [4, 0, 5.5, 5], "texture": "#0"}
+			}
+		},
+		{
+			"name": "cover_right_rotation",
+			"from": [5, 0.025, 2.95],
+			"to": [11, 0.025, 12.95],
+			"rotation": {"angle": 0, "axis": "y", "origin": [9.5, 1.025, 7.95]},
+			"faces": {
+				"north": {"uv": [0, 5, 0, 8], "rotation": 90, "texture": "#0"},
+				"east": {"uv": [0, 0, 0, 5], "rotation": 270, "texture": "#0"},
+				"south": {"uv": [2.5, 5, 2.5, 8], "rotation": 270, "texture": "#0"},
+				"west": {"uv": [0, 5, 0, 0], "rotation": 270, "texture": "#0"},
+				"up": {"uv": [4, 0, 5.5, 5], "texture": "#0"},
+				"down": {"uv": [4, 0, 5.5, 5], "texture": "#0"}
+			}
+		},
+		{
+			"name": "spine_rotation",
+			"from": [11, 0.025, 2.95],
+			"to": [11, 2.025, 12.95],
+			"rotation": {"angle": 0, "axis": "y", "origin": [9.5, 1.025, 7.95]},
+			"faces": {
+				"north": {"uv": [2.5, 5, 3, 5], "rotation": 90, "texture": "#0"},
+				"east": {"uv": [3.5, 0, 3, 5], "rotation": 270, "texture": "#0"},
+				"south": {"uv": [5.5, 5, 6, 5], "rotation": 270, "texture": "#0"},
+				"west": {"uv": [4, 5, 3.5, 0], "rotation": 270, "texture": "#0"},
+				"up": {"uv": [0, 5, 2.5, 5], "rotation": 270, "texture": "#0"},
+				"down": {"uv": [3, 5, 5.5, 5], "rotation": 270, "texture": "#0"}
+			}
+		},
+		{
+			"name": "page_left_rotation",
+			"from": [5.325, 0.05, 3.1],
+			"to": [10.975, 2, 12.8],
+			"rotation": {"angle": 0, "axis": "y", "origin": [9.5, 1.025, 7.95]},
+			"faces": {
+				"north": {"uv": [3.25, 5, 4.5, 5.5], "rotation": 180, "texture": "#0"},
+				"east": {"uv": [4.5, 5.5, 4.75, 9.5], "rotation": 270, "texture": "#0"},
+				"south": {"uv": [4.5, 5, 5.75, 5.5], "rotation": 180, "texture": "#0"},
+				"west": {"uv": [3, 5.5, 3.25, 9.5], "rotation": 270, "texture": "#0"},
+				"up": {"uv": [6, 9.5, 4.75, 5.5], "rotation": 180, "texture": "#0"},
+				"down": {"uv": [3.25, 5.5, 4.5, 9.5], "rotation": 180, "texture": "#0"}
+			}
+		}
+	],
+	"display": {
+		"thirdperson_righthand": {
+			"rotation": [-25, 0, -90],
+			"translation": [4.5, 1.75, 2.25],
+			"scale": [0.75, 0.75, 0.75]
+		},
+		"thirdperson_lefthand": {
+			"rotation": [-25, 0, 90],
+			"translation": [-5.5, 1.75, 2.25],
+			"scale": [0.75, 0.75, 0.75]
+		},
+		"firstperson_righthand": {
+			"rotation": [85, -180, -2],
+			"translation": [2, 2.5, 5.25],
+			"scale": [0.75, 0.75, 0.75]
+		},
+		"firstperson_lefthand": {
+			"rotation": [85, -180, -2],
+			"translation": [2, 2.5, 5.25],
+			"scale": [0.75, 0.75, 0.75]
+		},
+		"ground": {
+			"rotation": [-75, 0, 0],
+			"translation": [0, 3.75, -5],
+			"scale": [0.75, 0.75, 0.75]
+		},
+		"gui": {
+			"rotation": [48, 148, -3],
+			"translation": [0.25, 4.5, 0]
+		},
+		"head": {
+			"translation": [0, 14.5, 0]
+		},
+		"fixed": {
+			"rotation": [-90, 0, 0],
+			"translation": [0, 0, -7]
+		}
+	},
+	"groups": [
+		{
+			"name": "closed",
+			"origin": [15, 5, 8],
+			"color": 0,
+			"children": [
+				{
+					"name": "cover_left",
+					"origin": [15, 5, 8],
+					"color": 0,
+					"children": [
+						{
+							"name": "cover_left_rotation",
+							"origin": [12, 5, 8],
+							"color": 0,
+							"children": [0]
+						}
+					]
+				},
+				{
+					"name": "cover_right",
+					"origin": [1, 5, 8],
+					"color": 0,
+					"children": [
+						{
+							"name": "cover_right_rotation",
+							"origin": [4, 5, 8],
+							"color": 0,
+							"children": [1]
+						}
+					]
+				},
+				{
+					"name": "book_spine",
+					"origin": [8, 5, 8],
+					"color": 0,
+					"children": [
+						{
+							"name": "spine_rotation",
+							"origin": [8, 5, 8],
+							"color": 0,
+							"children": [2]
+						}
+					]
+				},
+				{
+					"name": "pages_left",
+					"origin": [13, 5, 6.925],
+					"color": 0,
+					"children": [
+						{
+							"name": "page_left_rotation",
+							"origin": [10.5, 5, 7.4],
+							"color": 0,
+							"children": [3]
+						}
+					]
+				}
+			]
+		}
+	]
+}

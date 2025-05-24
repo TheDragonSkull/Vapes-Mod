@@ -23,7 +23,9 @@
   "item.vapemod.d_vape_green": "QVape D Pod (Green)",
   "item.vapemod.d_vape_red": "QVape D Pod (Red)",
   "item.vapemod.d_vape_black": "QVape D Pod (Black)",
+
   "block.vapemod.vape_expositor": "Vape Expositor",
+  "block.vapemod.vape_catalog": "Vape Catalog",
 
   "entity.minecraft.villager.vapemod.vape_shopkeeper" : "Vape Shopkeeper",
 
