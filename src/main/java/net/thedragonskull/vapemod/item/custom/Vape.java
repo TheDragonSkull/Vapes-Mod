@@ -306,9 +306,9 @@ public class Vape extends Item implements VapeEnergyContainer, IVape {
                         model.rightArm.yRot = (float) Math.toRadians(-30);
                         model.rightArm.zRot = (float) Math.toRadians(20);
                     } else {
-                        model.leftArm.xRot = (float) Math.toRadians(-30);
-                        model.leftArm.yRot = (float) Math.toRadians(-10);
-                        model.leftArm.zRot = (float) Math.toRadians(-15);
+                        model.leftArm.xRot = (float) Math.toRadians(-90);
+                        model.leftArm.yRot = (float) Math.toRadians(30);
+                        model.leftArm.zRot = (float) Math.toRadians(-20);
                     }
                 }
             });

@@ -17,7 +17,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -26,7 +25,7 @@ import net.thedragonskull.vapemod.util.ModTags;
 
 import java.util.List;
 
-public class VapeCatalogScreen extends Screen {
+public class VapeCatalogScreenBackup extends Screen {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(VapeMod.MOD_ID, "textures/gui/vape_catalog_screen.png");
     private final List<ItemStack> vapeList;
     private int pageIndex = 0;
@@ -37,9 +36,8 @@ public class VapeCatalogScreen extends Screen {
     private static final int GUI_HEIGHT = 166;
 
     private ItemStack selectedVape = ItemStack.EMPTY;
-    int scrollOff;
 
-    public VapeCatalogScreen() {
+    public VapeCatalogScreenBackup() {
         super(Component.literal("Vape Catalog"));
         this.vapeList = generateVapeListForPage(pageIndex);
     }
@@ -48,21 +46,18 @@ public class VapeCatalogScreen extends Screen {
     protected void init() {
         super.init();
 
-        int width = (this.width - GUI_WIDTH) / 2;
-        int height = (this.height - GUI_HEIGHT) / 2;
-        int yPos = height + 16 + 2;
-
+        int y = GUI_HEIGHT + 16 + 2;
         for (int i = 0; i < 7; i++) {
             ItemStack vape = vapeList.get(i);
             ItemStack costA = new ItemStack(Items.DIAMOND, 45);
             ItemStack costB = ItemStack.EMPTY;
 
-            this.addRenderableWidget(new VapeTradeButton(width + 5 , yPos, i, costA, costB, vape, (btn) -> {
+            this.addRenderableWidget(new VapeTradeButton(GUI_WIDTH + 5 , y, i, costA, costB, vape, (btn) -> {
                 this.selectedVape = vape;
                 attemptBuy(vape);
             }));
 
-            yPos += 20;
+            y += 20;
         }
     }
 
@@ -78,35 +73,14 @@ public class VapeCatalogScreen extends Screen {
         // para ejecutar la compra real.
     }
 
-    private void renderScroller(GuiGraphics pGuiGraphics, int pPosX, int pPosY, List<ItemStack> vapeList) {
-        int i = this.vapeList.size() + 1 - 7;
-        if (i > 1) {
-            int j = 139 - (27 + (i - 1) * 139 / i);
-            int k = 1 + j / i + 139 / i;
-            int l = 113;
-            int i1 = Math.min(113, this.scrollOff * k);
-            if (this.scrollOff == i - 1) {
-                i1 = 113;
-            }
-
-            pGuiGraphics.blit(BACKGROUND, pPosX + 94, pPosY + 18 + i1, 0, 0.0F, 199.0F, 6, 27, 512, 256);
-        } else {
-            pGuiGraphics.blit(BACKGROUND, pPosX + 94, pPosY + 18, 0, 6.0F, 199.0F, 6, 27, 512, 256);
-        }
-
-    }
-
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(graphics);
+        super.render(graphics, mouseX, mouseY, partialTicks);
 
         int x = (this.width - GUI_WIDTH) / 2;
         int y = (this.height - GUI_HEIGHT) / 2;
         graphics.blit(BACKGROUND, x, y, 0, 0, GUI_WIDTH, GUI_HEIGHT, 512, 256);
-
-        this.renderScroller(graphics, x, y, this.vapeList);
-
-        super.render(graphics, mouseX, mouseY, partialTicks);
 
         // Tooltips
         for (Renderable widget : this.renderables) {
@@ -152,7 +126,11 @@ public class VapeCatalogScreen extends Screen {
     }
 
     private List<ItemStack> generateVapeListForPage(int pageIndex) {
-        TagKey<Item> tag = ModTags.Items.DISPOSABLE_VAPES;
+        TagKey<Item> tag = switch (pageIndex) {
+            case 0 -> ModTags.Items.VAPES;
+            case 1 -> ModTags.Items.DISPOSABLE_VAPES;
+            default -> ModTags.Items.VAPES;
+        };
 
         return ForgeRegistries.ITEMS.getValues().stream()
                 .filter(item -> item.builtInRegistryHolder().is(tag))
@@ -163,10 +141,6 @@ public class VapeCatalogScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
-    }
-
-    private boolean canScroll(int pNumOffers) {
-        return pNumOffers > 7;
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -186,6 +160,32 @@ public class VapeCatalogScreen extends Screen {
 
         public int getIndex() {
             return this.index;
+        }
+
+        @Override
+        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+
+            // Button BG
+            //graphics.blit(VapeCatalogScreen.BACKGROUND, this.getX(), this.getY(), 0, 166, this.width, this.height);
+
+            // Render cost A
+            graphics.renderItem(this.costA, this.getX() + 5, this.getY() + 2);
+            graphics.renderItemDecorations(Minecraft.getInstance().font, this.costA, this.getX() + 5, this.getY() + 2);
+
+            // Render cost B (if avaliable)
+            if (!this.costB.isEmpty()) {
+                graphics.renderItem(this.costB, this.getX() + 25, this.getY() + 2);
+                graphics.renderItemDecorations(Minecraft.getInstance().font, this.costB, this.getX() + 25, this.getY() + 2);
+            }
+
+            // Render result
+            graphics.renderItem(this.result, this.getX() + 65, this.getY() + 2);
+            graphics.renderItemDecorations(Minecraft.getInstance().font, this.result, this.getX() + 65, this.getY() + 2);
+
+            // Hover
+            if (this.isHovered) {
+                graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, 0x40FFFFFF);
+            }
         }
 
         public void renderToolTip(GuiGraphics graphics, int mouseX, int mouseY, Font font) {
