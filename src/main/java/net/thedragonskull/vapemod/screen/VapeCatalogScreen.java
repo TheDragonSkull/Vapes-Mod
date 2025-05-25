@@ -10,9 +10,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -20,18 +18,20 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.trading.MerchantOffer;
-import net.minecraft.world.item.trading.MerchantOffers;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.VapeMod;
-import net.thedragonskull.vapemod.network.C2SCloseCatalogScreenPacket;
+import net.thedragonskull.vapemod.block.custom.VapeCatalog;
+import net.thedragonskull.vapemod.network.C2SCloseCatalogPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
+import net.thedragonskull.vapemod.sound.ModSounds;
 import net.thedragonskull.vapemod.util.ModTags;
 import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
@@ -50,7 +50,10 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
     private final int BUTTON_HEIGHT = 20;
     private Button buyButton;
 
-    ItemStack costA = VapeTradeButton.getCostA(); // o como lo tengas definido
+    private enum TabType { DISPOSABLES, NORMAL }
+    private TabType currentTab = TabType.DISPOSABLES;
+
+    ItemStack costA = VapeTradeButton.getCostA();
     ItemStack costB = VapeTradeButton.getCostB();
 
     private static final int GUI_WIDTH = 276;
@@ -78,17 +81,14 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         int yPos = height + 16 + 2;
 
         for (int i = 0; i < 7; i++) {
-            ItemStack vape = vapeList.get(i);
-            ItemStack costA = new ItemStack(Items.DIAMOND, 45);
-            ItemStack costB = ItemStack.EMPTY;
-
-            this.tradeOfferButtons[i] = this.addRenderableWidget(new VapeTradeButton(width + 5 , yPos, i, costA, costB, vape, (btn) -> {
-                if (btn instanceof VapeCatalogScreen.VapeTradeButton) {
-                    this.selectedVape = vape;
-                    attemptBuy(vape);
-                }
-            }));
-
+            this.tradeOfferButtons[i] = this.addRenderableWidget(new VapeTradeButton(width + 5, yPos, i,
+                    ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY,
+                    btn -> {
+                        VapeTradeButton b = (VapeTradeButton) btn;
+                        this.selectedVape = b.getResult();
+                        attemptBuy(b.getResult());
+                    }
+            ));
             yPos += 20;
         }
 
@@ -96,53 +96,88 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         int centerY = height + 16 + 2;
         SoundManager soundManager = Minecraft.getInstance().getSoundManager();
 
-        //QVape Pen V2 tab
-        this.addRenderableWidget(new VapeCatalogUtil.TabAndBuyButton(centerX - 31, centerY, 100, 20, Component.literal("QVape Pen V2"), btn -> {
-            //TODO: change tab
+        //QVape D Pod tab
+        this.addRenderableWidget(new VapeCatalogUtil.TabAndBuyButton(centerX - 31, centerY, 100, 20, Component.literal("QVape D Pod"), btn -> {
+            if (this.currentTab != TabType.DISPOSABLES) {
+                this.currentTab = TabType.DISPOSABLES;
+                this.scrollOff = 0;
+                this.selectedVape = ItemStack.EMPTY;
+                updateVapeList();
+            }
         }, SoundEvents.BOOK_PAGE_TURN));
 
         centerY += 25;
 
-        //QVape D Pod tab
-        this.addRenderableWidget(new VapeCatalogUtil.TabAndBuyButton(centerX - 31, centerY, 100, 20, Component.literal("QVape D Pod"), btn -> {
-            //TODO: change tab
+        //QVape Pen V2 tab
+        this.addRenderableWidget(new VapeCatalogUtil.TabAndBuyButton(centerX - 31, centerY, 100, 20, Component.literal("QVape Pen V2"), btn -> {
+            if (this.currentTab != TabType.NORMAL) {
+                this.currentTab = TabType.NORMAL;
+                this.scrollOff = 0;
+                this.selectedVape = ItemStack.EMPTY;
+                updateVapeList();
+            }
         }, SoundEvents.BOOK_PAGE_TURN));
 
-        // Buy button
+        // Buy button todo: make normal button
         this.buyButton = new VapeCatalogUtil.TabAndBuyButton(centerX + 75, height + 83, 54, 20, Component.literal("$ Buy $"), btn -> {
-            //todo: comprar
-        }, SoundEvents.ANVIL_LAND); //TODO: register machine/cash sound
+            if (this.selectedVape.isEmpty() || this.minecraft.player == null) return;
+
+            Player player = this.minecraft.player;
+
+            if (hasEnoughCurrency(player, costA, costB)) {
+                removeCurrency(player, 1, 1);
+
+                ItemStack vape = this.selectedVape.copy();
+                if (!player.getInventory().add(vape)) {
+                    player.drop(vape, false);
+                }
+
+                // Sonido opcional de compra
+                player.playSound(ModSounds.CATALOG_BUY.get(), 1.0F, 1.0F);
+            }
+
+        }, ModSounds.CATALOG_BUY.get());
 
         buyButton.active = !this.selectedVape.isEmpty() && hasEnoughCurrency(this.minecraft.player, costA, costB);
-
         this.addRenderableWidget(this.buyButton);
+
+        updateVapeList();
     }
 
+    private void removeCurrency(Player player, int costA, int costB) {
+        removeItemsFromPlayer(player, Items.DIAMOND, costA);
+    }
+
+    private void removeItemsFromPlayer(Player player, Item item, int amount) {
+        for (int i = 0; i < player.getInventory().items.size(); i++) {
+            ItemStack stack = player.getInventory().items.get(i);
+            if (stack.getItem() == item) {
+                int toRemove = Math.min(stack.getCount(), amount);
+                stack.shrink(toRemove);
+                amount -= toRemove;
+                if (amount <= 0) break;
+            }
+        }
+    }
+
+
     private void updateVapeList() {
-        // Genera todos los ítems disponibles
-        TagKey<Item> tag = ModTags.Items.DISPOSABLE_VAPES;
-        List<ItemStack> all = ForgeRegistries.ITEMS.getValues().stream()
-                .filter(item -> item.builtInRegistryHolder().is(tag))
-                .map(ItemStack::new)
-                .toList();
+        this.fullVapeList = generateVapeListForTab(this.currentTab);
 
-        // Calcula los ítems visibles según el scroll actual
-        int from = Mth.clamp(this.scrollOff, 0, Math.max(0, all.size() - 7));
-        int to = Math.min(from + 7, all.size());
-        this.vapeList = new ArrayList<>(all); // guarda la lista entera por si se necesita más adelante
+        int from = Mth.clamp(this.scrollOff, 0, Math.max(0, fullVapeList.size() - 7));
+        int to = Math.min(from + 7, fullVapeList.size());
+        this.vapeList = new ArrayList<>(fullVapeList); // opcional: puedes usar subList si prefieres
 
-        // Actualiza los botones existentes sin recrearlos
         for (int i = 0; i < 7; i++) {
-            if (i + from < all.size()) {
-                ItemStack vape = all.get(i + from);
-                ItemStack costA = new ItemStack(Items.DIAMOND, 45); // o ajusta por ítem si quieres
+            if (i + from < fullVapeList.size()) {
+                ItemStack vape = fullVapeList.get(i + from);
+                ItemStack costA = new ItemStack(Items.DIAMOND, 45);
 
                 VapeTradeButton button = this.tradeOfferButtons[i];
                 button.visible = true;
                 button.active = true;
                 button.setItem(vape, costA, ItemStack.EMPTY);
             } else {
-                // Oculta botones sobrantes
                 VapeTradeButton button = this.tradeOfferButtons[i];
                 button.visible = false;
                 button.active = false;
@@ -161,6 +196,14 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         boolean hasSelection = !this.selectedVape.isEmpty();
         boolean hasCurrency = hasSelection && hasEnoughCurrency(this.minecraft.player, costA, costB);
         this.buyButton.active = hasSelection && hasCurrency;
+
+        if (minecraft != null && minecraft.level != null) {
+            BlockState state = minecraft.level.getBlockState(blockPos);
+            if (!(state.getBlock() instanceof VapeCatalog)) {
+                minecraft.setScreen(null);
+            }
+        }
+
     }
 
     private void renderScroller(GuiGraphics pGuiGraphics, int pPosX, int pPosY, List<ItemStack> vapeList) {
@@ -242,11 +285,11 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             }
         }
 
-        // 3D item TODO: centrar en cuadrado?
+        // 3D item
         if (!this.selectedVape.isEmpty()) {
             int centerX = this.width / 2;
             int centerY = this.height / 2;
-            int scale = 100;
+            int scale = 110;
 
             PoseStack poseStack = graphics.pose();
             poseStack.pushPose();
@@ -279,6 +322,18 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
 
     }
 
+    private List<ItemStack> generateVapeListForTab(TabType tab) {
+        TagKey<Item> tag = switch (tab) {
+            case DISPOSABLES -> ModTags.Items.DISPOSABLE_VAPES;
+            case NORMAL -> ModTags.Items.VAPES;
+        };
+
+        return ForgeRegistries.ITEMS.getValues().stream()
+                .filter(item -> item.builtInRegistryHolder().is(tag))
+                .map(ItemStack::new)
+                .toList();
+    }
+
     private List<ItemStack> generateFullVapeList() {
         TagKey<Item> tag = ModTags.Items.DISPOSABLE_VAPES;
 
@@ -300,10 +355,10 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
     }
 
     @Override
-    public void onClose() { // TODO: CLOSE SOUND for everyone
+    public void onClose() {
         super.onClose();
         if (blockPos != null) {
-            PacketHandler.sendToServer(new C2SCloseCatalogScreenPacket(blockPos));
+            PacketHandler.sendToServer(new C2SCloseCatalogPacket(blockPos));
         }
     }
 
