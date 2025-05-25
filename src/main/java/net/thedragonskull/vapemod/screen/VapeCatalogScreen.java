@@ -19,6 +19,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -29,7 +30,7 @@ import net.thedragonskull.vapemod.util.ModTags;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VapeCatalogScreen extends Screen {
+public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(VapeMod.MOD_ID, "textures/gui/vape_catalog_screen.png");
     private final VapeCatalogScreen.VapeTradeButton[] tradeOfferButtons = new VapeCatalogScreen.VapeTradeButton[7];
     private List<ItemStack> vapeList = new ArrayList<>();
@@ -72,7 +73,26 @@ public class VapeCatalogScreen extends Screen {
             }));
 
             yPos += 20;
+
+            // Vape Tabs
+            int centerX = (this.width) / 2;
+            int centerY = height + 16 + 2;
+
+            //QVape Pen V2 tab
+            this.addRenderableWidget(Button.builder(Component.literal("QVape Pen V2"), (btn) -> {
+            }).bounds(centerX - 31, centerY, 100, 20).build());
+
+            centerY += 25;
+
+            //QVape D Pod tab
+            this.addRenderableWidget(Button.builder(Component.literal("QVape D Pod"), (btn) -> {
+            }).bounds(centerX - 31, centerY, 100, 20).build());
+
+            //Buy button
+            this.addRenderableWidget(Button.builder(Component.literal("Buy for: "), (btn) -> {
+            }).bounds(centerX + 75, height + 79, 54, 20).build());
         }
+
     }
 
     private void updateVapeList() {
@@ -107,7 +127,6 @@ public class VapeCatalogScreen extends Screen {
         }
     }
 
-
     private void attemptBuy(ItemStack vape) {
         // Aquí puedes hacer la comprobación de esmeraldas y enviar un paquete al servidor
         // para ejecutar la compra real.
@@ -134,6 +153,27 @@ public class VapeCatalogScreen extends Screen {
         }
     }
 
+    private void renderButtonArrows(GuiGraphics pGuiGraphics, int pPosX, int pPosY) {
+        RenderSystem.enableBlend();
+        pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35 + 20, pPosY + 3, 0, 15.0F, 171.0F, 10, 9, 512, 256);
+    }
+
+    protected void renderLabels(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY) {
+        int fontWidth = this.font.width("Vape List");
+        int labelX = (this.width - GUI_WIDTH) / 2 + 48 - fontWidth / 2;
+        int labelY = (this.height - GUI_HEIGHT) / 2 + 6;
+
+        pGuiGraphics.drawString(this.font, "Vape List", labelX, labelY, 4210752, false);
+
+        int vapeModelsWidth = this.font.width("Vape Models");
+        int centerX = (this.width / 2) + 50;
+        pGuiGraphics.drawString(this.font, "Vape Models", centerX - vapeModelsWidth, labelY, 4210752, false);
+
+        int vape3DWidth = this.font.width("3D View");
+        int displayCenter = (this.width / 2) + 75 + (54 - vape3DWidth) / 2;
+        pGuiGraphics.drawString(this.font, "3D View", displayCenter, labelY, 4210752, false);
+    }
+
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(graphics);
@@ -143,7 +183,8 @@ public class VapeCatalogScreen extends Screen {
         graphics.blit(BACKGROUND, x, y, 0, 0, GUI_WIDTH, GUI_HEIGHT, 512, 256);
 
         this.renderScroller(graphics, x, y, this.vapeList);
-
+        this.renderButtonArrows(graphics, x , y);
+        this.renderLabels(graphics, mouseX, mouseY);
         super.render(graphics, mouseX, mouseY, partialTicks);
 
         // Tooltips
@@ -154,7 +195,7 @@ public class VapeCatalogScreen extends Screen {
         }
 
         // 3D item
-        if (!this.selectedVape.isEmpty()) { //todo: no es centrado absoluto
+        if (!this.selectedVape.isEmpty()) { //todo: no es centrado absoluto /// name: 3D view
             int centerX = this.width - 100;
             int centerY = this.height / 2;
             int scale = 200;
