@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -22,22 +23,26 @@ import net.thedragonskull.vapemod.screen.VapeCatalogScreen;
 
 public class VapeCatalog extends Block {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
     public static final VoxelShape SHAPE = Block.box(5, 0, 3, 11, 4, 13);
 
     public VapeCatalog(Properties pProperties) {
         super(pProperties);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
+        this.registerDefaultState(this.stateDefinition.any().setValue(OPEN, Boolean.FALSE));
     }
 
     @Override
-    public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
+    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
         Minecraft mc = Minecraft.getInstance();
 
-        if (pLevel.isClientSide()) {
-            mc.setScreen(new VapeCatalogScreen());
+        if (!level.isClientSide()) { // TODO: OPEN SOUND for everyone
+            level.setBlock(pos, state.setValue(OPEN, true), 3);
+        } else {
+            mc.setScreen(new VapeCatalogScreen(pos));
         }
 
-        return InteractionResult.sidedSuccess(pLevel.isClientSide());
+        return InteractionResult.sidedSuccess(level.isClientSide());
     }
 
     @Override
@@ -69,7 +74,7 @@ public class VapeCatalog extends Block {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> pBuilder) {
-        pBuilder.add(FACING);
+        pBuilder.add(FACING, OPEN);
     }
 
     public static VoxelShape rotateShape(Direction from, Direction to, VoxelShape shape) {

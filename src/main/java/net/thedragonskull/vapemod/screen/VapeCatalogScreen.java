@@ -14,6 +14,7 @@ import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
@@ -29,6 +30,8 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.VapeMod;
+import net.thedragonskull.vapemod.network.C2SCloseCatalogScreenPacket;
+import net.thedragonskull.vapemod.network.PacketHandler;
 import net.thedragonskull.vapemod.util.ModTags;
 import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
@@ -57,10 +60,13 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
     int scrollOff;
     private boolean isDragging = false;
 
-    public VapeCatalogScreen() {
+    private final BlockPos blockPos;
+
+    public VapeCatalogScreen(BlockPos blockPos) {
         super(Component.literal("Vape Catalog"));
         this.fullVapeList = generateFullVapeList();
         this.vapeList = paginateVapeList();
+        this.blockPos = blockPos;
     }
 
     @Override
@@ -291,6 +297,14 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public void onClose() { // TODO: CLOSE SOUND for everyone
+        super.onClose();
+        if (blockPos != null) {
+            PacketHandler.sendToServer(new C2SCloseCatalogScreenPacket(blockPos));
+        }
     }
 
     private boolean canScroll(int pNumOffers) {

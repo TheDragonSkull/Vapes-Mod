@@ -37,6 +37,12 @@ public class PacketHandler {
                 .decoder(S2CVapeParticlesPacket::new)
                 .consumerMainThread(S2CVapeParticlesPacket::handle)
                 .add();
+
+        INSTANCE.messageBuilder(C2SCloseCatalogScreenPacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(C2SCloseCatalogScreenPacket::encode)
+                .decoder(C2SCloseCatalogScreenPacket::new)
+                .consumerMainThread(C2SCloseCatalogScreenPacket::handle)
+                .add();
     }
 
 

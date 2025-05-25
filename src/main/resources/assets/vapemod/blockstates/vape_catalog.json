@@ -1,8 +1,13 @@
 {
   "variants": {
-    "facing=north": { "model": "vapemod:block/vape_catalog" },
-    "facing=east": { "model": "vapemod:block/vape_catalog", "y": 90 },
-    "facing=south": { "model": "vapemod:block/vape_catalog", "y": 180 },
-    "facing=west": { "model": "vapemod:block/vape_catalog", "y": 270 }
+    "facing=north,open=false": { "model": "vapemod:block/vape_catalog" },
+    "facing=east,open=false":  { "model": "vapemod:block/vape_catalog", "y": 90 },
+    "facing=south,open=false": { "model": "vapemod:block/vape_catalog", "y": 180 },
+    "facing=west,open=false":  { "model": "vapemod:block/vape_catalog", "y": 270 },
+
+    "facing=north,open=true":  { "model": "vapemod:block/vape_catalog_open" },
+    "facing=east,open=true":   { "model": "vapemod:block/vape_catalog_open", "y": 90 },
+    "facing=south,open=true":  { "model": "vapemod:block/vape_catalog_open", "y": 180 },
+    "facing=west,open=true":   { "model": "vapemod:block/vape_catalog_open", "y": 270 }
   }
 }
