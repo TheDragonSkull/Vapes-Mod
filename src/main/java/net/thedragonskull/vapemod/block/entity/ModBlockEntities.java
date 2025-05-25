@@ -17,11 +17,6 @@ public class ModBlockEntities {
                     BlockEntityType.Builder.of(VapeExpositorBE::new,
                             ModBlocks.VAPE_EXPOSITOR.get()).build(null));
 
-    public static final RegistryObject<BlockEntityType<VapeCatalogBE>> VAPE_CATALOG_BE =
-            BLOCK_ENTITIES.register("vape_catalog_be", () ->
-                    BlockEntityType.Builder.of(VapeCatalogBE::new,
-                            ModBlocks.VAPE_CATALOG.get()).build(null));
-
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);
     }
