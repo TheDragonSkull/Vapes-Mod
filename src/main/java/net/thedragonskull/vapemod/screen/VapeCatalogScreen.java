@@ -60,7 +60,7 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         int height = (this.height - GUI_HEIGHT) / 2;
         int yPos = height + 16 + 2;
 
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < 7; i++) { //todo render arrow here?
             ItemStack vape = vapeList.get(i);
             ItemStack costA = new ItemStack(Items.DIAMOND, 45);
             ItemStack costB = ItemStack.EMPTY;
@@ -73,26 +73,29 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             }));
 
             yPos += 20;
-
-            // Vape Tabs
-            int centerX = (this.width) / 2;
-            int centerY = height + 16 + 2;
-
-            //QVape Pen V2 tab
-            this.addRenderableWidget(Button.builder(Component.literal("QVape Pen V2"), (btn) -> {
-            }).bounds(centerX - 31, centerY, 100, 20).build());
-
-            centerY += 25;
-
-            //QVape D Pod tab
-            this.addRenderableWidget(Button.builder(Component.literal("QVape D Pod"), (btn) -> {
-            }).bounds(centerX - 31, centerY, 100, 20).build());
-
-            //Buy button
-            this.addRenderableWidget(Button.builder(Component.literal("Buy for: "), (btn) -> {
-            }).bounds(centerX + 75, height + 79, 54, 20).build());
         }
 
+        // Vape Tabs
+        int centerX = (this.width) / 2;
+        int centerY = height + 16 + 2;
+
+        //QVape Pen V2 tab
+        this.addRenderableWidget(Button.builder(Component.literal("QVape Pen V2"), (btn) -> {
+        }).bounds(centerX - 31, centerY, 100, 20).build());
+
+        centerY += 25;
+
+        //QVape D Pod tab
+        this.addRenderableWidget(Button.builder(Component.literal("QVape D Pod"), (btn) -> {
+        }).bounds(centerX - 31, centerY, 100, 20).build());
+
+        //Buy button
+        Button buyButton = Button.builder(Component.literal("Buy"), btn -> {
+                }).bounds(centerX + 75, height + 79, 54, 20).build();
+
+        buyButton.active = !this.selectedVape.isEmpty();
+
+        this.addRenderableWidget(buyButton);
     }
 
     private void updateVapeList() {
@@ -153,11 +156,6 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         }
     }
 
-    private void renderButtonArrows(GuiGraphics pGuiGraphics, int pPosX, int pPosY) {
-        RenderSystem.enableBlend();
-        pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35 + 20, pPosY + 3, 0, 15.0F, 171.0F, 10, 9, 512, 256);
-    }
-
     protected void renderLabels(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY) {
         int fontWidth = this.font.width("Vape List");
         int labelX = (this.width - GUI_WIDTH) / 2 + 48 - fontWidth / 2;
@@ -180,10 +178,11 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
 
         int x = (this.width - GUI_WIDTH) / 2;
         int y = (this.height - GUI_HEIGHT) / 2;
+
+        // Background
         graphics.blit(BACKGROUND, x, y, 0, 0, GUI_WIDTH, GUI_HEIGHT, 512, 256);
 
         this.renderScroller(graphics, x, y, this.vapeList);
-        this.renderButtonArrows(graphics, x , y);
         this.renderLabels(graphics, mouseX, mouseY);
         super.render(graphics, mouseX, mouseY, partialTicks);
 
@@ -196,21 +195,21 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
 
         // 3D item
         if (!this.selectedVape.isEmpty()) { //todo: no es centrado absoluto /// name: 3D view
-            int centerX = this.width - 100;
+            int centerX = this.width / 2;
             int centerY = this.height / 2;
-            int scale = 200;
+            int scale = 100;
 
             PoseStack poseStack = graphics.pose();
             poseStack.pushPose();
 
-            poseStack.translate(centerX, centerY, 100);
+            poseStack.translate((centerX + 100) + 1.5F, centerY - 30, 100);
             poseStack.scale(scale, scale, scale);
 
             poseStack.mulPose(Axis.XP.rotationDegrees(180f));
 
 
             float rotation = (System.currentTimeMillis() % 3600L) / 10f;
-            poseStack.mulPose(Axis.YP.rotationDegrees(rotation));
+            poseStack.mulPose(Axis.YP.rotationDegrees(-rotation));
             poseStack.mulPose(Axis.ZP.rotationDegrees(25));
 
             RenderSystem.disableCull();
@@ -358,8 +357,14 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             graphics.renderItemDecorations(Minecraft.getInstance().font, this.result, x + 68, y);
 
             poseStack.popPose();
+
+            this.renderButtonArrows(graphics, x, y);
         }
 
+        private void renderButtonArrows(GuiGraphics pGuiGraphics, int pPosX, int pPosY) {
+            RenderSystem.enableBlend();
+            pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35, pPosY + 4, 0, 15.0F, 171.0F, 10, 9, 512, 256);
+        }
 
         public void renderToolTip(GuiGraphics graphics, int mouseX, int mouseY, Font font) {
             if (this.isHovered) {
