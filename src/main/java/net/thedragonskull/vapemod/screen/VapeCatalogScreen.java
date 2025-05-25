@@ -3,6 +3,7 @@ package net.thedragonskull.vapemod.screen;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -11,8 +12,11 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
@@ -26,9 +30,12 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.util.ModTags;
+import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static net.thedragonskull.vapemod.util.VapeCatalogUtil.hasEnoughCurrency;
 
 public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(VapeMod.MOD_ID, "textures/gui/vape_catalog_screen.png");
@@ -38,6 +45,10 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
     private int pageIndex = 0;
     private final int BUTTON_WIDTH = 60;
     private final int BUTTON_HEIGHT = 20;
+    private Button buyButton;
+
+    ItemStack costA = VapeTradeButton.getCostA(); // o como lo tengas definido
+    ItemStack costB = VapeTradeButton.getCostB();
 
     private static final int GUI_WIDTH = 276;
     private static final int GUI_HEIGHT = 166;
@@ -60,7 +71,7 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         int height = (this.height - GUI_HEIGHT) / 2;
         int yPos = height + 16 + 2;
 
-        for (int i = 0; i < 7; i++) { //todo render arrow here?
+        for (int i = 0; i < 7; i++) {
             ItemStack vape = vapeList.get(i);
             ItemStack costA = new ItemStack(Items.DIAMOND, 45);
             ItemStack costB = ItemStack.EMPTY;
@@ -75,27 +86,30 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             yPos += 20;
         }
 
-        // Vape Tabs
         int centerX = (this.width) / 2;
         int centerY = height + 16 + 2;
+        SoundManager soundManager = Minecraft.getInstance().getSoundManager();
 
         //QVape Pen V2 tab
-        this.addRenderableWidget(Button.builder(Component.literal("QVape Pen V2"), (btn) -> {
-        }).bounds(centerX - 31, centerY, 100, 20).build());
+        this.addRenderableWidget(new VapeCatalogUtil.TabAndBuyButton(centerX - 31, centerY, 100, 20, Component.literal("QVape Pen V2"), btn -> {
+            //TODO: change tab
+        }, SoundEvents.BOOK_PAGE_TURN));
 
         centerY += 25;
 
         //QVape D Pod tab
-        this.addRenderableWidget(Button.builder(Component.literal("QVape D Pod"), (btn) -> {
-        }).bounds(centerX - 31, centerY, 100, 20).build());
+        this.addRenderableWidget(new VapeCatalogUtil.TabAndBuyButton(centerX - 31, centerY, 100, 20, Component.literal("QVape D Pod"), btn -> {
+            //TODO: change tab
+        }, SoundEvents.BOOK_PAGE_TURN));
 
-        //Buy button
-        Button buyButton = Button.builder(Component.literal("Buy"), btn -> {
-                }).bounds(centerX + 75, height + 79, 54, 20).build();
+        // Buy button
+        this.buyButton = new VapeCatalogUtil.TabAndBuyButton(centerX + 75, height + 83, 54, 20, Component.literal("$ Buy $"), btn -> {
+            //todo: comprar
+        }, SoundEvents.ANVIL_LAND); //TODO: register machine/cash sound
 
-        buyButton.active = !this.selectedVape.isEmpty();
+        buyButton.active = !this.selectedVape.isEmpty() && hasEnoughCurrency(this.minecraft.player, costA, costB);
 
-        this.addRenderableWidget(buyButton);
+        this.addRenderableWidget(this.buyButton);
     }
 
     private void updateVapeList() {
@@ -133,6 +147,14 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
     private void attemptBuy(ItemStack vape) {
         // Aquí puedes hacer la comprobación de esmeraldas y enviar un paquete al servidor
         // para ejecutar la compra real.
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        boolean hasSelection = !this.selectedVape.isEmpty();
+        boolean hasCurrency = hasSelection && hasEnoughCurrency(this.minecraft.player, costA, costB);
+        this.buyButton.active = hasSelection && hasCurrency;
     }
 
     private void renderScroller(GuiGraphics pGuiGraphics, int pPosX, int pPosY, List<ItemStack> vapeList) {
@@ -193,8 +215,29 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             }
         }
 
-        // 3D item
-        if (!this.selectedVape.isEmpty()) { //todo: no es centrado absoluto /// name: 3D view
+        if (this.buyButton != null && this.buyButton.isHoveredOrFocused()) {
+            Component tooltip = null;
+
+            if (this.selectedVape.isEmpty()) {
+                if (!this.buyButton.active) {
+                    tooltip = Component.literal("No vape selected").withStyle(ChatFormatting.RED);
+                }
+            } else {
+                ItemStack costA = this.costA;
+                ItemStack costB = this.costB;
+
+                if (!hasEnoughCurrency(this.minecraft.player, costA, costB)) {
+                    tooltip = Component.literal("Not enough currency").withStyle(ChatFormatting.RED);
+                }
+            }
+
+            if (tooltip != null) {
+                graphics.renderTooltip(this.font, tooltip, mouseX, mouseY);
+            }
+        }
+
+        // 3D item TODO: centrar en cuadrado?
+        if (!this.selectedVape.isEmpty()) {
             int centerX = this.width / 2;
             int centerY = this.height / 2;
             int scale = 100;
@@ -309,8 +352,8 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
     @OnlyIn(Dist.CLIENT)
     public class VapeTradeButton extends Button {
         private ItemStack result;
-        private ItemStack costA;
-        private ItemStack costB;
+        private static ItemStack costA;
+        private static ItemStack costB;
         private final int index;
 
         public VapeTradeButton(int x, int y, int index, ItemStack costA, ItemStack costB, ItemStack result, OnPress onPress) {
@@ -319,6 +362,18 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             this.costA = costA;
             this.costB = costB;
             this.result = result;
+        }
+
+        public ItemStack getResult() {
+            return result;
+        }
+
+        public static ItemStack getCostA() {
+            return costA;
+        }
+
+        public static ItemStack getCostB() {
+            return costB;
         }
 
         public int getIndex() {
@@ -359,11 +414,31 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             poseStack.popPose();
 
             this.renderButtonArrows(graphics, x, y);
+
+            int arrowX = x + 5 + 35;
+            int arrowY = y + 4;
+            int arrowWidth = 10;
+            int arrowHeight = 9;
+            boolean enough = hasEnoughCurrency(Minecraft.getInstance().player, costA, costB);
+
+            if (!enough) {
+                if (mouseX >= arrowX && mouseX < arrowX + arrowWidth &&
+                        mouseY >= arrowY && mouseY < arrowY + arrowHeight) {
+                    graphics.renderTooltip(font, Component.literal("Not enough currency").withStyle(ChatFormatting.RED), mouseX, mouseY);
+                }
+            }
         }
 
         private void renderButtonArrows(GuiGraphics pGuiGraphics, int pPosX, int pPosY) {
+            boolean enough = hasEnoughCurrency(Minecraft.getInstance().player, costA, costB);
             RenderSystem.enableBlend();
-            pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35, pPosY + 4, 0, 15.0F, 171.0F, 10, 9, 512, 256);
+
+            if (enough) {
+                pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35, pPosY + 4, 0, 15.0F, 171.0F, 10, 9, 512, 256);
+            } else {
+                pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35, pPosY + 4, 0, 25.0F, 171.0F, 10, 9, 512, 256);
+            }
+
         }
 
         public void renderToolTip(GuiGraphics graphics, int mouseX, int mouseY, Font font) {
