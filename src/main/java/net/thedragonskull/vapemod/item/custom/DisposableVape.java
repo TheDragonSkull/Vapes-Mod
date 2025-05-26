@@ -66,6 +66,16 @@ public class DisposableVape extends Item implements IVape {
     }
 
     @Override
+    public int getMaxDamage(ItemStack stack) {
+        return VapeCommonConfigs.DISPOSABLE_VAPE_DURABILITY.get();
+    }
+
+    @Override
+    public boolean isBarVisible(ItemStack pStack) {
+        return false;
+    }
+
+    @Override
     public void inventoryTick(ItemStack pStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
         if (pLevel.isClientSide || !(pEntity instanceof Player)) return;
 
@@ -157,6 +167,7 @@ public class DisposableVape extends Item implements IVape {
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
                         ModSounds.SMOKING_BREATHE_OUT.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
             }
+
         }
 
     }
