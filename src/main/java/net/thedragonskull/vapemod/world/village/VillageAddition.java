@@ -14,6 +14,7 @@ import net.minecraftforge.event.server.ServerAboutToStartEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.thedragonskull.vapemod.VapeMod;
+import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,25 +54,27 @@ public class VillageAddition {
         Registry<StructureTemplatePool> templatePoolRegistry = event.getServer().registryAccess().registry(Registries.TEMPLATE_POOL).orElseThrow();
         Registry<StructureProcessorList> processorListRegistry = event.getServer().registryAccess().registry(Registries.PROCESSOR_LIST).orElseThrow();
 
+        int value = VapeCommonConfigs.VAPE_SHOP_GENERATION.get();
+
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
                 ResourceLocation.parse("minecraft:village/plains/houses"),
-                "vapemod:vape_shop", 10);
+                "vapemod:vape_shop", value);
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
                 ResourceLocation.parse("minecraft:village/snowy/houses"),
-                "vapemod:vape_shop", 10);
+                "vapemod:vape_shop", value);
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
                 ResourceLocation.parse("minecraft:village/savanna/houses"),
-                "vapemod:vape_shop", 10);
+                "vapemod:vape_shop", value);
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
                 ResourceLocation.parse("minecraft:village/taiga/houses"),
-                "vapemod:vape_shop", 10);
+                "vapemod:vape_shop", value);
 
         addBuildingToPool(templatePoolRegistry, processorListRegistry,
                 ResourceLocation.parse("minecraft:village/desert/houses"),
-                "vapemod:vape_shop", 10);
+                "vapemod:vape_shop", value);
     }
 
 }

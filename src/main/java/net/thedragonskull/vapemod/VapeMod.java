@@ -7,12 +7,15 @@ import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.thedragonskull.vapemod.block.ModBlocks;
 import net.thedragonskull.vapemod.block.entity.ModBlockEntities;
+import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.item.ModCreativeModeTabs;
 import net.thedragonskull.vapemod.item.ModItems;
 import net.thedragonskull.vapemod.particle.ModParticles;
@@ -46,6 +49,7 @@ public class VapeMod {
         MinecraftForge.EVENT_BUS.register(this);
         modEventBus.addListener(this::addCreative);
 
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, VapeCommonConfigs.SPEC, "vapemod-common.toml");
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {

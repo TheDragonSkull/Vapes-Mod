@@ -35,7 +35,7 @@ public class CommonEvents {
         if (event.getType() == ModVillagers.VAPE_SHOPKEEPER.get()) {
             Int2ObjectMap<List<VillagerTrades.ItemListing>> trades = event.getTrades();
 
-            for (Item item : ForgeRegistries.ITEMS.getValues()) {
+/*            for (Item item : ForgeRegistries.ITEMS.getValues()) {
 
                 if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)) {
 
@@ -61,7 +61,7 @@ public class CommonEvents {
                         );
                     });
                 }
-            }
+            }*/
 
         }
     }
@@ -73,26 +73,15 @@ public class CommonEvents {
 
         for (Item item : ForgeRegistries.ITEMS.getValues()) {
 
-            if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)) {
+             if (item.builtInRegistryHolder().is(ModTags.Items.DISPOSABLE_VAPES)) {
 
                 genericTrades.add((pTrader, pRandom) -> {
                     ItemStack vape = new ItemStack(item);
 
                     return new MerchantOffer(
-                            new ItemStack(Items.EMERALD, 30),
+                            new ItemStack(Items.EMERALD, 15), //todo: tomar del config - el 20%
                             vape,
-                            10, 20, 0.2f
-                    );
-                });
-            }  else if (item.builtInRegistryHolder().is(ModTags.Items.DISPOSABLE_VAPES)) {
-
-                genericTrades.add((pTrader, pRandom) -> {
-                    ItemStack vape = new ItemStack(item);
-
-                    return new MerchantOffer(
-                            new ItemStack(Items.EMERALD, 15),
-                            vape,
-                            999, 20, 0.2f
+                            1, 20, 0.2f
                     );
                 });
             }

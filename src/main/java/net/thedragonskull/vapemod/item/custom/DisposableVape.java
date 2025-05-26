@@ -29,6 +29,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.network.PacketDistributor;
+import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.network.PacketHandler;
 import net.thedragonskull.vapemod.network.S2CResistanceSoundPacket;
 import net.thedragonskull.vapemod.network.S2CStopResistanceSoundPacket;
@@ -65,12 +66,26 @@ public class DisposableVape extends Item implements IVape {
     }
 
     @Override
+    public void inventoryTick(ItemStack pStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
+        if (pLevel.isClientSide || !(pEntity instanceof Player)) return;
+
+        if (PotionUtils.getPotion(pStack) == Potions.EMPTY) {
+
+            List<Potion> potions = BuiltInRegistries.POTION.stream()
+                    .filter(p -> !p.getEffects().isEmpty() && p != Potions.EMPTY)
+                    .toList();
+
+            if (!potions.isEmpty()) {
+                Potion randomPotion = potions.get(pLevel.getRandom().nextInt(potions.size()));
+                PotionUtils.setPotion(pStack, randomPotion);
+            }
+        }
+
+    }
+
+    @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack item = player.getItemInHand(hand);
-
-        if (PotionUtils.getPotion(item) == Potions.EMPTY) {
-            return InteractionResultHolder.fail(item);
-        }
 
         for (InteractionHand h : InteractionHand.values()) {
             ItemStack held = player.getItemInHand(h);
@@ -142,7 +157,6 @@ public class DisposableVape extends Item implements IVape {
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
                         ModSounds.SMOKING_BREATHE_OUT.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
             }
-
         }
 
     }
@@ -171,6 +185,7 @@ public class DisposableVape extends Item implements IVape {
                 );
             } else {
                 ClientSoundHandler.stop(player);
+
             }
 
             stack.hurtAndBreak(1, player, e -> e.broadcastBreakEvent(player.getUsedItemHand()));

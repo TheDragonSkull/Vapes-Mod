@@ -43,6 +43,12 @@ public class PacketHandler {
                 .decoder(C2SCloseCatalogPacket::new)
                 .consumerMainThread(C2SCloseCatalogPacket::handle)
                 .add();
+
+        INSTANCE.messageBuilder(C2SBuyVapePacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(C2SBuyVapePacket::encode)
+                .decoder(C2SBuyVapePacket::decode)
+                .consumerMainThread(C2SBuyVapePacket::handle)
+                .add();
     }
 
 

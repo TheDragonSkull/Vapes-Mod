@@ -33,6 +33,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.PacketDistributor;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.capability.VapeEnergyContainer;
+import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.network.S2CResistanceSoundPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
 import net.thedragonskull.vapemod.network.S2CStopResistanceSoundPacket;
@@ -152,7 +153,6 @@ public class Vape extends Item implements VapeEnergyContainer, IVape {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack item = player.getItemInHand(hand);
-        Minecraft minecraft = Minecraft.getInstance();
 
         for (InteractionHand h : InteractionHand.values()) {
             ItemStack held = player.getItemInHand(h);
@@ -241,6 +241,9 @@ public class Vape extends Item implements VapeEnergyContainer, IVape {
 
                     if (!player.getAbilities().instabuild) {
                         storage.extractEnergy(1, false);
+                        if (storage.getEnergyStored() <= 0) {
+                            PotionUtils.setPotion(item, Potions.EMPTY);
+                        }
                     }
 
                     if (!level.isClientSide) {
@@ -395,6 +398,6 @@ public class Vape extends Item implements VapeEnergyContainer, IVape {
 
     @Override
     public int getCapacity(ItemStack container) {
-        return 15;
+        return VapeCommonConfigs.NORMAL_VAPE_CAPACITY.get();
     }
 }

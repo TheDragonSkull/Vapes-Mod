@@ -33,7 +33,9 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.block.custom.VapeCatalog;
+import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.item.custom.DisposableVape;
+import net.thedragonskull.vapemod.network.C2SBuyVapePacket;
 import net.thedragonskull.vapemod.network.C2SCloseCatalogPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
 import net.thedragonskull.vapemod.sound.ModSounds;
@@ -62,9 +64,9 @@ public class VapeCatalogScreen extends Screen {
 
     ItemStack costA = VapeTradeButton.getCostA();
 
-    private static Item COST_ITEM = Items.DIAMOND; //todo: config
-    private static final int PRICE_DISPOSABLE = 10;
-    private static final int PRICE_NORMAL = 25;
+    private static Item COST_ITEM = VapeCommonConfigs.getCatalogCostItem();
+    private static final int PRICE_DISPOSABLE = VapeCommonConfigs.PRICE_DISPOSABLE.get();
+    private static final int PRICE_NORMAL = VapeCommonConfigs.PRICE_NORMAL.get();
 
     private static final int GUI_WIDTH = 276;
     private static final int GUI_HEIGHT = 166;
@@ -148,35 +150,23 @@ public class VapeCatalogScreen extends Screen {
 
         //Buy button
         this.buyButton = Button.builder(Component.literal("$ Buy $"), btn -> {
-            if (this.selectedVape.isEmpty() || this.minecraft.player == null) return;
+            if (this.selectedVape.isEmpty()) return;
 
-            Player player = this.minecraft.player;
-            int price = getPriceForVape(this.selectedVape);
-            ItemStack costStack = new ItemStack(COST_ITEM, price);
+            ItemStack stack = this.selectedVape.copy();
 
-            if (hasEnoughCurrency(player, costStack)) {
-                removeCurrency(player, COST_ITEM, price);
-
-                ItemStack vape = this.selectedVape.copy();
-
-                //Assign potion effect
-                if (vape.getItem() instanceof DisposableVape && PotionUtils.getPotion(vape) == Potions.EMPTY) {
-                    List<Potion> potions = BuiltInRegistries.POTION.stream()
-                            .filter(p -> !p.getEffects().isEmpty() && p != Potions.EMPTY)
-                            .toList();
-
-                    if (!potions.isEmpty()) {
-                        Potion randomPotion = potions.get(player.level().getRandom().nextInt(potions.size()));
-                        PotionUtils.setPotion(vape, randomPotion);
-                    }
+            // Asignar poción aleatoria si es un vape desechable sin poción
+            if (stack.getItem() instanceof DisposableVape && PotionUtils.getPotion(stack) == Potions.EMPTY) {
+                List<Potion> potions = BuiltInRegistries.POTION.stream()
+                        .filter(p -> !p.getEffects().isEmpty() && p != Potions.EMPTY)
+                        .toList();
+                if (!potions.isEmpty()) {
+                    Potion randomPotion = potions.get(this.minecraft.level.getRandom().nextInt(potions.size()));
+                    PotionUtils.setPotion(stack, randomPotion);
                 }
-
-                if (!player.getInventory().add(vape)) {
-                    player.drop(vape, false);
-                }
-
-                player.playSound(ModSounds.CATALOG_BUY.get(), 1.0F, 1.0F);
             }
+
+            PacketHandler.sendToServer(new C2SBuyVapePacket(stack));
+
         }).pos(centerX + 75, height + 83).size(54, 20).build();
 
 
