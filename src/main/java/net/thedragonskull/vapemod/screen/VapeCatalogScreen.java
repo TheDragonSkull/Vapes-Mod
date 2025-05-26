@@ -54,6 +54,8 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
     private final int BUTTON_WIDTH = 60;
     private final int BUTTON_HEIGHT = 20;
     private Button buyButton;
+    private Button scrollUpButton;
+    private Button scrollDownButton;
 
     private enum TabType { DISPOSABLES, NORMAL }
     private TabType currentTab = TabType.DISPOSABLES;
@@ -102,6 +104,23 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         int centerY = height + 16 + 2;
         SoundManager soundManager = Minecraft.getInstance().getSoundManager();
 
+        //Scroll buttons
+        int size = 20;
+        this.scrollUpButton = Button.builder(Component.literal("↑"), btn -> {
+            scrollOff = Math.max(0, scrollOff - 1);
+            updateVapeList();
+            updateScrollButtons();
+        }).pos(centerX - 31, height + 115).size(size, size).build();
+
+        this.scrollDownButton = Button.builder(Component.literal("↓"), btn -> {
+            scrollOff = Math.min(scrollOff + 1, Math.max(0, fullVapeList.size() - 7));
+            updateVapeList();
+            updateScrollButtons();
+        }).pos(centerX - 31, height + 139).size(size, size).build();
+
+        this.addRenderableWidget(scrollUpButton);
+        this.addRenderableWidget(scrollDownButton);
+
         //QVape D Pod tab
         this.addRenderableWidget(new VapeCatalogUtil.TabAndBuyButton(centerX - 31, centerY, 100, 20, Component.literal("QVape D Pod"), btn -> {
             if (this.currentTab != TabType.DISPOSABLES) {
@@ -109,6 +128,7 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
                 this.scrollOff = 0;
                 this.selectedVape = ItemStack.EMPTY;
                 updateVapeList();
+                updateScrollButtons();
             }
         }, SoundEvents.BOOK_PAGE_TURN));
 
@@ -121,6 +141,7 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
                 this.scrollOff = 0;
                 this.selectedVape = ItemStack.EMPTY;
                 updateVapeList();
+                updateScrollButtons();
             }
         }, SoundEvents.BOOK_PAGE_TURN));
 
@@ -162,6 +183,7 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         this.addRenderableWidget(this.buyButton);
 
         updateVapeList();
+        updateScrollButtons();
     }
 
     private void removeCurrency(Player player, int costA, int costB) {
@@ -180,13 +202,13 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         }
     }
 
-
     private void updateVapeList() {
         this.fullVapeList = generateVapeListForTab(this.currentTab);
+        this.scrollOff = Mth.clamp(this.scrollOff, 0, Math.max(0, fullVapeList.size() - 7));
 
-        int from = Mth.clamp(this.scrollOff, 0, Math.max(0, fullVapeList.size() - 7));
+        int from = this.scrollOff;
         int to = Math.min(from + 7, fullVapeList.size());
-        this.vapeList = new ArrayList<>(fullVapeList); // opcional: puedes usar subList si prefieres
+        this.vapeList = new ArrayList<>(fullVapeList);
 
         for (int i = 0; i < 7; i++) {
             if (i + from < fullVapeList.size()) {
@@ -204,6 +226,16 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
                 button.active = false;
             }
         }
+
+    }
+
+    private void updateScrollButtons() {
+        int total = this.fullVapeList.size();
+        int visible = 7;
+        int maxScroll = Math.max(0, total - visible);
+
+        this.scrollUpButton.active = scrollOff > 0;
+        this.scrollDownButton.active = scrollOff < maxScroll;
     }
 
     private int getPriceForVape(ItemStack vape) {
@@ -245,17 +277,14 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         int maxScroll = Math.max(0, total - visible);
 
         if (maxScroll > 0) {
-            int thumbHeight = 27; // Alto del pulgar
+            int thumbHeight = 27;
             int trackHeight = 140;
 
-            // Relación de scroll
             float scrollRatio = (float) this.scrollOff / maxScroll;
             int thumbY = (int) (scrollRatio * (trackHeight - thumbHeight));
 
-            // Usa u=199, v=0 para el scroller activo
             pGuiGraphics.blit(BACKGROUND, pPosX + 94, pPosY + 18 + thumbY, 0, 0.0F, 199.0F, 6, 27, 512, 256);
         } else {
-            // Usa u=199, v=6 para el scroller inactivo
             pGuiGraphics.blit(BACKGROUND, pPosX + 94, pPosY + 18, 0, 6.0F, 199.0F, 6, 27, 512, 256);
         }
     }
@@ -488,7 +517,6 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             PoseStack poseStack = graphics.pose();
             poseStack.pushPose();
 
-            // Posiciones relativas al botón
             int x = this.getX();
             int y = this.getY() + 1;
 
@@ -496,7 +524,7 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             graphics.renderItem(this.costA, x + 2, y);
             graphics.renderItemDecorations(Minecraft.getInstance().font, this.costA, x + 2, y);
 
-            // Render costB (solo si no está vacío)
+            // Render costB
             if (!this.costB.isEmpty()) {
                 graphics.renderItem(this.costB, x + 34, y);
                 graphics.renderItemDecorations(Minecraft.getInstance().font, this.costB, x + 34, y);
