@@ -68,6 +68,10 @@ public class DisposableVape extends Item implements IVape {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack item = player.getItemInHand(hand);
 
+        if (PotionUtils.getPotion(item) == Potions.EMPTY) {
+            return InteractionResultHolder.fail(item);
+        }
+
         for (InteractionHand h : InteractionHand.values()) {
             ItemStack held = player.getItemInHand(h);
             if (held.getItem() instanceof DisposableVape) {
@@ -173,24 +177,6 @@ public class DisposableVape extends Item implements IVape {
         }
 
         return super.finishUsingItem(stack, level, entity);
-    }
-
-    @Override
-    public void inventoryTick(ItemStack pStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
-        if (pLevel.isClientSide || !(pEntity instanceof Player)) return;
-
-        if (PotionUtils.getPotion(pStack) == Potions.EMPTY) {
-
-            List<Potion> potions = BuiltInRegistries.POTION.stream()
-                    .filter(p -> !p.getEffects().isEmpty() && p != Potions.EMPTY)
-                    .toList();
-
-            if (!potions.isEmpty()) {
-                Potion randomPotion = potions.get(pLevel.getRandom().nextInt(potions.size()));
-                PotionUtils.setPotion(pStack, randomPotion);
-            }
-        }
-
     }
 
     @Override

@@ -13,6 +13,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
@@ -23,12 +24,16 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.Potion;
+import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.block.custom.VapeCatalog;
+import net.thedragonskull.vapemod.item.custom.DisposableVape;
 import net.thedragonskull.vapemod.network.C2SCloseCatalogPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
 import net.thedragonskull.vapemod.sound.ModSounds;
@@ -55,6 +60,8 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
 
     ItemStack costA = VapeTradeButton.getCostA();
     ItemStack costB = VapeTradeButton.getCostB();
+    private static final int PRICE_DISPOSABLE = 25;
+    private static final int PRICE_NORMAL = 45;
 
     private static final int GUI_WIDTH = 276;
     private static final int GUI_HEIGHT = 166;
@@ -86,7 +93,6 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
                     btn -> {
                         VapeTradeButton b = (VapeTradeButton) btn;
                         this.selectedVape = b.getResult();
-                        attemptBuy(b.getResult());
                     }
             ));
             yPos += 20;
@@ -118,25 +124,39 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             }
         }, SoundEvents.BOOK_PAGE_TURN));
 
-        // Buy button todo: make normal button
-        this.buyButton = new VapeCatalogUtil.TabAndBuyButton(centerX + 75, height + 83, 54, 20, Component.literal("$ Buy $"), btn -> {
+        //Buy button
+        this.buyButton = Button.builder(Component.literal("$ Buy $"), btn -> {
             if (this.selectedVape.isEmpty() || this.minecraft.player == null) return;
 
             Player player = this.minecraft.player;
+            int price = getPriceForVape(this.selectedVape);
+            ItemStack cost = new ItemStack(Items.DIAMOND, price);
 
-            if (hasEnoughCurrency(player, costA, costB)) {
-                removeCurrency(player, 1, 1);
+            if (hasEnoughCurrency(player, cost, ItemStack.EMPTY)) {
+                removeCurrency(player, price, 1);
 
                 ItemStack vape = this.selectedVape.copy();
+
+                //Assign potion effect
+                if (vape.getItem() instanceof DisposableVape && PotionUtils.getPotion(vape) == Potions.EMPTY) {
+                    List<Potion> potions = BuiltInRegistries.POTION.stream()
+                            .filter(p -> !p.getEffects().isEmpty() && p != Potions.EMPTY)
+                            .toList();
+
+                    if (!potions.isEmpty()) {
+                        Potion randomPotion = potions.get(player.level().getRandom().nextInt(potions.size()));
+                        PotionUtils.setPotion(vape, randomPotion);
+                    }
+                }
+
                 if (!player.getInventory().add(vape)) {
                     player.drop(vape, false);
                 }
 
-                // Sonido opcional de compra
                 player.playSound(ModSounds.CATALOG_BUY.get(), 1.0F, 1.0F);
             }
+        }).pos(centerX + 75, height + 83).size(54, 20).build();
 
-        }, ModSounds.CATALOG_BUY.get());
 
         buyButton.active = !this.selectedVape.isEmpty() && hasEnoughCurrency(this.minecraft.player, costA, costB);
         this.addRenderableWidget(this.buyButton);
@@ -171,7 +191,8 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         for (int i = 0; i < 7; i++) {
             if (i + from < fullVapeList.size()) {
                 ItemStack vape = fullVapeList.get(i + from);
-                ItemStack costA = new ItemStack(Items.DIAMOND, 45);
+                int price = getPriceForVape(vape);
+                ItemStack costA = new ItemStack(Items.DIAMOND, price);
 
                 VapeTradeButton button = this.tradeOfferButtons[i];
                 button.visible = true;
@@ -185,9 +206,14 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         }
     }
 
-    private void attemptBuy(ItemStack vape) {
-        // Aquí puedes hacer la comprobación de esmeraldas y enviar un paquete al servidor
-        // para ejecutar la compra real.
+    private int getPriceForVape(ItemStack vape) {
+        if (vape.is(ModTags.Items.DISPOSABLE_VAPES)) {
+            return PRICE_DISPOSABLE;
+        } else if (vape.is(ModTags.Items.VAPES)) {
+            return PRICE_NORMAL;
+        } else {
+            return PRICE_NORMAL;
+        }
     }
 
     @Override
@@ -202,6 +228,13 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             if (!(state.getBlock() instanceof VapeCatalog)) {
                 minecraft.setScreen(null);
             }
+        }
+
+        if (!this.selectedVape.isEmpty()) {
+            int price = getPriceForVape(this.selectedVape);
+            this.buyButton.active = hasEnoughCurrency(this.minecraft.player, new ItemStack(Items.DIAMOND, price), ItemStack.EMPTY);
+        } else {
+            this.buyButton.active = false;
         }
 
     }
@@ -270,13 +303,6 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             if (this.selectedVape.isEmpty()) {
                 if (!this.buyButton.active) {
                     tooltip = Component.literal("No vape selected").withStyle(ChatFormatting.RED);
-                }
-            } else {
-                ItemStack costA = this.costA;
-                ItemStack costB = this.costB;
-
-                if (!hasEnoughCurrency(this.minecraft.player, costA, costB)) {
-                    tooltip = Component.literal("Not enough currency").withStyle(ChatFormatting.RED);
                 }
             }
 
