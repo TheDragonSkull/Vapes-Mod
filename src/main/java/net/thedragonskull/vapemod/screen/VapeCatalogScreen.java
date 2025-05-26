@@ -45,7 +45,7 @@ import java.util.List;
 
 import static net.thedragonskull.vapemod.util.VapeCatalogUtil.hasEnoughCurrency;
 
-public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
+public class VapeCatalogScreen extends Screen {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(VapeMod.MOD_ID, "textures/gui/vape_catalog_screen.png");
     private final VapeCatalogScreen.VapeTradeButton[] tradeOfferButtons = new VapeCatalogScreen.VapeTradeButton[7];
     private List<ItemStack> vapeList = new ArrayList<>();
@@ -61,9 +61,10 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
     private TabType currentTab = TabType.DISPOSABLES;
 
     ItemStack costA = VapeTradeButton.getCostA();
-    ItemStack costB = VapeTradeButton.getCostB();
-    private static final int PRICE_DISPOSABLE = 25;
-    private static final int PRICE_NORMAL = 45;
+
+    private static Item COST_ITEM = Items.DIAMOND; //todo: config
+    private static final int PRICE_DISPOSABLE = 10;
+    private static final int PRICE_NORMAL = 25;
 
     private static final int GUI_WIDTH = 276;
     private static final int GUI_HEIGHT = 166;
@@ -91,7 +92,7 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
 
         for (int i = 0; i < 7; i++) {
             this.tradeOfferButtons[i] = this.addRenderableWidget(new VapeTradeButton(width + 5, yPos, i,
-                    ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY,
+                    ItemStack.EMPTY, ItemStack.EMPTY,
                     btn -> {
                         VapeTradeButton b = (VapeTradeButton) btn;
                         this.selectedVape = b.getResult();
@@ -151,10 +152,10 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
 
             Player player = this.minecraft.player;
             int price = getPriceForVape(this.selectedVape);
-            ItemStack cost = new ItemStack(Items.DIAMOND, price);
+            ItemStack costStack = new ItemStack(COST_ITEM, price);
 
-            if (hasEnoughCurrency(player, cost, ItemStack.EMPTY)) {
-                removeCurrency(player, price, 1);
+            if (hasEnoughCurrency(player, costStack)) {
+                removeCurrency(player, COST_ITEM, price);
 
                 ItemStack vape = this.selectedVape.copy();
 
@@ -179,21 +180,17 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         }).pos(centerX + 75, height + 83).size(54, 20).build();
 
 
-        buyButton.active = !this.selectedVape.isEmpty() && hasEnoughCurrency(this.minecraft.player, costA, costB);
+        buyButton.active = !this.selectedVape.isEmpty() && hasEnoughCurrency(this.minecraft.player, costA);
         this.addRenderableWidget(this.buyButton);
 
         updateVapeList();
         updateScrollButtons();
     }
 
-    private void removeCurrency(Player player, int costA, int costB) {
-        removeItemsFromPlayer(player, Items.DIAMOND, costA);
-    }
-
-    private void removeItemsFromPlayer(Player player, Item item, int amount) {
+    private void removeCurrency(Player player, Item currencyItem, int amount) {
         for (int i = 0; i < player.getInventory().items.size(); i++) {
             ItemStack stack = player.getInventory().items.get(i);
-            if (stack.getItem() == item) {
+            if (stack.getItem() == currencyItem) {
                 int toRemove = Math.min(stack.getCount(), amount);
                 stack.shrink(toRemove);
                 amount -= toRemove;
@@ -214,12 +211,12 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             if (i + from < fullVapeList.size()) {
                 ItemStack vape = fullVapeList.get(i + from);
                 int price = getPriceForVape(vape);
-                ItemStack costA = new ItemStack(Items.DIAMOND, price);
+                ItemStack costStack = new ItemStack(COST_ITEM, price);
 
                 VapeTradeButton button = this.tradeOfferButtons[i];
                 button.visible = true;
                 button.active = true;
-                button.setItem(vape, costA, ItemStack.EMPTY);
+                button.setItem(vape, costStack);
             } else {
                 VapeTradeButton button = this.tradeOfferButtons[i];
                 button.visible = false;
@@ -252,7 +249,7 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
     public void tick() {
         super.tick();
         boolean hasSelection = !this.selectedVape.isEmpty();
-        boolean hasCurrency = hasSelection && hasEnoughCurrency(this.minecraft.player, costA, costB);
+        boolean hasCurrency = hasSelection && hasEnoughCurrency(this.minecraft.player, costA);
         this.buyButton.active = hasSelection && hasCurrency;
 
         if (minecraft != null && minecraft.level != null) {
@@ -264,7 +261,7 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
 
         if (!this.selectedVape.isEmpty()) {
             int price = getPriceForVape(this.selectedVape);
-            this.buyButton.active = hasEnoughCurrency(this.minecraft.player, new ItemStack(Items.DIAMOND, price), ItemStack.EMPTY);
+            this.buyButton.active = hasEnoughCurrency(this.minecraft.player, new ItemStack(COST_ITEM, price));
         } else {
             this.buyButton.active = false;
         }
@@ -477,14 +474,12 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
     public class VapeTradeButton extends Button {
         private ItemStack result;
         private static ItemStack costA;
-        private static ItemStack costB;
         private final int index;
 
-        public VapeTradeButton(int x, int y, int index, ItemStack costA, ItemStack costB, ItemStack result, OnPress onPress) {
+        public VapeTradeButton(int x, int y, int index, ItemStack costA, ItemStack result, OnPress onPress) {
             super(x, y, 88, 20, Component.empty(), onPress, DEFAULT_NARRATION);
             this.index = index;
             this.costA = costA;
-            this.costB = costB;
             this.result = result;
         }
 
@@ -496,18 +491,13 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             return costA;
         }
 
-        public static ItemStack getCostB() {
-            return costB;
-        }
-
         public int getIndex() {
             return this.index;
         }
 
-        public void setItem(ItemStack result, ItemStack costA, ItemStack costB) {
+        public void setItem(ItemStack result, ItemStack costA) {
             this.result = result;
             this.costA = costA;
-            this.costB = costB;
         }
 
         @Override
@@ -524,12 +514,6 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             graphics.renderItem(this.costA, x + 2, y);
             graphics.renderItemDecorations(Minecraft.getInstance().font, this.costA, x + 2, y);
 
-            // Render costB
-            if (!this.costB.isEmpty()) {
-                graphics.renderItem(this.costB, x + 34, y);
-                graphics.renderItemDecorations(Minecraft.getInstance().font, this.costB, x + 34, y);
-            }
-
             // Render result
             graphics.renderItem(this.result, x + 68, y + 1);
             graphics.renderItemDecorations(Minecraft.getInstance().font, this.result, x + 68, y);
@@ -542,7 +526,7 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
             int arrowY = y + 4;
             int arrowWidth = 10;
             int arrowHeight = 9;
-            boolean enough = hasEnoughCurrency(Minecraft.getInstance().player, costA, costB);
+            boolean enough = hasEnoughCurrency(Minecraft.getInstance().player, costA);
 
             if (!enough) {
                 if (mouseX >= arrowX && mouseX < arrowX + arrowWidth &&
@@ -553,7 +537,7 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         }
 
         private void renderButtonArrows(GuiGraphics pGuiGraphics, int pPosX, int pPosY) {
-            boolean enough = hasEnoughCurrency(Minecraft.getInstance().player, costA, costB);
+            boolean enough = hasEnoughCurrency(Minecraft.getInstance().player, costA);
             RenderSystem.enableBlend();
 
             if (enough) {
@@ -565,11 +549,9 @@ public class VapeCatalogScreen extends Screen { // TODO: CLEAN COMMENTS AND CODE
         }
 
         public void renderToolTip(GuiGraphics graphics, int mouseX, int mouseY, Font font) {
-            if (this.isHovered) {
+            if (isHovered) {
                 if (mouseX < this.getX() + 20) {
                     graphics.renderTooltip(font, this.costA, mouseX, mouseY);
-                } else if (mouseX < this.getX() + 50 && mouseX > this.getX() + 30 && !this.costB.isEmpty()) {
-                    graphics.renderTooltip(font, this.costB, mouseX, mouseY);
                 } else if (mouseX > this.getX() + 65) {
                     graphics.renderTooltip(font, this.result, mouseX, mouseY);
                 }

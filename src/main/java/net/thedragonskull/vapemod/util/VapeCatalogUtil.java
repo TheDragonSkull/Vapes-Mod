@@ -10,12 +10,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
-import javax.annotation.Nullable;
 
 public class VapeCatalogUtil {
 
-    public static boolean hasEnoughCurrency(Player player, ItemStack costA, @Nullable ItemStack costB) {
-        return hasEnoughOf(player, costA) && (costB == null || costB.isEmpty() || hasEnoughOf(player, costB));
+    public static boolean hasEnoughCurrency(Player player, ItemStack costA) {
+        return hasEnoughOf(player, costA);
     }
 
     public static boolean hasEnoughOf(Player player, ItemStack required) {
