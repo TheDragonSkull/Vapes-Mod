@@ -104,8 +104,7 @@ public class VapeCatalogScreen extends Screen {
                         this.selectedVape = b.getResult();
                         this.selectedCostA = b.getCostA();
                         this.selectedCostB = b.getCostB();
-                        this.buyButton.active = !this.selectedVape.isEmpty() &&
-                                hasEnoughCurrency(this.minecraft.player, selectedCostA, selectedCostB);
+                        this.updateBuyButtonActiveState();
                     }
             ));
             yPos += 20;
@@ -268,6 +267,7 @@ public class VapeCatalogScreen extends Screen {
             }
         }
 
+        updateBuyButtonActiveState();
     }
 
     private ItemStack getExtraCost(ItemStack item) { //TODO: cambiar tags por custom trades
@@ -276,6 +276,11 @@ public class VapeCatalogScreen extends Screen {
         } else {
             return ItemStack.EMPTY;
         }
+    }
+
+    private void updateBuyButtonActiveState() {
+        this.buyButton.active = !this.selectedVape.isEmpty() &&
+                hasEnoughCurrency(this.minecraft.player, selectedCostA, selectedCostB);
     }
 
     private void updateScrollButtons() {
@@ -312,12 +317,12 @@ public class VapeCatalogScreen extends Screen {
             BlockState state = minecraft.level.getBlockState(blockPos);
             if (!(state.getBlock() instanceof VapeCatalog)) {
                 minecraft.setScreen(null);
+                return;
             }
         }
 
         if (!this.selectedVape.isEmpty()) {
-            int price = getPriceForVape(this.selectedVape);
-            this.buyButton.active = hasEnoughCurrency(this.minecraft.player, new ItemStack(COST_ITEM, price), selectedCostB);
+            this.buyButton.active = hasEnoughCurrency(this.minecraft.player, selectedCostA, selectedCostB);
         } else {
             this.buyButton.active = false;
         }

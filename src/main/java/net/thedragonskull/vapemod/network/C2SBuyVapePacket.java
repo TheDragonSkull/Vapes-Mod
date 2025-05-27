@@ -73,7 +73,7 @@ public class C2SBuyVapePacket {
         for (int i = 0; i < player.getInventory().items.size(); i++) {
             ItemStack stack = player.getInventory().items.get(i);
 
-            if (ItemStack.isSameItemSameTags(stack, required)) {
+            if (stack.getItem() == required.getItem()) {
                 int removed = Math.min(stack.getCount(), remaining);
                 stack.shrink(removed);
                 remaining -= removed;
@@ -82,11 +82,6 @@ public class C2SBuyVapePacket {
                 }
             }
         }
-    }
-
-    private static int getPriceForVape(ItemStack vape) {
-        if (vape.is(ModTags.Items.DISPOSABLE_VAPES)) return VapeCommonConfigs.PRICE_DISPOSABLE.get();
-        return VapeCommonConfigs.PRICE_NORMAL.get();
     }
 }
 
