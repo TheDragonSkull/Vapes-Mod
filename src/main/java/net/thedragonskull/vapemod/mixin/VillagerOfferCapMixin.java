@@ -32,7 +32,7 @@ public abstract class VillagerOfferCapMixin extends AbstractVillager {
             MerchantOffers merchantOffers = this.getOffers();
             VillagerTrades.ItemListing[] newTrades = VillagerTrades.TRADES.get(villagerData.getProfession()).get(villagerData.getLevel());
 
-            this.addOffersFromItemListings(merchantOffers, newTrades, 25); // TODO: revisar después de nuevas offers
+            this.addOffersFromItemListings(merchantOffers, newTrades, 25);
 
             ci.cancel();
         }
