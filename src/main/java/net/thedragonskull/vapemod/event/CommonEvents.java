@@ -1,68 +1,56 @@
 package net.thedragonskull.vapemod.event;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.world.entity.npc.VillagerTrades;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.MerchantOffer;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.village.VillagerTradesEvent;
 import net.minecraftforge.event.village.WandererTradesEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.VapeMod;
-import net.thedragonskull.vapemod.item.ModItems;
-import net.thedragonskull.vapemod.item.custom.Vape;
-import net.thedragonskull.vapemod.sound.ResistanceSoundInstance;
+import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.util.ModTags;
 import net.thedragonskull.vapemod.villager.ModVillagers;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Mod.EventBusSubscriber(modid = VapeMod.MOD_ID)
 public class CommonEvents {
 
     @SubscribeEvent
-    public static void addCustomTrades(VillagerTradesEvent event) { // TODO: cambiar por nuevas offers
+    public static void addCustomTrades(VillagerTradesEvent event) {
         if (event.getType() == ModVillagers.VAPE_SHOPKEEPER.get()) {
             Int2ObjectMap<List<VillagerTrades.ItemListing>> trades = event.getTrades();
 
-/*            for (Item item : ForgeRegistries.ITEMS.getValues()) {
-
+            for (Item item : ForgeRegistries.ITEMS.getValues()) {
                 if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)) {
-
-                    trades.get(1).add((pTrader, pRandom) -> {
-                        ItemStack vape = new ItemStack(item);
-
-                        return new MerchantOffer(
-                                new ItemStack(Items.EMERALD, 45),
-                                vape,
-                                10, 20, 0.2f
-                        );
-                    });
-
+                    for (int level = 1; level <= 5; level++) {
+                        trades.get(level).add((pTrader, pRandom) -> {
+                            ItemStack vape = new ItemStack(item);
+                            return new MerchantOffer(
+                                    new ItemStack(Items.EMERALD, 45),
+                                    vape,
+                                    10, 3, 0.0f
+                            );
+                        });
+                    }
                 } else if (item.builtInRegistryHolder().is(ModTags.Items.DISPOSABLE_VAPES)) {
-
-                    trades.get(2).add((pTrader, pRandom) -> {
-                        ItemStack vape = new ItemStack(item);
-
-                        return new MerchantOffer(
-                                new ItemStack(Items.EMERALD, 25),
-                                vape,
-                                999, 20, 0.2f
-                        );
-                    });
+                    for (int level = 1; level <= 5; level++) {
+                        trades.get(level).add((pTrader, pRandom) -> {
+                            ItemStack vape = new ItemStack(item);
+                            return new MerchantOffer(
+                                    new ItemStack(Items.EMERALD, 25),
+                                    vape,
+                                    10, 3, 0.0f
+                            );
+                        });
+                    }
                 }
-            }*/
-
+            }
         }
     }
 
@@ -77,11 +65,28 @@ public class CommonEvents {
 
                 genericTrades.add((pTrader, pRandom) -> {
                     ItemStack vape = new ItemStack(item);
+                    int basePrice = VapeCommonConfigs.PRICE_DISPOSABLE.get();
+                    int discountedPrice = Math.max(1, Math.round(basePrice * 0.2f));
 
                     return new MerchantOffer(
-                            new ItemStack(Items.EMERALD, 15), //todo: tomar del config - el 20%
+                            new ItemStack(Items.EMERALD, discountedPrice),
                             vape,
-                            1, 20, 0.2f
+                            1, 4, 0.0f
+                    );
+                });
+            }
+
+            if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)) {
+
+                genericTrades.add((pTrader, pRandom) -> {
+                    ItemStack vape = new ItemStack(item);
+                    int basePrice = VapeCommonConfigs.PRICE_NORMAL.get();
+                    int discountedPrice = Math.max(1, Math.round(basePrice * 0.2f));
+
+                    return new MerchantOffer(
+                            new ItemStack(Items.EMERALD, discountedPrice),
+                            vape,
+                            1, 5, 0.0f
                     );
                 });
             }

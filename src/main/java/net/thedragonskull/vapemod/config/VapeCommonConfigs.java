@@ -29,14 +29,14 @@ public class VapeCommonConfigs {
                 .defineInRange("QVape Pen V2 Max Energy", 15, 1, 1000);
 
 
-        CATALOG_COST_ITEM = BUILDER.comment("The cost item for the items in the catalog (like emeralds in trades)")
+        CATALOG_COST_ITEM = BUILDER.comment("The cost item for the vapes in the catalog (like emeralds in trades)")
                 .comment("Must be a valid item ID like 'minecraft:emerald'")
                 .define("Catalog cost item", "minecraft:diamond");
 
-        PRICE_DISPOSABLE = BUILDER.comment("The price for the QVape D Pod vapes")
+        PRICE_DISPOSABLE = BUILDER.comment("The price for the QVape D Pod vapes in the catalog")
                 .defineInRange("QVape D Pod price", 10, 1, 64);
 
-        PRICE_NORMAL = BUILDER.comment("The price for the QVape Pen V2 vapes")
+        PRICE_NORMAL = BUILDER.comment("The price for the QVape Pen V2 vapes the catalog")
                 .defineInRange("QVape Pen V2 price", 25, 1, 64);
 
 

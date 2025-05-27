@@ -17,6 +17,7 @@ import java.util.List;
 @Mixin(ItemStack.class)
 public class ItemStackMixin {
 
+    //Removes durability text from tooltip
     @Inject(method = "getTooltipLines", at = @At("RETURN"), cancellable = true)
     private void vapemod$removeDurabilityText(Player pPlayer, TooltipFlag pIsAdvanced, CallbackInfoReturnable<java.util.List<Component>> cir) {
         ItemStack self = (ItemStack)(Object)this;

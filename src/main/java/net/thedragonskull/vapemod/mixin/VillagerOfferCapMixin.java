@@ -21,7 +21,7 @@ public abstract class VillagerOfferCapMixin extends AbstractVillager {
         super(pEntityType, pLevel);
     }
 
-    @Shadow
+/*    @Shadow
     public abstract VillagerData getVillagerData();
 
     @Inject(method = "updateTrades", at = @At("HEAD"), cancellable = true)
@@ -36,6 +36,6 @@ public abstract class VillagerOfferCapMixin extends AbstractVillager {
 
             ci.cancel();
         }
-    }
+    }*/
 
 }
