@@ -35,12 +35,14 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.block.custom.VapeCatalog;
 import net.thedragonskull.vapemod.config.VapeCommonConfigs;
+import net.thedragonskull.vapemod.item.ModItems;
 import net.thedragonskull.vapemod.item.custom.DisposableVape;
 import net.thedragonskull.vapemod.network.C2SBuyVapePacket;
 import net.thedragonskull.vapemod.network.C2SCloseCatalogPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
 import net.thedragonskull.vapemod.sound.ModSounds;
 import net.thedragonskull.vapemod.util.ModTags;
+import net.thedragonskull.vapemod.util.VapeCatalogOffers;
 import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
 import java.util.ArrayList;
@@ -206,7 +208,7 @@ public class VapeCatalogScreen extends Screen {
         for (int i = 0; i < player.getInventory().items.size(); i++) {
             ItemStack stack = player.getInventory().items.get(i);
 
-            if (ItemStack.isSameItemSameTags(stack, required)) {
+            if (stack.getItem() == required.getItem()) {
                 int removed = Math.min(stack.getCount(), remaining);
                 stack.shrink(removed);
                 remaining -= removed;
@@ -217,35 +219,58 @@ public class VapeCatalogScreen extends Screen {
         }
     }
 
+    private List<VapeCatalogOffers> specialTrades = List.of(
+            new VapeCatalogOffers(
+                    new ItemStack(ModItems.VAPE_RED.get()),
+                    new ItemStack(Items.DIAMOND),
+                    new ItemStack(ModItems.VAPE.get(), 1)
+            )
+    );
+
     private void updateVapeList() {
-        this.fullVapeList = generateVapeListForTab(this.currentTab);
-        this.scrollOff = Mth.clamp(this.scrollOff, 0, Math.max(0, fullVapeList.size() - 7));
 
-        int from = this.scrollOff;
-        int to = Math.min(from + 7, fullVapeList.size());
-        this.vapeList = new ArrayList<>(fullVapeList);
-
-        for (int i = 0; i < 7; i++) {
-            if (i + from < fullVapeList.size()) {
-                ItemStack vape = fullVapeList.get(i + from);
-                int price = getPriceForVape(vape);
-                ItemStack costA = new ItemStack(COST_ITEM, price);
-                ItemStack costB = getExtraCost(vape);
-
+        if (currentTab == TabType.SPECIAL) {
+            for (int i = 0; i < 7; i++) {
                 VapeTradeButton button = this.tradeOfferButtons[i];
-                button.visible = true;
-                button.active = true;
-                button.setItem(vape, costA, costB);
-            } else {
+                if (i < specialTrades.size()) {
+                    VapeCatalogOffers t = specialTrades.get(i);
+                    button.visible = true;
+                    button.active  = true;
+                    button.setItem(t.getResult(), t.getCostA(), t.getCostB());
+                } else {
+                    button.visible = false;
+                    button.active  = false;
+                }
+            }
+        } else {
+
+            this.fullVapeList = generateVapeListForTab(this.currentTab);
+            this.scrollOff = Mth.clamp(this.scrollOff, 0, Math.max(0, fullVapeList.size() - 7));
+            //this.vapeList = new ArrayList<>(fullVapeList);
+
+            for (int i = 0; i < 7; i++) {
                 VapeTradeButton button = this.tradeOfferButtons[i];
-                button.visible = false;
-                button.active = false;
+                int idx = i + scrollOff;
+
+                if (idx < fullVapeList.size()) {
+                    ItemStack vape = fullVapeList.get(idx);
+                    int price = getPriceForVape(vape);
+                    ItemStack costA = new ItemStack(COST_ITEM, price); //TODO: costA y costB distintos por cada custom trade
+                    ItemStack costB = getExtraCost(vape);
+
+                    button.visible = true;
+                    button.active = true;
+                    button.setItem(vape, costA, costB);
+                } else {
+                    button.visible = false;
+                    button.active = false;
+                }
             }
         }
 
     }
 
-    private ItemStack getExtraCost(ItemStack item) {
+    private ItemStack getExtraCost(ItemStack item) { //TODO: cambiar tags por custom trades
         if (item.is(ItemTags.ACACIA_LOGS)) {
             return new ItemStack(Items.BOOK, 1);
         } else {
@@ -254,12 +279,16 @@ public class VapeCatalogScreen extends Screen {
     }
 
     private void updateScrollButtons() {
-        int total = this.fullVapeList.size();
-        int visible = 7;
-        int maxScroll = Math.max(0, total - visible);
-
-        this.scrollUpButton.active = scrollOff > 0;
-        this.scrollDownButton.active = scrollOff < maxScroll;
+        if (currentTab == TabType.SPECIAL) {
+            this.scrollUpButton.active = false;
+            this.scrollDownButton.active = false;
+        } else {
+            int total   = this.fullVapeList.size();
+            int visible = 7;
+            int max     = Math.max(0, total - visible);
+            this.scrollUpButton.active   = scrollOff > 0;
+            this.scrollDownButton.active = scrollOff < max;
+        }
     }
 
     private int getPriceForVape(ItemStack vape) {
@@ -300,7 +329,7 @@ public class VapeCatalogScreen extends Screen {
         int visible = 7;
         int maxScroll = Math.max(0, total - visible);
 
-        if (maxScroll > 0) {
+        if (maxScroll > 0 && currentTab != TabType.SPECIAL) {
             int thumbHeight = 27;
             int trackHeight = 140;
 
@@ -447,7 +476,7 @@ public class VapeCatalogScreen extends Screen {
     }
 
     private boolean canScroll(int pNumOffers) {
-        return pNumOffers > 7;
+        return currentTab != TabType.SPECIAL && pNumOffers > 7;
     }
 
     @Override
@@ -568,7 +597,7 @@ public class VapeCatalogScreen extends Screen {
 
             this.renderButtonArrows(graphics, x, y);
 
-            int arrowX = x + 5 + 35;
+            int arrowX = x + 5 + 35 + 10;
             int arrowY = y + 4;
             int arrowWidth = 10;
             int arrowHeight = 9;
@@ -587,9 +616,9 @@ public class VapeCatalogScreen extends Screen {
             RenderSystem.enableBlend();
 
             if (enough) {
-                pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35, pPosY + 4, 0, 15.0F, 171.0F, 10, 9, 512, 256);
+                pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35 + 10, pPosY + 4, 0, 15.0F, 171.0F, 10, 9, 512, 256);
             } else {
-                pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35, pPosY + 4, 0, 25.0F, 171.0F, 10, 9, 512, 256);
+                pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35 + 10, pPosY + 4, 0, 25.0F, 171.0F, 10, 9, 512, 256);
             }
 
         }

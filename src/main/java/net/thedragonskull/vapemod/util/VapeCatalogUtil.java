@@ -24,7 +24,7 @@ public class VapeCatalogUtil {
         int found = 0;
 
         for (ItemStack stack : player.getInventory().items) {
-            if (ItemStack.isSameItemSameTags(stack, required)) {
+            if (stack.getItem() == required.getItem()) {
                 found += stack.getCount();
                 if (found >= requiredCount) {
                     return true;
