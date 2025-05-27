@@ -70,7 +70,7 @@ public class CommonEvents {
                 genericTrades.add((pTrader, pRandom) -> {
                     ItemStack vape = new ItemStack(item);
                     int basePrice = VapeCommonConfigs.PRICE_NORMAL.get();
-                    int discountedPrice = Math.max(1, Math.round(basePrice * 0.2f));
+                    int discountedPrice = Math.max(1, Math.round(basePrice * 0.8f));
 
                     return new MerchantOffer(
                             new ItemStack(Items.EMERALD, discountedPrice),

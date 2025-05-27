@@ -17,6 +17,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -59,7 +60,7 @@ public class VapeCatalogScreen extends Screen {
     private Button scrollUpButton;
     private Button scrollDownButton;
 
-    private enum TabType { DISPOSABLES, NORMAL }
+    private enum TabType { DISPOSABLES, NORMAL, SPECIAL }
     private TabType currentTab = TabType.DISPOSABLES;
 
     ItemStack costA = VapeTradeButton.getCostA();
@@ -148,13 +149,25 @@ public class VapeCatalogScreen extends Screen {
             }
         }, SoundEvents.BOOK_PAGE_TURN));
 
+        centerY += 25;
+
+        //Special Trades tab
+        this.addRenderableWidget(new VapeCatalogUtil.TabAndBuyButton(centerX - 31, centerY, 100, 20, Component.literal("Special"), btn -> {
+            if (this.currentTab != TabType.SPECIAL) {
+                this.currentTab = TabType.SPECIAL;
+                this.scrollOff = 0;
+                this.selectedVape = ItemStack.EMPTY;
+                updateVapeList();
+                updateScrollButtons();
+            }
+        }, SoundEvents.BOOK_PAGE_TURN));
+
         //Buy button
         this.buyButton = Button.builder(Component.literal("$ Buy $"), btn -> {
             if (this.selectedVape.isEmpty()) return;
 
             ItemStack stack = this.selectedVape.copy();
 
-            // Asignar poción aleatoria si es un vape desechable sin poción
             if (stack.getItem() instanceof DisposableVape && PotionUtils.getPotion(stack) == Potions.EMPTY) {
                 List<Potion> potions = BuiltInRegistries.POTION.stream()
                         .filter(p -> !p.getEffects().isEmpty() && p != Potions.EMPTY)
@@ -368,6 +381,7 @@ public class VapeCatalogScreen extends Screen {
         TagKey<Item> tag = switch (tab) {
             case DISPOSABLES -> ModTags.Items.DISPOSABLE_VAPES;
             case NORMAL -> ModTags.Items.VAPES;
+            case SPECIAL -> ItemTags.ACACIA_LOGS;
         };
 
         return ForgeRegistries.ITEMS.getValues().stream()
