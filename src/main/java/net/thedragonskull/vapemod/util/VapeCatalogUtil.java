@@ -13,8 +13,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 public class VapeCatalogUtil {
 
-    public static boolean hasEnoughCurrency(Player player, ItemStack costA) {
-        return hasEnoughOf(player, costA);
+    public static boolean hasEnoughCurrency(Player player, ItemStack costA, ItemStack costB) {
+        return hasEnoughOf(player, costA) && (costB == null || costB.isEmpty() || hasEnoughOf(player, costB));
     }
 
     public static boolean hasEnoughOf(Player player, ItemStack required) {

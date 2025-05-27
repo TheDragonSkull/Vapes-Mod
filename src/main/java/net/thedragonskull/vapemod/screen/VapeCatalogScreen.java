@@ -63,11 +63,12 @@ public class VapeCatalogScreen extends Screen {
     private enum TabType { DISPOSABLES, NORMAL, SPECIAL }
     private TabType currentTab = TabType.DISPOSABLES;
 
-    ItemStack costA = VapeTradeButton.getCostA();
-
     private static Item COST_ITEM = VapeCommonConfigs.getCatalogCostItem();
     private static final int PRICE_DISPOSABLE = VapeCommonConfigs.PRICE_DISPOSABLE.get();
     private static final int PRICE_NORMAL = VapeCommonConfigs.PRICE_NORMAL.get();
+
+    private ItemStack selectedCostA = ItemStack.EMPTY;
+    private ItemStack selectedCostB = ItemStack.EMPTY;
 
     private static final int GUI_WIDTH = 276;
     private static final int GUI_HEIGHT = 166;
@@ -95,10 +96,14 @@ public class VapeCatalogScreen extends Screen {
 
         for (int i = 0; i < 7; i++) {
             this.tradeOfferButtons[i] = this.addRenderableWidget(new VapeTradeButton(width + 5, yPos, i,
-                    ItemStack.EMPTY, ItemStack.EMPTY,
+                    ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY,
                     btn -> {
                         VapeTradeButton b = (VapeTradeButton) btn;
                         this.selectedVape = b.getResult();
+                        this.selectedCostA = b.getCostA();
+                        this.selectedCostB = b.getCostB();
+                        this.buyButton.active = !this.selectedVape.isEmpty() &&
+                                hasEnoughCurrency(this.minecraft.player, selectedCostA, selectedCostB);
                     }
             ));
             yPos += 20;
@@ -152,7 +157,7 @@ public class VapeCatalogScreen extends Screen {
         centerY += 25;
 
         //Special Trades tab
-        this.addRenderableWidget(new VapeCatalogUtil.TabAndBuyButton(centerX - 31, centerY, 100, 20, Component.literal("Special"), btn -> {
+        this.addRenderableWidget(new VapeCatalogUtil.TabAndBuyButton(centerX - 31, centerY, 100, 20, Component.literal("Special Offers"), btn -> {
             if (this.currentTab != TabType.SPECIAL) {
                 this.currentTab = TabType.SPECIAL;
                 this.scrollOff = 0;
@@ -178,26 +183,36 @@ public class VapeCatalogScreen extends Screen {
                 }
             }
 
-            PacketHandler.sendToServer(new C2SBuyVapePacket(stack));
+            PacketHandler.sendToServer(new C2SBuyVapePacket(stack.copy(), selectedCostA.copy(), selectedCostB.copy()));
 
         }).pos(centerX + 75, height + 83).size(54, 20).build();
 
-
-        buyButton.active = !this.selectedVape.isEmpty() && hasEnoughCurrency(this.minecraft.player, costA);
         this.addRenderableWidget(this.buyButton);
 
         updateVapeList();
         updateScrollButtons();
     }
 
-    private void removeCurrency(Player player, Item currencyItem, int amount) {
+    private void removeCurrency(Player player, ItemStack costA, ItemStack costB) {
+        takeFromInventory(player, costA);
+        takeFromInventory(player, costB);
+    }
+
+    private static void takeFromInventory(Player player, ItemStack required) {
+        if (required == null || required.isEmpty()) return;
+
+        int remaining = required.getCount();
+
         for (int i = 0; i < player.getInventory().items.size(); i++) {
             ItemStack stack = player.getInventory().items.get(i);
-            if (stack.getItem() == currencyItem) {
-                int toRemove = Math.min(stack.getCount(), amount);
-                stack.shrink(toRemove);
-                amount -= toRemove;
-                if (amount <= 0) break;
+
+            if (ItemStack.isSameItemSameTags(stack, required)) {
+                int removed = Math.min(stack.getCount(), remaining);
+                stack.shrink(removed);
+                remaining -= removed;
+                if (remaining <= 0) {
+                    break;
+                }
             }
         }
     }
@@ -214,12 +229,13 @@ public class VapeCatalogScreen extends Screen {
             if (i + from < fullVapeList.size()) {
                 ItemStack vape = fullVapeList.get(i + from);
                 int price = getPriceForVape(vape);
-                ItemStack costStack = new ItemStack(COST_ITEM, price);
+                ItemStack costA = new ItemStack(COST_ITEM, price);
+                ItemStack costB = getExtraCost(vape);
 
                 VapeTradeButton button = this.tradeOfferButtons[i];
                 button.visible = true;
                 button.active = true;
-                button.setItem(vape, costStack);
+                button.setItem(vape, costA, costB);
             } else {
                 VapeTradeButton button = this.tradeOfferButtons[i];
                 button.visible = false;
@@ -227,6 +243,14 @@ public class VapeCatalogScreen extends Screen {
             }
         }
 
+    }
+
+    private ItemStack getExtraCost(ItemStack item) {
+        if (item.is(ItemTags.ACACIA_LOGS)) {
+            return new ItemStack(Items.BOOK, 1);
+        } else {
+            return ItemStack.EMPTY;
+        }
     }
 
     private void updateScrollButtons() {
@@ -252,7 +276,7 @@ public class VapeCatalogScreen extends Screen {
     public void tick() {
         super.tick();
         boolean hasSelection = !this.selectedVape.isEmpty();
-        boolean hasCurrency = hasSelection && hasEnoughCurrency(this.minecraft.player, costA);
+        boolean hasCurrency = hasSelection && hasEnoughCurrency(this.minecraft.player, selectedCostA, selectedCostB);
         this.buyButton.active = hasSelection && hasCurrency;
 
         if (minecraft != null && minecraft.level != null) {
@@ -264,7 +288,7 @@ public class VapeCatalogScreen extends Screen {
 
         if (!this.selectedVape.isEmpty()) {
             int price = getPriceForVape(this.selectedVape);
-            this.buyButton.active = hasEnoughCurrency(this.minecraft.player, new ItemStack(COST_ITEM, price));
+            this.buyButton.active = hasEnoughCurrency(this.minecraft.player, new ItemStack(COST_ITEM, price), selectedCostB);
         } else {
             this.buyButton.active = false;
         }
@@ -290,11 +314,15 @@ public class VapeCatalogScreen extends Screen {
     }
 
     protected void renderLabels(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY) {
-        int fontWidth = this.font.width("Vape List");
+        int fontWidth = currentTab == TabType.SPECIAL ? this.font.width("Special Offers") : this.font.width("Vape List");
         int labelX = (this.width - GUI_WIDTH) / 2 + 48 - fontWidth / 2;
         int labelY = (this.height - GUI_HEIGHT) / 2 + 6;
 
-        pGuiGraphics.drawString(this.font, "Vape List", labelX, labelY, 4210752, false);
+        if (currentTab != TabType.SPECIAL) {
+            pGuiGraphics.drawString(this.font, "Vape List", labelX, labelY, 4210752, false);
+        } else {
+            pGuiGraphics.drawString(this.font, "Special Offers", labelX, labelY, 4210752, false);
+        }
 
         int vapeModelsWidth = this.font.width("Vape Models");
         int centerX = (this.width / 2) + 50;
@@ -477,13 +505,16 @@ public class VapeCatalogScreen extends Screen {
     @OnlyIn(Dist.CLIENT)
     public class VapeTradeButton extends Button {
         private ItemStack result;
-        private static ItemStack costA;
+        private ItemStack costA;
+        private ItemStack costB;
+
         private final int index;
 
-        public VapeTradeButton(int x, int y, int index, ItemStack costA, ItemStack result, OnPress onPress) {
+        public VapeTradeButton(int x, int y, int index, ItemStack costA, ItemStack costB, ItemStack result, OnPress onPress) {
             super(x, y, 88, 20, Component.empty(), onPress, DEFAULT_NARRATION);
             this.index = index;
             this.costA = costA;
+            this.costB = costB;
             this.result = result;
         }
 
@@ -491,17 +522,22 @@ public class VapeCatalogScreen extends Screen {
             return result;
         }
 
-        public static ItemStack getCostA() {
-            return costA;
+        public ItemStack getCostA() {
+            return this.costA;
+        }
+
+        public ItemStack getCostB() {
+            return this.costB;
         }
 
         public int getIndex() {
             return this.index;
         }
 
-        public void setItem(ItemStack result, ItemStack costA) {
+        public void setItem(ItemStack result, ItemStack costA, ItemStack costB) {
             this.result = result;
             this.costA = costA;
+            this.costB = costB;
         }
 
         @Override
@@ -518,6 +554,12 @@ public class VapeCatalogScreen extends Screen {
             graphics.renderItem(this.costA, x + 2, y);
             graphics.renderItemDecorations(Minecraft.getInstance().font, this.costA, x + 2, y);
 
+            //Render costB
+            if (!this.costB.isEmpty()) {
+                graphics.renderItem(this.costB, x + 24, y); // entre costA y result
+                graphics.renderItemDecorations(Minecraft.getInstance().font, this.costB, x + 24, y);
+            }
+
             // Render result
             graphics.renderItem(this.result, x + 68, y + 1);
             graphics.renderItemDecorations(Minecraft.getInstance().font, this.result, x + 68, y);
@@ -530,7 +572,7 @@ public class VapeCatalogScreen extends Screen {
             int arrowY = y + 4;
             int arrowWidth = 10;
             int arrowHeight = 9;
-            boolean enough = hasEnoughCurrency(Minecraft.getInstance().player, costA);
+            boolean enough = hasEnoughCurrency(Minecraft.getInstance().player, costA, costB);
 
             if (!enough) {
                 if (mouseX >= arrowX && mouseX < arrowX + arrowWidth &&
@@ -541,7 +583,7 @@ public class VapeCatalogScreen extends Screen {
         }
 
         private void renderButtonArrows(GuiGraphics pGuiGraphics, int pPosX, int pPosY) {
-            boolean enough = hasEnoughCurrency(Minecraft.getInstance().player, costA);
+            boolean enough = hasEnoughCurrency(Minecraft.getInstance().player, costA, costB);
             RenderSystem.enableBlend();
 
             if (enough) {
@@ -554,13 +596,16 @@ public class VapeCatalogScreen extends Screen {
 
         public void renderToolTip(GuiGraphics graphics, int mouseX, int mouseY, Font font) {
             if (isHovered) {
-                if (mouseX < this.getX() + 20) {
+                if (mouseX < this.getX() + 16) {
                     graphics.renderTooltip(font, this.costA, mouseX, mouseY);
+                } else if (mouseX < this.getX() + 36 && !this.costB.isEmpty()) {
+                    graphics.renderTooltip(font, this.costB, mouseX, mouseY);
                 } else if (mouseX > this.getX() + 65) {
                     graphics.renderTooltip(font, this.result, mouseX, mouseY);
                 }
             }
         }
+
     }
 
 
