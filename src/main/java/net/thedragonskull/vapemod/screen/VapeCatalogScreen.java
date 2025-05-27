@@ -235,7 +235,7 @@ public class VapeCatalogScreen extends Screen {
                     VapeCatalogOffers t = specialTrades.get(i);
                     button.visible = true;
                     button.active  = true;
-                    button.setItem(t.getResult(), t.getCostA(), t.getCostB());
+                    button.setItem(t.getResult(), t.getCostA(), t.getCostB()); //TODO: costA y costB distintos por cada custom trade
                 } else {
                     button.visible = false;
                     button.active  = false;
@@ -254,12 +254,11 @@ public class VapeCatalogScreen extends Screen {
                 if (idx < fullVapeList.size()) {
                     ItemStack vape = fullVapeList.get(idx);
                     int price = getPriceForVape(vape);
-                    ItemStack costA = new ItemStack(COST_ITEM, price); //TODO: costA y costB distintos por cada custom trade
-                    ItemStack costB = getExtraCost(vape);
+                    ItemStack costA = new ItemStack(COST_ITEM, price);
 
                     button.visible = true;
                     button.active = true;
-                    button.setItem(vape, costA, costB);
+                    button.setItem(vape, costA, ItemStack.EMPTY);
                 } else {
                     button.visible = false;
                     button.active = false;
@@ -268,14 +267,6 @@ public class VapeCatalogScreen extends Screen {
         }
 
         updateBuyButtonActiveState();
-    }
-
-    private ItemStack getExtraCost(ItemStack item) { //TODO: cambiar tags por custom trades
-        if (item.is(ItemTags.ACACIA_LOGS)) {
-            return new ItemStack(Items.BOOK, 1);
-        } else {
-            return ItemStack.EMPTY;
-        }
     }
 
     private void updateBuyButtonActiveState() {
