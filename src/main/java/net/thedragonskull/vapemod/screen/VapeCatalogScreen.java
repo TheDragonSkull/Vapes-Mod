@@ -21,10 +21,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
@@ -39,6 +36,7 @@ import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.item.ModItems;
 import net.thedragonskull.vapemod.item.custom.DisposableVape;
+import net.thedragonskull.vapemod.item.custom.Vape;
 import net.thedragonskull.vapemod.network.C2SBuyVapePacket;
 import net.thedragonskull.vapemod.network.C2SCloseCatalogPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
@@ -48,9 +46,9 @@ import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-import static net.thedragonskull.vapemod.util.VapeCatalogOffersUtil.getVisualCostAWithTagInfo;
-import static net.thedragonskull.vapemod.util.VapeCatalogOffersUtil.getVisualResultFromTag;
+import static net.thedragonskull.vapemod.util.VapeCatalogOffersUtil.*;
 import static net.thedragonskull.vapemod.util.VapeCatalogUtil.*;
 
 public class VapeCatalogScreen extends Screen {
@@ -67,6 +65,8 @@ public class VapeCatalogScreen extends Screen {
 
     private enum TabType { DISPOSABLES, NORMAL, SPECIAL }
     private TabType currentTab = TabType.DISPOSABLES;
+
+    private long lastCycleUpdateTime = 0;
 
     private static Item COST_ITEM = VapeCommonConfigs.getCatalogCostItem();
     private static final int PRICE_DISPOSABLE = VapeCommonConfigs.PRICE_DISPOSABLE.get();
@@ -288,6 +288,7 @@ public class VapeCatalogScreen extends Screen {
     @Override
     public void tick() {
         super.tick();
+
         boolean hasSelection = !this.selectedVape.isEmpty();
         boolean hasCurrency = hasSelection && hasEnoughCurrency(this.minecraft.player, selectedCostA, selectedCostB);
         this.buyButton.active = hasSelection && hasCurrency;
@@ -382,22 +383,12 @@ public class VapeCatalogScreen extends Screen {
         }
 
         // 3D item
-        if (!this.selectedVape.isEmpty()) { //TODO: el render solo se actualiza al cambiar de pagina
+        if (!this.selectedVape.isEmpty()) {
             ItemStack vapeToRender = this.selectedVape;
 
-            if (isTagCost(vapeToRender)) {
-                TagKey<Item> tag = getTagFromCostA(vapeToRender);
-
-                List<Item> tagItems = ForgeRegistries.ITEMS.getValues().stream()
-                        .filter(item -> item.builtInRegistryHolder().is(tag))
-                        .toList();
-
-                if (!tagItems.isEmpty()) {
-                    long time = System.currentTimeMillis() / 1000L;
-                    int index = (int) (time % tagItems.size());
-
-                    vapeToRender = new ItemStack(tagItems.get(index));
-                }
+            if (isTagCost(this.selectedVape)) {
+                TagKey<Item> tag = getTagFromCostA(this.selectedVape);
+                vapeToRender = getCycledItemFromTag(tag);
             }
 
             int centerX = this.width / 2;
@@ -429,6 +420,7 @@ public class VapeCatalogScreen extends Screen {
                     0
             );
 
+            graphics.bufferSource().endBatch();
             poseStack.popPose();
         }
 
@@ -565,15 +557,21 @@ public class VapeCatalogScreen extends Screen {
         }
 
         public void setItem(ItemStack result, ItemStack costA, ItemStack costB) {
-            this.result = result;
             this.costA = costA;
             this.costB = costB;
 
             if (isTagCost(costA)) {
                 this.costATag = getTagFromCostA(costA);
+
+                if (!result.isEmpty()) {
+                    CompoundTag tag = result.getOrCreateTag();
+                    tag.putString("TagKey", costATag.location().toString());
+                }
             } else {
                 this.costATag = null;
             }
+
+            this.result = result;
         }
 
         @Override
@@ -709,7 +707,25 @@ public class VapeCatalogScreen extends Screen {
                         }
                     }
 
-                    graphics.renderTooltip(font, tooltipStack, mouseX, mouseY);
+                    List<Component> tooltip = new ArrayList<>(tooltipStack.getTooltipLines(Minecraft.getInstance().player, TooltipFlag.Default.NORMAL));
+
+                    for (int i = 0; i < tooltip.size(); i++) {
+                        if (currentTab == TabType.SPECIAL && tooltip.get(i).getString().equals("No Effects")) {
+                            tooltip.set(i, Component.literal("Effect: ???").withStyle(ChatFormatting.BLUE));
+                            break;
+                        }
+                    }
+
+                    ResourceLocation id = ForgeRegistries.ITEMS.getKey(tooltipStack.getItem());
+                    if (id != null && Minecraft.getInstance().options.advancedItemTooltips) {
+                        tooltip.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
+                    }
+
+                    if (tooltipStack.hasTag() && Minecraft.getInstance().options.advancedItemTooltips) {
+                        tooltip.add(Component.literal("NBT: " + tooltipStack.getTag().getAllKeys().size() + " tag(s)").withStyle(ChatFormatting.DARK_GRAY));
+                    }
+
+                    graphics.renderTooltip(Minecraft.getInstance().font, tooltip, Optional.empty(), mouseX, mouseY);
                 }
             }
         }

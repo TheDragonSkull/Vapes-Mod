@@ -4,6 +4,8 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionUtils;
@@ -12,6 +14,7 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.network.NetworkEvent;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.sound.ModSounds;
+import net.thedragonskull.vapemod.util.VapeCatalogOffersUtil;
 import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
 import java.util.List;
@@ -48,9 +51,18 @@ public class C2SBuyVapePacket {
             ServerPlayer player = ctx.get().getSender();
             if (player == null) return;
 
-            ItemStack vape = msg.stack.copy();
+            ItemStack vape;
             ItemStack costA = msg.costA.copy();
             ItemStack costB = msg.costB.copy();
+
+            if (VapeCatalogUtil.isTagCost(costA)) {
+                TagKey<Item> tag = VapeCatalogUtil.getTagFromCostA(costA);
+                ItemStack baseVape = VapeCatalogOffersUtil.getFirstStackInTagWithZeroEnergy(player, tag);
+                if (baseVape.isEmpty()) return;
+                vape = new ItemStack(baseVape.getItem());
+            } else {
+                vape = msg.stack.copy();
+            }
 
             if (VapeCatalogUtil.hasEnoughCurrency(player, costA, costB)) {
 
@@ -65,7 +77,7 @@ public class C2SBuyVapePacket {
 
                 removeCurrency(player, costA, costB);
 
-                if (!player.getInventory().add(vape)) { //TODO: el vape result ha de ser del mismo color que el que toma en la comparacion
+                if (!player.getInventory().add(vape)) {
                     player.drop(vape, false);
                 }
 
@@ -80,7 +92,7 @@ public class C2SBuyVapePacket {
                 .filter(p -> !p.getEffects().isEmpty() && p != Potions.EMPTY)
                 .toList();
 
-        if (potions.isEmpty()) return Potions.HEALING; // fallback
+        if (potions.isEmpty()) return Potions.POISON; // fallback
 
         return potions.get(player.level().random.nextInt(potions.size()));
     }
