@@ -1,18 +1,23 @@
 package net.thedragonskull.vapemod.network;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.alchemy.Potion;
+import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.Potions;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.network.NetworkEvent;
-import net.thedragonskull.vapemod.config.VapeCommonConfigs;
+import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.sound.ModSounds;
-import net.thedragonskull.vapemod.util.ModTags;
 import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
+import java.util.List;
 import java.util.function.Supplier;
+
+import static net.thedragonskull.vapemod.util.VapeCatalogUtil.removeCurrency;
 
 public class C2SBuyVapePacket {
     private final ItemStack stack;
@@ -48,6 +53,16 @@ public class C2SBuyVapePacket {
             ItemStack costB = msg.costB.copy();
 
             if (VapeCatalogUtil.hasEnoughCurrency(player, costA, costB)) {
+
+                vape.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
+                    if (cap instanceof VapeEnergy e) {
+                        VapeEnergy.setInt(e.stack, "Energy", e.getMaxEnergyStored());
+                    }
+                });
+
+                Potion randomPotion = getRandomPotion(player);
+                PotionUtils.setPotion(vape, randomPotion);
+
                 removeCurrency(player, costA, costB);
 
                 if (!player.getInventory().add(vape)) {
@@ -60,28 +75,16 @@ public class C2SBuyVapePacket {
         ctx.get().setPacketHandled(true);
     }
 
-    private static void removeCurrency(Player player, ItemStack costA, ItemStack costB) {
-        takeFromInventory(player, costA);
-        takeFromInventory(player, costB);
+    private static Potion getRandomPotion(ServerPlayer player) {
+        List<Potion> potions = BuiltInRegistries.POTION.stream()
+                .filter(p -> !p.getEffects().isEmpty() && p != Potions.EMPTY)
+                .toList();
+
+        if (potions.isEmpty()) return Potions.HEALING; // fallback
+
+        return potions.get(player.level().random.nextInt(potions.size()));
     }
 
-    private static void takeFromInventory(Player player, ItemStack required) {
-        if (required == null || required.isEmpty()) return;
 
-        int remaining = required.getCount();
-
-        for (int i = 0; i < player.getInventory().items.size(); i++) {
-            ItemStack stack = player.getInventory().items.get(i);
-
-            if (stack.getItem() == required.getItem()) {
-                int removed = Math.min(stack.getCount(), remaining);
-                stack.shrink(removed);
-                remaining -= removed;
-                if (remaining <= 0) {
-                    break;
-                }
-            }
-        }
-    }
 }
 

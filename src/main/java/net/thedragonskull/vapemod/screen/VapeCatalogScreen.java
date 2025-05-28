@@ -14,13 +14,13 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -31,16 +31,17 @@ import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.block.custom.VapeCatalog;
+import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.item.ModItems;
 import net.thedragonskull.vapemod.item.custom.DisposableVape;
 import net.thedragonskull.vapemod.network.C2SBuyVapePacket;
 import net.thedragonskull.vapemod.network.C2SCloseCatalogPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
-import net.thedragonskull.vapemod.sound.ModSounds;
 import net.thedragonskull.vapemod.util.ModTags;
 import net.thedragonskull.vapemod.util.VapeCatalogOffers;
 import net.thedragonskull.vapemod.util.VapeCatalogUtil;
@@ -48,7 +49,7 @@ import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.thedragonskull.vapemod.util.VapeCatalogUtil.hasEnoughCurrency;
+import static net.thedragonskull.vapemod.util.VapeCatalogUtil.*;
 
 public class VapeCatalogScreen extends Screen {
     private static final ResourceLocation BACKGROUND = ResourceLocation.fromNamespaceAndPath(VapeMod.MOD_ID, "textures/gui/vape_catalog_screen.png");
@@ -194,35 +195,11 @@ public class VapeCatalogScreen extends Screen {
         updateScrollButtons();
     }
 
-    private void removeCurrency(Player player, ItemStack costA, ItemStack costB) {
-        takeFromInventory(player, costA);
-        takeFromInventory(player, costB);
-    }
-
-    private static void takeFromInventory(Player player, ItemStack required) {
-        if (required == null || required.isEmpty()) return;
-
-        int remaining = required.getCount();
-
-        for (int i = 0; i < player.getInventory().items.size(); i++) {
-            ItemStack stack = player.getInventory().items.get(i);
-
-            if (stack.getItem() == required.getItem()) {
-                int removed = Math.min(stack.getCount(), remaining);
-                stack.shrink(removed);
-                remaining -= removed;
-                if (remaining <= 0) {
-                    break;
-                }
-            }
-        }
-    }
-
     private List<VapeCatalogOffers> specialTrades = List.of(
             new VapeCatalogOffers(
-                    new ItemStack(ModItems.VAPE_RED.get()),
-                    new ItemStack(Items.DIAMOND),
-                    new ItemStack(ModItems.VAPE.get(), 1)
+                    ModTags.Items.VAPES,
+                    new ItemStack(Items.DIAMOND, 2),
+                    new ItemStack(ModItems.VAPE.get())
             )
     );
 
@@ -235,7 +212,12 @@ public class VapeCatalogScreen extends Screen {
                     VapeCatalogOffers t = specialTrades.get(i);
                     button.visible = true;
                     button.active  = true;
-                    button.setItem(t.getResult(), t.getCostA(), t.getCostB()); //TODO: costA y costB distintos por cada custom trade
+
+                    ItemStack visualCostA = t.isCostAByTag()
+                            ? getVisualCostAWithTagInfo(t.getCostATag())
+                            : t.getCostA();
+
+                    button.setItem(t.getResult(), visualCostA, t.getCostB());
                 } else {
                     button.visible = false;
                     button.active  = false;
@@ -267,6 +249,23 @@ public class VapeCatalogScreen extends Screen {
         }
 
         updateBuyButtonActiveState();
+    }
+
+    private ItemStack getVisualCostAWithTagInfo(TagKey<Item> tag) {
+        ItemStack visual = getFirstItemFromTag(tag);
+        if (!visual.isEmpty()) {
+            CompoundTag nbt = visual.getOrCreateTag();
+            nbt.putString("TagKey", tag.location().toString());
+        }
+        return visual;
+    }
+
+    private ItemStack getFirstItemFromTag(TagKey<Item> tag) {
+        return ForgeRegistries.ITEMS.getValues().stream()
+                .filter(item -> item.builtInRegistryHolder().is(tag))
+                .findFirst()
+                .map(ItemStack::new)
+                .orElse(ItemStack.EMPTY);
     }
 
     private void updateBuyButtonActiveState() {
@@ -532,6 +531,7 @@ public class VapeCatalogScreen extends Screen {
         private ItemStack result;
         private ItemStack costA;
         private ItemStack costB;
+        private TagKey<Item> costATag = null;
 
         private final int index;
 
@@ -563,6 +563,12 @@ public class VapeCatalogScreen extends Screen {
             this.result = result;
             this.costA = costA;
             this.costB = costB;
+
+            if (isTagCost(costA)) {
+                this.costATag = getTagFromCostA(costA);
+            } else {
+                this.costATag = null;
+            }
         }
 
         @Override
@@ -576,18 +582,53 @@ public class VapeCatalogScreen extends Screen {
             int y = this.getY() + 1;
 
             // Render costA
-            graphics.renderItem(this.costA, x + 2, y);
-            graphics.renderItemDecorations(Minecraft.getInstance().font, this.costA, x + 2, y);
+            ItemStack toRenderA = this.costA;
+            if (this.costATag != null) {
+                List<Item> tagItems = ForgeRegistries.ITEMS.getValues().stream()
+                        .filter(item -> item.builtInRegistryHolder().is(this.costATag))
+                        .toList();
+
+                if (!tagItems.isEmpty()) {
+                    long time = System.currentTimeMillis() / 1000L;
+                    int index = (int)(time % tagItems.size());
+                    toRenderA = new ItemStack(tagItems.get(index));
+                }
+            }
+            graphics.renderItem(toRenderA, x + 2, y + 1);
+            graphics.renderItemDecorations(Minecraft.getInstance().font, toRenderA, x + 2, y);
+
 
             //Render costB
             if (!this.costB.isEmpty()) {
-                graphics.renderItem(this.costB, x + 24, y); // entre costA y result
+                graphics.renderItem(this.costB, x + 24, y);
                 graphics.renderItemDecorations(Minecraft.getInstance().font, this.costB, x + 24, y);
             }
 
             // Render result
-            graphics.renderItem(this.result, x + 68, y + 1);
-            graphics.renderItemDecorations(Minecraft.getInstance().font, this.result, x + 68, y);
+            ItemStack resultToRender = this.result;
+            if (this.costATag != null) {
+                List<Item> tagItems = ForgeRegistries.ITEMS.getValues().stream()
+                        .filter(item -> item.builtInRegistryHolder().is(this.costATag))
+                        .toList();
+
+                if (!tagItems.isEmpty()) {
+                    long time = System.currentTimeMillis() / 1000L;
+                    int index = (int)(time % tagItems.size());
+                    ItemStack vapeItem = new ItemStack(tagItems.get(index));
+
+                    ItemStack vapeWithEnergy = vapeItem.copy();
+
+                    vapeWithEnergy.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
+                        if (cap instanceof VapeEnergy energyCap) {
+                            VapeEnergy.setInt(vapeWithEnergy, "Energy", energyCap.getMaxEnergyStored());
+                        }
+                    });
+
+                    resultToRender = vapeWithEnergy;
+                }
+            }
+            graphics.renderItem(resultToRender, x + 68, y + 1);
+            graphics.renderItemDecorations(Minecraft.getInstance().font, resultToRender, x + 68, y);
 
             poseStack.popPose();
 
@@ -621,17 +662,55 @@ public class VapeCatalogScreen extends Screen {
 
         public void renderToolTip(GuiGraphics graphics, int mouseX, int mouseY, Font font) {
             if (isHovered) {
-                if (mouseX < this.getX() + 16) {
-                    graphics.renderTooltip(font, this.costA, mouseX, mouseY);
-                } else if (mouseX < this.getX() + 36 && !this.costB.isEmpty()) {
+                if (mouseX < this.getX() + 20) {
+
+                    // CostA
+                    ItemStack tooltipStack = this.costA;
+                    if (this.costATag != null) {
+                        List<Item> tagItems = ForgeRegistries.ITEMS.getValues().stream()
+                                .filter(item -> item.builtInRegistryHolder().is(this.costATag))
+                                .toList();
+                        if (!tagItems.isEmpty()) {
+                            long time = System.currentTimeMillis() / 1000L;
+                            int index = (int)(time % tagItems.size());
+                            tooltipStack = new ItemStack(tagItems.get(index));
+                        }
+                    }
+                    graphics.renderTooltip(font, tooltipStack, mouseX, mouseY);
+                } else if (mouseX < this.getX() + 42 && mouseX > this.getX() + 25 && !this.costB.isEmpty()) {
+
+                    // CostB
                     graphics.renderTooltip(font, this.costB, mouseX, mouseY);
                 } else if (mouseX > this.getX() + 65) {
-                    graphics.renderTooltip(font, this.result, mouseX, mouseY);
+
+                    // Result
+                    ItemStack tooltipStack = this.result;
+
+                    if (this.costATag != null) {
+                        List<Item> tagItems = ForgeRegistries.ITEMS.getValues().stream()
+                                .filter(item -> item.builtInRegistryHolder().is(this.costATag))
+                                .toList();
+                        if (!tagItems.isEmpty()) {
+                            long time = System.currentTimeMillis() / 1000L;
+                            int index = (int)(time % tagItems.size());
+                            tooltipStack = new ItemStack(tagItems.get(index));
+
+                            ItemStack finalStack = tooltipStack;
+                            finalStack.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
+                                if (cap instanceof VapeEnergy energyCap) {
+                                    VapeEnergy.setInt(finalStack, "Energy", energyCap.getMaxEnergyStored());
+                                }
+                            });
+                        }
+                    }
+
+                    graphics.renderTooltip(font, tooltipStack, mouseX, mouseY);
                 }
             }
         }
 
     }
 
-
 }
+
+
