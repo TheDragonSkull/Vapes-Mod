@@ -15,6 +15,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.thedragonskull.vapemod.block.ModBlocks;
 import net.thedragonskull.vapemod.block.entity.ModBlockEntities;
+import net.thedragonskull.vapemod.catalog_offers.VapeOfferRegistry;
 import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.item.ModCreativeModeTabs;
 import net.thedragonskull.vapemod.item.ModItems;
@@ -53,7 +54,9 @@ public class VapeMod {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-
+        event.enqueueWork(() -> {
+            VapeOfferRegistry.registerAll();
+        });
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {

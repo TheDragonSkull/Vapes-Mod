@@ -1,4 +1,4 @@
-package net.thedragonskull.vapemod.util;
+package net.thedragonskull.vapemod.catalog_offers;
 
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
@@ -7,26 +7,27 @@ import net.minecraft.world.item.ItemStack;
 public class VapeCatalogOffers {
     private final ItemStack costA;
     private final TagKey<Item> costATag;
-
     private final ItemStack costB;
-
     private final ItemStack result;
     private final TagKey<Item> resultTag;
+    private final ISpecialOfferLogic tradeLogic;
 
-    public VapeCatalogOffers(ItemStack costA, ItemStack costB, ItemStack result) {
+    public VapeCatalogOffers(ItemStack costA, ItemStack costB, ItemStack result, ISpecialOfferLogic logic) {
         this.costA = costA;
         this.costATag = null;
         this.costB = costB;
         this.result = result;
         this.resultTag = null;
+        this.tradeLogic = logic;
     }
 
-    public VapeCatalogOffers(TagKey<Item> costATag, ItemStack costB, TagKey<Item> resultTag) {
+    public VapeCatalogOffers(TagKey<Item> costATag, ItemStack costB, TagKey<Item> resultTag, ISpecialOfferLogic logic) {
         this.costA = ItemStack.EMPTY;
         this.costATag = costATag;
         this.costB = costB;
         this.result = ItemStack.EMPTY;
         this.resultTag = resultTag;
+        this.tradeLogic = logic;
     }
 
     public boolean isCostAByTag() {
@@ -35,6 +36,10 @@ public class VapeCatalogOffers {
 
     public boolean isResultByTag() {
         return resultTag != null;
+    }
+
+    public TagKey<Item> getResultTag() {
+        return resultTag;
     }
 
     public ItemStack getCostA() {
@@ -53,8 +58,8 @@ public class VapeCatalogOffers {
         return result;
     }
 
-    public TagKey<Item> getResultTag() {
-        return resultTag;
+    public ISpecialOfferLogic getTradeLogic() {
+        return tradeLogic;
     }
 
 }

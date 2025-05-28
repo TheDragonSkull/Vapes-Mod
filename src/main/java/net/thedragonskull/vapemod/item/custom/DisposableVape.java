@@ -97,6 +97,8 @@ public class DisposableVape extends Item implements IVape {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack item = player.getItemInHand(hand);
 
+        //TODO: no se puede usar si el durability es 0
+
         for (InteractionHand h : InteractionHand.values()) {
             ItemStack held = player.getItemInHand(h);
             if (held.getItem() instanceof DisposableVape) {
