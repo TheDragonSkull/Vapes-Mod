@@ -65,7 +65,7 @@ public class C2SBuyVapePacket {
 
                 removeCurrency(player, costA, costB);
 
-                if (!player.getInventory().add(vape)) {
+                if (!player.getInventory().add(vape)) { //TODO: el vape result ha de ser del mismo color que el que toma en la comparacion
                     player.drop(vape, false);
                 }
 

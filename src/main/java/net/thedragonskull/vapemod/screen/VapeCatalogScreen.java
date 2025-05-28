@@ -49,6 +49,8 @@ import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.thedragonskull.vapemod.util.VapeCatalogOffersUtil.getVisualCostAWithTagInfo;
+import static net.thedragonskull.vapemod.util.VapeCatalogOffersUtil.getVisualResultFromTag;
 import static net.thedragonskull.vapemod.util.VapeCatalogUtil.*;
 
 public class VapeCatalogScreen extends Screen {
@@ -199,7 +201,7 @@ public class VapeCatalogScreen extends Screen {
             new VapeCatalogOffers(
                     ModTags.Items.VAPES,
                     new ItemStack(Items.DIAMOND, 2),
-                    new ItemStack(ModItems.VAPE.get())
+                    ModTags.Items.VAPES
             )
     );
 
@@ -217,7 +219,11 @@ public class VapeCatalogScreen extends Screen {
                             ? getVisualCostAWithTagInfo(t.getCostATag())
                             : t.getCostA();
 
-                    button.setItem(t.getResult(), visualCostA, t.getCostB());
+                    ItemStack visualResult = t.isResultByTag()
+                            ? getVisualResultFromTag(t.getResultTag())
+                            : t.getResult();
+
+                    button.setItem(visualResult, visualCostA, t.getCostB());
                 } else {
                     button.visible = false;
                     button.active  = false;
@@ -249,23 +255,6 @@ public class VapeCatalogScreen extends Screen {
         }
 
         updateBuyButtonActiveState();
-    }
-
-    private ItemStack getVisualCostAWithTagInfo(TagKey<Item> tag) {
-        ItemStack visual = getFirstItemFromTag(tag);
-        if (!visual.isEmpty()) {
-            CompoundTag nbt = visual.getOrCreateTag();
-            nbt.putString("TagKey", tag.location().toString());
-        }
-        return visual;
-    }
-
-    private ItemStack getFirstItemFromTag(TagKey<Item> tag) {
-        return ForgeRegistries.ITEMS.getValues().stream()
-                .filter(item -> item.builtInRegistryHolder().is(tag))
-                .findFirst()
-                .map(ItemStack::new)
-                .orElse(ItemStack.EMPTY);
     }
 
     private void updateBuyButtonActiveState() {
@@ -393,7 +382,24 @@ public class VapeCatalogScreen extends Screen {
         }
 
         // 3D item
-        if (!this.selectedVape.isEmpty()) {
+        if (!this.selectedVape.isEmpty()) { //TODO: el render solo se actualiza al cambiar de pagina
+            ItemStack vapeToRender = this.selectedVape;
+
+            if (isTagCost(vapeToRender)) {
+                TagKey<Item> tag = getTagFromCostA(vapeToRender);
+
+                List<Item> tagItems = ForgeRegistries.ITEMS.getValues().stream()
+                        .filter(item -> item.builtInRegistryHolder().is(tag))
+                        .toList();
+
+                if (!tagItems.isEmpty()) {
+                    long time = System.currentTimeMillis() / 1000L;
+                    int index = (int) (time % tagItems.size());
+
+                    vapeToRender = new ItemStack(tagItems.get(index));
+                }
+            }
+
             int centerX = this.width / 2;
             int centerY = this.height / 2;
             int scale = 110;
@@ -406,7 +412,6 @@ public class VapeCatalogScreen extends Screen {
 
             poseStack.mulPose(Axis.XP.rotationDegrees(180f));
 
-
             float rotation = (System.currentTimeMillis() % 3600L) / 10f;
             poseStack.mulPose(Axis.YP.rotationDegrees(-rotation));
             poseStack.mulPose(Axis.ZP.rotationDegrees(25));
@@ -414,7 +419,7 @@ public class VapeCatalogScreen extends Screen {
             RenderSystem.disableCull();
 
             Minecraft.getInstance().getItemRenderer().renderStatic(
-                    this.selectedVape,
+                    vapeToRender,
                     ItemDisplayContext.GROUND,
                     15728880,
                     OverlayTexture.NO_OVERLAY,
