@@ -208,8 +208,6 @@ public class VapeCatalogScreen extends Screen {
             case DISPOSABLES -> VapeOfferRegistry.getDisposableTrades();
         };
 
-        System.out.println("Normal trades: " + VapeOfferRegistry.getNormalTrades().size());
-
         this.scrollOff = Mth.clamp(this.scrollOff, 0, Math.max(0, trades.size() - 7));
 
         for (int i = 0; i < 7; i++) {

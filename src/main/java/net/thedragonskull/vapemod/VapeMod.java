@@ -54,9 +54,6 @@ public class VapeMod {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-        event.enqueueWork(() -> {
-            VapeOfferRegistry.registerAll();
-        });
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {

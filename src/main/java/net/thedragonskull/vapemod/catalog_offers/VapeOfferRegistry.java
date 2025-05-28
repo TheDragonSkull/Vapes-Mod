@@ -17,10 +17,10 @@ public class VapeOfferRegistry {
     private static final List<VapeCatalogOffers> DISPOSABLE_TRADES = new ArrayList<>();
 
     public static void registerNormalTrades() {
-        System.out.println("=== REGISTERING NORMAL TRADES ===");
+        NORMAL_TRADES.clear();
+
         for (Item item : ForgeRegistries.ITEMS.getValues()) {
             if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)) {
-                System.out.println("Adding vape trade for: " + item);
                 NORMAL_TRADES.add(new VapeCatalogOffers(
                         new ItemStack(VapeCommonConfigs.getCatalogCostItem(), VapeCommonConfigs.PRICE_NORMAL.get()),
                         ItemStack.EMPTY,
@@ -29,10 +29,11 @@ public class VapeOfferRegistry {
                 ));
             }
         }
-        System.out.println("Total normal trades: " + NORMAL_TRADES.size());
     }
 
     public static void registerDisposableTrades() {
+        DISPOSABLE_TRADES.clear();
+
         for (Item item : ForgeRegistries.ITEMS.getValues()) {
             if (item.builtInRegistryHolder().is(ModTags.Items.DISPOSABLE_VAPES)) {
                 DISPOSABLE_TRADES.add(new VapeCatalogOffers(
@@ -46,6 +47,8 @@ public class VapeOfferRegistry {
     }
 
     public static void registerSpecialTrades() {
+        SPECIAL_TRADES.clear();
+
         SPECIAL_TRADES.add(new VapeCatalogOffers(
                 ModTags.Items.VAPES,
                 new ItemStack(Items.DIAMOND, 2),
