@@ -395,7 +395,7 @@ public class VapeCatalogScreen extends Screen {
             ItemStack vapeToRender = this.selectedVape;
 
             if (isTagCost(this.selectedVape)) {
-                TagKey<Item> tag = getTagFromCostA(this.selectedVape); //todo, el render ya no cicla por tag
+                TagKey<Item> tag = getTagFromCostA(this.selectedVape);
                 vapeToRender = getCycledItemFromTag(tag);
             }
 
