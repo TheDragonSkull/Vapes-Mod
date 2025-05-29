@@ -1,8 +1,11 @@
 package net.thedragonskull.vapemod.catalog_offers;
 
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
 public class VapeCatalogOffers {
     private final ItemStack costA;
@@ -27,6 +30,15 @@ public class VapeCatalogOffers {
         this.costB = costB;
         this.result = ItemStack.EMPTY;
         this.resultTag = resultTag;
+        this.tradeLogic = logic;
+    }
+
+    public VapeCatalogOffers(TagKey<Item> costATag, ISpecialOfferLogic logic) {
+        this.costA = ItemStack.EMPTY;
+        this.costATag = costATag;
+        this.costB = ItemStack.EMPTY;
+        this.result = ItemStack.EMPTY;
+        this.resultTag = null;
         this.tradeLogic = logic;
     }
 
@@ -61,5 +73,28 @@ public class VapeCatalogOffers {
     public ISpecialOfferLogic getTradeLogic() {
         return tradeLogic;
     }
+
+    public boolean playerHasEnough(ServerPlayer player) {
+        return tradeLogic.canTrade(player, this);
+    }
+
+    public boolean clientPlayerHasEnough(Player player) {
+        System.out.println("[CLIENT CHECK] Calling clientPlayerHasEnough for trade: " + this);
+
+        if (tradeLogic instanceof SimpleVapeOffer) {
+            System.out.println("[CLIENT CHECK] → SimpleVapeOffer, checking currency");
+            return VapeCatalogUtil.hasEnoughCurrency(player, getCostA(), getCostB());
+        }
+
+        if (tradeLogic instanceof DisposableRerollOffer) {
+            System.out.println("[CLIENT CHECK] → DisposableRerollOffer, always true");
+            return VapeCatalogUtil.hasItemInTagWithFullDurability(player, getCostATag())
+                    && VapeCatalogUtil.hasEnoughOf(player, getCostB());
+        }
+
+        System.out.println("[CLIENT CHECK] → Unknown logic");
+        return false;
+    }
+
 
 }

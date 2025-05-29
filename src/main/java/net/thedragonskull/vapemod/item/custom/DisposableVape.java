@@ -76,7 +76,7 @@ public class DisposableVape extends Item implements IVape {
     }
 
     @Override
-    public void inventoryTick(ItemStack pStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) {
+    public void inventoryTick(ItemStack pStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) { //todo: randomiza el efecto 2 veces
         if (pLevel.isClientSide || !(pEntity instanceof Player)) return;
 
         if (PotionUtils.getPotion(pStack) == Potions.EMPTY) {
@@ -97,12 +97,10 @@ public class DisposableVape extends Item implements IVape {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack item = player.getItemInHand(hand);
 
-        //TODO: no se puede usar si el durability es 0
-
         for (InteractionHand h : InteractionHand.values()) {
             ItemStack held = player.getItemInHand(h);
             if (held.getItem() instanceof DisposableVape) {
-                if (player.getCooldowns().isOnCooldown(held.getItem())) {
+                if (player.getCooldowns().isOnCooldown(held.getItem()) || held.getDamageValue() >= VapeCommonConfigs.DISPOSABLE_VAPE_DURABILITY.get()) {
                     return InteractionResultHolder.fail(item);
                 }
             }
@@ -201,7 +199,12 @@ public class DisposableVape extends Item implements IVape {
 
             }
 
-            stack.hurtAndBreak(1, player, e -> e.broadcastBreakEvent(player.getUsedItemHand()));
+            int current = stack.getDamageValue();
+            int max = stack.getMaxDamage();
+
+            if (current < max) {
+                stack.setDamageValue(current + 1);
+            }
         }
 
         return super.finishUsingItem(stack, level, entity);

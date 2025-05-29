@@ -47,7 +47,7 @@ public class C2SBuyVapePacket {
             if (msg.tradeIndex >= 0 && msg.tradeIndex < trades.size()) {
                 VapeCatalogOffers offer = trades.get(msg.tradeIndex);
 
-                if (offer.getTradeLogic().canTrade(player, offer)) {
+                if (offer.playerHasEnough(player)) {
                     ItemStack result = offer.getTradeLogic().createResult(player, offer);
                     offer.getTradeLogic().removeCost(player, offer);
 

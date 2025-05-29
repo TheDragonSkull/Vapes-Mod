@@ -78,6 +78,7 @@ public class VapeCatalogScreen extends Screen {
 
     private ItemStack selectedVape = ItemStack.EMPTY;
     private int selectedTradeIndex = -1;
+    private VapeCatalogOffers selectedOffer = null;
 
     int scrollOff;
     private boolean isDragging = false;
@@ -106,6 +107,7 @@ public class VapeCatalogScreen extends Screen {
                         this.selectedCostA = b.getCostA();
                         this.selectedCostB = b.getCostB();
                         this.selectedTradeIndex = b.getIndex();
+                        this.selectedOffer = b.getOffer();
                         this.updateBuyButtonActiveState();
                     }
             ));
@@ -227,7 +229,7 @@ public class VapeCatalogScreen extends Screen {
 
                 button.visible = true;
                 button.active = true;
-                button.setItem(visualResult, visualCostA, offer.getCostB());
+                button.setItem(offer, visualResult, visualCostA, offer.getCostB());
                 button.setIndex(index);
             } else {
                 button.visible = false;
@@ -238,11 +240,30 @@ public class VapeCatalogScreen extends Screen {
         updateBuyButtonActiveState();
     }
 
-
-
     private void updateBuyButtonActiveState() {
-        this.buyButton.active = !this.selectedVape.isEmpty() &&
-                hasEnoughCurrency(this.minecraft.player, selectedCostA, selectedCostB);
+
+        System.out.println("=== DEBUG SELECTED COST A ===");
+        System.out.println("Item: " + selectedCostA);
+        System.out.println("Damage: " + selectedCostA.getDamageValue());
+        System.out.println("Max: " + selectedCostA.getMaxDamage());
+        System.out.println("IsDamageable: " + selectedCostA.isDamageableItem());
+
+
+        if (this.selectedTradeIndex >= 0) {
+            List<VapeCatalogOffers> trades = switch (currentTab) {
+                case SPECIAL -> VapeOfferRegistry.getSpecialTrades();
+                case NORMAL -> VapeOfferRegistry.getNormalTrades();
+                case DISPOSABLES -> VapeOfferRegistry.getDisposableTrades();
+            };
+
+            if (selectedTradeIndex < trades.size()) {
+                VapeCatalogOffers offer = trades.get(selectedTradeIndex);
+                this.buyButton.active = offer.clientPlayerHasEnough(Minecraft.getInstance().player);
+                return;
+            }
+        }
+
+        this.buyButton.active = false;
     }
 
     private void updateScrollButtons() {
@@ -268,10 +289,6 @@ public class VapeCatalogScreen extends Screen {
     public void tick() {
         super.tick();
 
-        boolean hasSelection = !this.selectedVape.isEmpty();
-        boolean hasCurrency = hasSelection && hasEnoughCurrency(this.minecraft.player, selectedCostA, selectedCostB);
-        this.buyButton.active = hasSelection && hasCurrency;
-
         if (minecraft != null && minecraft.level != null) {
             BlockState state = minecraft.level.getBlockState(blockPos);
             if (!(state.getBlock() instanceof VapeCatalog)) {
@@ -280,12 +297,11 @@ public class VapeCatalogScreen extends Screen {
             }
         }
 
-        if (!this.selectedVape.isEmpty()) {
-            this.buyButton.active = hasEnoughCurrency(this.minecraft.player, selectedCostA, selectedCostB);
+        if (selectedOffer != null) {
+            this.buyButton.active = selectedOffer.clientPlayerHasEnough(Minecraft.getInstance().player);
         } else {
             this.buyButton.active = false;
         }
-
     }
 
     private void renderScroller(GuiGraphics graphics, int x, int y) {
@@ -503,6 +519,7 @@ public class VapeCatalogScreen extends Screen {
         private ItemStack costB;
         private TagKey<Item> costATag = null;
 
+        private VapeCatalogOffers offer;
         private int index;
 
         public VapeTradeButton(int x, int y, int index, ItemStack costA, ItemStack costB, ItemStack result, OnPress onPress) {
@@ -529,13 +546,19 @@ public class VapeCatalogScreen extends Screen {
             return this.index;
         }
 
+        public VapeCatalogOffers getOffer() {
+            return this.offer;
+        }
+
         public void setIndex(int index) {
             this.index = index;
         }
 
-        public void setItem(ItemStack result, ItemStack costA, ItemStack costB) {
-            this.costA = costA;
-            this.costB = costB;
+        public void setItem(VapeCatalogOffers offer, ItemStack result, ItemStack costA, ItemStack costB) {
+            this.offer = offer;
+            this.costA = costA.copy();
+            this.costB = costB.copy();
+            this.result = result.copy();
 
             if (isTagCost(costA)) {
                 this.costATag = getTagFromCostA(costA);
@@ -548,7 +571,6 @@ public class VapeCatalogScreen extends Screen {
                 this.costATag = null;
             }
 
-            this.result = result;
         }
 
         @Override
@@ -596,16 +618,23 @@ public class VapeCatalogScreen extends Screen {
                     int index = (int)(time % tagItems.size());
                     ItemStack vapeItem = new ItemStack(tagItems.get(index));
 
-                    ItemStack vapeWithEnergy = vapeItem.copy();
+                    if (vapeItem.getCapability(ForgeCapabilities.ENERGY).isPresent()) {
+                        ItemStack vapeWithEnergy = vapeItem.copy();
+                        vapeWithEnergy.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
+                            if (cap instanceof VapeEnergy energyCap) {
+                                VapeEnergy.setInt(vapeWithEnergy, "Energy", energyCap.getMaxEnergyStored());
+                            }
+                        });
 
-                    vapeWithEnergy.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
-                        if (cap instanceof VapeEnergy energyCap) {
-                            VapeEnergy.setInt(vapeWithEnergy, "Energy", energyCap.getMaxEnergyStored());
+                        resultToRender = vapeWithEnergy;
+                    } else {
+                        resultToRender = vapeItem.copy();
+                        if (resultToRender.isDamageableItem()) {
+                            resultToRender.setDamageValue(0);
                         }
-                    });
-
-                    resultToRender = vapeWithEnergy;
+                    }
                 }
+
             }
             graphics.renderItem(resultToRender, x + 68, y + 1);
             graphics.renderItemDecorations(Minecraft.getInstance().font, resultToRender, x + 68, y);
@@ -618,7 +647,7 @@ public class VapeCatalogScreen extends Screen {
             int arrowY = y + 4;
             int arrowWidth = 10;
             int arrowHeight = 9;
-            boolean enough = hasEnoughCurrency(Minecraft.getInstance().player, costA, costB);
+            boolean enough = offer != null && offer.clientPlayerHasEnough(Minecraft.getInstance().player);
 
             if (!enough) {
                 if (mouseX >= arrowX && mouseX < arrowX + arrowWidth &&
@@ -629,7 +658,7 @@ public class VapeCatalogScreen extends Screen {
         }
 
         private void renderButtonArrows(GuiGraphics pGuiGraphics, int pPosX, int pPosY) {
-            boolean enough = hasEnoughCurrency(Minecraft.getInstance().player, costA, costB);
+            boolean enough = offer != null && offer.clientPlayerHasEnough(Minecraft.getInstance().player);
             RenderSystem.enableBlend();
 
             if (enough) {
@@ -670,18 +699,29 @@ public class VapeCatalogScreen extends Screen {
                         List<Item> tagItems = ForgeRegistries.ITEMS.getValues().stream()
                                 .filter(item -> item.builtInRegistryHolder().is(this.costATag))
                                 .toList();
+
                         if (!tagItems.isEmpty()) {
                             long time = System.currentTimeMillis() / 1000L;
                             int index = (int)(time % tagItems.size());
-                            tooltipStack = new ItemStack(tagItems.get(index));
+                            ItemStack vapeItem = new ItemStack(tagItems.get(index));
 
-                            ItemStack finalStack = tooltipStack;
-                            finalStack.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
-                                if (cap instanceof VapeEnergy energyCap) {
-                                    VapeEnergy.setInt(finalStack, "Energy", energyCap.getMaxEnergyStored());
+                            if (vapeItem.getCapability(ForgeCapabilities.ENERGY).isPresent()) {
+                                ItemStack vapeWithEnergy = vapeItem.copy();
+                                vapeWithEnergy.getCapability(ForgeCapabilities.ENERGY).ifPresent(cap -> {
+                                    if (cap instanceof VapeEnergy energyCap) {
+                                        VapeEnergy.setInt(vapeWithEnergy, "Energy", energyCap.getMaxEnergyStored());
+                                    }
+                                });
+
+                                tooltipStack = vapeWithEnergy;
+                            } else {
+                                tooltipStack = vapeItem.copy();
+                                if (tooltipStack.isDamageableItem()) {
+                                    tooltipStack.setDamageValue(0);
                                 }
-                            });
+                            }
                         }
+
                     }
 
                     List<Component> tooltip = new ArrayList<>(tooltipStack.getTooltipLines(Minecraft.getInstance().player, TooltipFlag.Default.NORMAL));

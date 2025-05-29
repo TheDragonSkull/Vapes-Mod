@@ -4,6 +4,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
@@ -15,6 +16,9 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.energy.IEnergyStorage;
+import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.List;
 
 
 public class VapeCatalogUtil {
@@ -38,10 +42,6 @@ public class VapeCatalogUtil {
         return TagKey.create(Registries.ITEM, ResourceLocation.parse(tagId));
     }
 
-    public static boolean hasItemInTag(Player player, TagKey<Item> tag) {
-        return player.getInventory().items.stream().anyMatch(stack -> stack.is(tag));
-    }
-
     public static boolean hasEnoughOf(Player player, ItemStack required) {
         if (required == null || required.isEmpty()) return true;
 
@@ -63,14 +63,38 @@ public class VapeCatalogUtil {
     public static boolean hasItemInTagWithZeroEnergy(Player player, TagKey<Item> tag) {
         for (ItemStack stack : player.getInventory().items) {
             if (!stack.isEmpty() && stack.is(tag)) {
-                IEnergyStorage energy = stack.getCapability(ForgeCapabilities.ENERGY).orElse(null);
-                if (energy.getEnergyStored() == 0) {
+                if (stack.getCapability(ForgeCapabilities.ENERGY).isPresent()) {
+                    IEnergyStorage energy = stack.getCapability(ForgeCapabilities.ENERGY).orElse(null);
+                    if (energy.getEnergyStored() == 0) {
+                        return true;
+                    }
+                }
+
+                else if (stack.getDamageValue() >= stack.getMaxDamage()) {
                     return true;
                 }
             }
         }
         return false;
     }
+
+    public static boolean hasItemInTagWithFullDurability(Player player, TagKey<Item> tag) {
+        for (ItemStack stack : player.getInventory().items) {
+            if (!stack.isEmpty() && stack.is(tag)) {
+                System.out.println("[FULL DURABILITY CHECK] Found tagged item: " + stack);
+                System.out.println(" → DamageValue: " + stack.getDamageValue() + " / Max: " + stack.getMaxDamage());
+
+                if (stack.getDamageValue() == 0) {
+                    System.out.println(" → ✅ This one is FULL durability");
+                    return true;
+                } else {
+                    System.out.println(" → ❌ Not full durability");
+                }
+            }
+        }
+        return false;
+    }
+
 
     public static void removeCurrency(Player player, ItemStack costA, ItemStack costB) {
         takeFromInventory(player, costA);
@@ -88,9 +112,19 @@ public class VapeCatalogUtil {
             for (int i = 0; i < player.getInventory().items.size(); i++) {
                 ItemStack stack = player.getInventory().items.get(i);
 
-                if (stack.is(tag)) {
-                    IEnergyStorage energy = stack.getCapability(ForgeCapabilities.ENERGY).orElse(null);
-                    if (energy.getEnergyStored() == 0) {
+                if (!stack.isEmpty() && stack.is(tag)) {
+                    // for ENERGY
+                    if (stack.getCapability(ForgeCapabilities.ENERGY).isPresent()) {
+                        IEnergyStorage energy = stack.getCapability(ForgeCapabilities.ENERGY).orElse(null);
+                        if (energy.getEnergyStored() == 0) {
+                            int removed = Math.min(stack.getCount(), remaining);
+                            stack.shrink(removed);
+                            remaining -= removed;
+                            if (remaining <= 0) break;
+                        }
+                    }
+                    // for durability
+                    else if (stack.getDamageValue() >= stack.getMaxDamage()) {
                         int removed = Math.min(stack.getCount(), remaining);
                         stack.shrink(removed);
                         remaining -= removed;
@@ -112,6 +146,63 @@ public class VapeCatalogUtil {
         }
     }
 
+    public static ItemStack getVisualResultFromTag(TagKey<Item> tag) {
+        List<Item> tagItems = ForgeRegistries.ITEMS.getValues().stream()
+                .filter(item -> item.builtInRegistryHolder().is(tag))
+                .toList();
+
+        if (tagItems.isEmpty()) return ItemStack.EMPTY;
+
+        long time = System.currentTimeMillis() / 1000L;
+        int index = (int)(time % tagItems.size());
+        return new ItemStack(tagItems.get(index));
+    }
+
+    public static ItemStack getVisualCostAWithTagInfo(TagKey<Item> tag) {
+        ItemStack visual = getFirstItemFromTag(tag);
+        if (!visual.isEmpty()) {
+            CompoundTag nbt = visual.getOrCreateTag();
+            nbt.putString("TagKey", tag.location().toString());
+            visual.setTag(nbt);
+
+            visual.setDamageValue(0);
+        }
+        return visual;
+    }
+
+    public static ItemStack getFirstItemFromTag(TagKey<Item> tag) {
+        return ForgeRegistries.ITEMS.getValues().stream()
+                .filter(item -> item.builtInRegistryHolder().is(tag))
+                .findFirst()
+                .map(ItemStack::new)
+                .orElse(ItemStack.EMPTY);
+    }
+
+    public static ItemStack getFirstStackInTagWithZeroEnergy(Player player, TagKey<Item> tag) {
+        for (ItemStack stack : player.getInventory().items) {
+            if (!stack.isEmpty() && stack.is(tag)) {
+                IEnergyStorage energy = stack.getCapability(ForgeCapabilities.ENERGY).orElse(null);
+                if (energy.getEnergyStored() == 0) {
+                    return stack.copy();
+                }
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
+
+    public static ItemStack getCycledItemFromTag(TagKey<Item> tag) {
+        List<Item> tagItems = ForgeRegistries.ITEMS.getValues().stream()
+                .filter(item -> item.builtInRegistryHolder().is(tag))
+                .toList();
+
+        if (tagItems.isEmpty()) return ItemStack.EMPTY;
+
+        long time = System.currentTimeMillis() / 1000L;
+        int index = (int)(time % tagItems.size());
+
+        return new ItemStack(tagItems.get(index));
+    }
 
     // Buy Button
     @OnlyIn(Dist.CLIENT)

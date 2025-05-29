@@ -56,6 +56,13 @@ public class VapeOfferRegistry {
                 new RandomPotionRechargeOffer()
         ));
 
+        SPECIAL_TRADES.add(new VapeCatalogOffers(
+                ModTags.Items.DISPOSABLE_VAPES,
+                new ItemStack(VapeCommonConfigs.getCatalogCostItem(), Math.max(1, (int)(VapeCommonConfigs.PRICE_DISPOSABLE.get() * 0.25))),
+                ModTags.Items.DISPOSABLE_VAPES,
+                new DisposableRerollOffer()
+        ));
+
     }
 
     public static List<VapeCatalogOffers> getSpecialTrades() {
