@@ -146,8 +146,11 @@ public class VapeCatalogScreen extends Screen {
                 this.currentTab = TabType.DISPOSABLES;
                 this.scrollOff = 0;
                 this.selectedVape = ItemStack.EMPTY;
+                this.selectedTradeIndex = -1;
+                this.selectedOffer = null;
                 updateVapeList();
                 updateScrollButtons();
+                updateBuyButtonActiveState();
             }
         }, SoundEvents.BOOK_PAGE_TURN));
 
@@ -155,11 +158,16 @@ public class VapeCatalogScreen extends Screen {
 
         //QVape Pen V2 tab
         this.addRenderableWidget(new VapeCatalogUtil.TabAndBuyButton(centerX - 31, centerY, 100, 20, Component.literal("QVape Pen V2"), btn -> {
+            if (this.currentTab != TabType.NORMAL) {
                 this.currentTab = TabType.NORMAL;
                 this.scrollOff = 0;
                 this.selectedVape = ItemStack.EMPTY;
+                this.selectedTradeIndex = -1;
+                this.selectedOffer = null;
                 updateVapeList();
                 updateScrollButtons();
+                updateBuyButtonActiveState();
+            }
 
         }, SoundEvents.BOOK_PAGE_TURN));
 
@@ -167,11 +175,16 @@ public class VapeCatalogScreen extends Screen {
 
         //Special Trades tab
         this.addRenderableWidget(new VapeCatalogUtil.TabAndBuyButton(centerX - 31, centerY, 100, 20, Component.literal("Special Offers"), btn -> {
+            if (this.currentTab != TabType.SPECIAL) {
                 this.currentTab = TabType.SPECIAL;
                 this.scrollOff = 0;
                 this.selectedVape = ItemStack.EMPTY;
+                this.selectedTradeIndex = -1;
+                this.selectedOffer = null;
                 updateVapeList();
                 updateScrollButtons();
+                updateBuyButtonActiveState();
+            }
 
         }, SoundEvents.BOOK_PAGE_TURN));
 
@@ -241,13 +254,6 @@ public class VapeCatalogScreen extends Screen {
     }
 
     private void updateBuyButtonActiveState() {
-
-        System.out.println("=== DEBUG SELECTED COST A ===");
-        System.out.println("Item: " + selectedCostA);
-        System.out.println("Damage: " + selectedCostA.getDamageValue());
-        System.out.println("Max: " + selectedCostA.getMaxDamage());
-        System.out.println("IsDamageable: " + selectedCostA.isDamageableItem());
-
 
         if (this.selectedTradeIndex >= 0) {
             List<VapeCatalogOffers> trades = switch (currentTab) {
@@ -573,6 +579,18 @@ public class VapeCatalogScreen extends Screen {
 
         }
 
+        private void renderButtonArrows(GuiGraphics pGuiGraphics, int pPosX, int pPosY) {
+            boolean enough = offer != null && offer.clientPlayerHasEnough(Minecraft.getInstance().player);
+            RenderSystem.enableBlend();
+
+            if (enough) {
+                pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35 + 10, pPosY + 4, 0, 15.0F, 171.0F, 10, 9, 512, 256);
+            } else {
+                pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35 + 10, pPosY + 4, 0, 25.0F, 171.0F, 10, 9, 512, 256);
+            }
+
+        }
+
         @Override
         public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
             super.renderWidget(graphics, mouseX, mouseY, partialTicks);
@@ -655,18 +673,6 @@ public class VapeCatalogScreen extends Screen {
                     graphics.renderTooltip(font, Component.literal("Not enough currency").withStyle(ChatFormatting.RED), mouseX, mouseY);
                 }
             }
-        }
-
-        private void renderButtonArrows(GuiGraphics pGuiGraphics, int pPosX, int pPosY) {
-            boolean enough = offer != null && offer.clientPlayerHasEnough(Minecraft.getInstance().player);
-            RenderSystem.enableBlend();
-
-            if (enough) {
-                pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35 + 10, pPosY + 4, 0, 15.0F, 171.0F, 10, 9, 512, 256);
-            } else {
-                pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35 + 10, pPosY + 4, 0, 25.0F, 171.0F, 10, 9, 512, 256);
-            }
-
         }
 
         public void renderToolTip(GuiGraphics graphics, int mouseX, int mouseY, Font font) {

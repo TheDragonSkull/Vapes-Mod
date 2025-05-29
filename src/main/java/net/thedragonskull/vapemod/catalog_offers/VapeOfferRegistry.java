@@ -63,6 +63,11 @@ public class VapeOfferRegistry {
                 new DisposableRerollOffer()
         ));
 
+        SPECIAL_TRADES.add(new VapeCatalogOffers(
+                ModTags.Items.DISPOSABLE_VAPES,
+                new RecycleDisposableOffer()
+        ));
+
     }
 
     public static List<VapeCatalogOffers> getSpecialTrades() {

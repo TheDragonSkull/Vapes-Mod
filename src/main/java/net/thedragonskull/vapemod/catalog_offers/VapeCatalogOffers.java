@@ -79,20 +79,26 @@ public class VapeCatalogOffers {
     }
 
     public boolean clientPlayerHasEnough(Player player) {
-        System.out.println("[CLIENT CHECK] Calling clientPlayerHasEnough for trade: " + this);
 
         if (tradeLogic instanceof SimpleVapeOffer) {
-            System.out.println("[CLIENT CHECK] → SimpleVapeOffer, checking currency");
             return VapeCatalogUtil.hasEnoughCurrency(player, getCostA(), getCostB());
         }
 
+        if (tradeLogic instanceof RandomPotionRechargeOffer) {
+            return VapeCatalogUtil.hasItemInTagWithZeroEnergy(player, getCostATag())
+                    && VapeCatalogUtil.hasEnoughOf(player, getCostB());
+        }
+
         if (tradeLogic instanceof DisposableRerollOffer) {
-            System.out.println("[CLIENT CHECK] → DisposableRerollOffer, always true");
             return VapeCatalogUtil.hasItemInTagWithFullDurability(player, getCostATag())
                     && VapeCatalogUtil.hasEnoughOf(player, getCostB());
         }
 
-        System.out.println("[CLIENT CHECK] → Unknown logic");
+        if (tradeLogic instanceof RecycleDisposableOffer) {
+            return VapeCatalogUtil.hasItemInTagWithZeroDurability(player, getCostATag())
+                    && VapeCatalogUtil.hasEnoughOf(player, getCostB());
+        }
+
         return false;
     }
 

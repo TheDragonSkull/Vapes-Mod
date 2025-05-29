@@ -69,8 +69,15 @@ public class VapeCatalogUtil {
                         return true;
                     }
                 }
+            }
+        }
+        return false;
+    }
 
-                else if (stack.getDamageValue() >= stack.getMaxDamage()) {
+    public static boolean hasItemInTagWithZeroDurability(Player player, TagKey<Item> tag) {
+        for (ItemStack stack : player.getInventory().items) {
+            if (!stack.isEmpty() && stack.is(tag)) {
+                if (stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage()) {
                     return true;
                 }
             }
@@ -78,17 +85,12 @@ public class VapeCatalogUtil {
         return false;
     }
 
+
     public static boolean hasItemInTagWithFullDurability(Player player, TagKey<Item> tag) {
         for (ItemStack stack : player.getInventory().items) {
             if (!stack.isEmpty() && stack.is(tag)) {
-                System.out.println("[FULL DURABILITY CHECK] Found tagged item: " + stack);
-                System.out.println(" → DamageValue: " + stack.getDamageValue() + " / Max: " + stack.getMaxDamage());
-
                 if (stack.getDamageValue() == 0) {
-                    System.out.println(" → ✅ This one is FULL durability");
                     return true;
-                } else {
-                    System.out.println(" → ❌ Not full durability");
                 }
             }
         }
