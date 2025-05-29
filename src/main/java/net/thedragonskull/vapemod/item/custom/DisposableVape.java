@@ -49,6 +49,7 @@ import static net.thedragonskull.vapemod.util.VapeUtil.toRoman;
 
 public class DisposableVape extends Item implements IVape {
     private static final String MESSAGE_CANT_SMOKE_UNDERWATER = "message.vapemod.cant_smoke_underwater";
+    private static final String MESSAGE_DEPLETED = "message.vapemod.depleted";
     private final DyeColor dyeColor;
 
     public DisposableVape(DyeColor dyeColor, Properties pProperties) {
@@ -100,7 +101,10 @@ public class DisposableVape extends Item implements IVape {
         for (InteractionHand h : InteractionHand.values()) {
             ItemStack held = player.getItemInHand(h);
             if (held.getItem() instanceof DisposableVape) {
-                if (player.getCooldowns().isOnCooldown(held.getItem()) || held.getDamageValue() >= VapeCommonConfigs.DISPOSABLE_VAPE_DURABILITY.get()) {
+                if (player.getCooldowns().isOnCooldown(held.getItem())) {
+                    return InteractionResultHolder.fail(item);
+                } else if (held.getDamageValue() >= VapeCommonConfigs.DISPOSABLE_VAPE_DURABILITY.get()) {
+                    player.displayClientMessage(Component.translatable(MESSAGE_DEPLETED).withStyle(ChatFormatting.DARK_RED), true);
                     return InteractionResultHolder.fail(item);
                 }
             }

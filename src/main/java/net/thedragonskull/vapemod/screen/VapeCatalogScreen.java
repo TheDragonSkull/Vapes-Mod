@@ -34,6 +34,7 @@ import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.block.custom.VapeCatalog;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.catalog_offers.RandomPotionRechargeOffer;
+import net.thedragonskull.vapemod.catalog_offers.RecycleDisposableOffer;
 import net.thedragonskull.vapemod.catalog_offers.VapeOfferRegistry;
 import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.item.custom.DisposableVape;
@@ -335,12 +336,12 @@ public class VapeCatalogScreen extends Screen {
     }
 
     protected void renderLabels(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY) {
-        int fontWidth = currentTab == TabType.SPECIAL ? this.font.width("Special Offers") : this.font.width("Vape List");
+        int fontWidth = currentTab == TabType.SPECIAL ? this.font.width("Special Offers") : this.font.width("Vape Offers");
         int labelX = (this.width - GUI_WIDTH) / 2 + 48 - fontWidth / 2;
         int labelY = (this.height - GUI_HEIGHT) / 2 + 6;
 
         if (currentTab != TabType.SPECIAL) {
-            pGuiGraphics.drawString(this.font, "Vape List", labelX, labelY, 4210752, false);
+            pGuiGraphics.drawString(this.font, "Vape Offers", labelX, labelY, 4210752, false);
         } else {
             pGuiGraphics.drawString(this.font, "Special Offers", labelX, labelY, 4210752, false);
         }
@@ -380,7 +381,7 @@ public class VapeCatalogScreen extends Screen {
 
             if (this.selectedVape.isEmpty()) {
                 if (!this.buyButton.active) {
-                    tooltip = Component.literal("No vape selected").withStyle(ChatFormatting.RED);
+                    tooltip = Component.literal("No offer selected").withStyle(ChatFormatting.RED);
                 }
             }
 
@@ -394,7 +395,7 @@ public class VapeCatalogScreen extends Screen {
             ItemStack vapeToRender = this.selectedVape;
 
             if (isTagCost(this.selectedVape)) {
-                TagKey<Item> tag = getTagFromCostA(this.selectedVape);
+                TagKey<Item> tag = getTagFromCostA(this.selectedVape); //todo, el render ya no cicla por tag
                 vapeToRender = getCycledItemFromTag(tag);
             }
 
@@ -614,6 +615,21 @@ public class VapeCatalogScreen extends Screen {
                     toRenderA = new ItemStack(tagItems.get(index));
                 }
             }
+
+            if (offer != null && offer.getTradeLogic() instanceof RecycleDisposableOffer) {
+                List<Item> tagItems = ForgeRegistries.ITEMS.getValues().stream()
+                        .filter(item -> item.builtInRegistryHolder().is(this.costATag))
+                        .toList();
+                if (!tagItems.isEmpty()) {
+                    long time = System.currentTimeMillis() / 1000L;
+                    int index = (int)(time % tagItems.size());
+                    ItemStack depletedVape = new ItemStack(tagItems.get(index));
+                    if (depletedVape.isDamageableItem()) {
+                        depletedVape.setDamageValue(depletedVape.getMaxDamage());
+                    }
+                    toRenderA = depletedVape;
+                }
+            }
             graphics.renderItem(toRenderA, x + 2, y + 1);
             graphics.renderItemDecorations(Minecraft.getInstance().font, toRenderA, x + 2, y);
 
@@ -652,8 +668,14 @@ public class VapeCatalogScreen extends Screen {
                         }
                     }
                 }
-
             }
+
+            if (offer != null && offer.getTradeLogic() instanceof RecycleDisposableOffer) {
+                int price = VapeCommonConfigs.PRICE_DISPOSABLE.get();
+                int refund = Math.max(1, (int)(price * 0.25));
+                resultToRender = new ItemStack(VapeCommonConfigs.getCatalogCostItem(), refund);
+            }
+
             graphics.renderItem(resultToRender, x + 68, y + 1);
             graphics.renderItemDecorations(Minecraft.getInstance().font, resultToRender, x + 68, y);
 
@@ -691,7 +713,23 @@ public class VapeCatalogScreen extends Screen {
                             tooltipStack = new ItemStack(tagItems.get(index));
                         }
                     }
+
+                    if (offer != null && offer.getTradeLogic() instanceof RecycleDisposableOffer) {
+                        List<Item> tagItems = ForgeRegistries.ITEMS.getValues().stream()
+                                .filter(item -> item.builtInRegistryHolder().is(this.costATag))
+                                .toList();
+                        if (!tagItems.isEmpty()) {
+                            long time = System.currentTimeMillis() / 1000L;
+                            int index = (int)(time % tagItems.size());
+                            ItemStack depletedVape = new ItemStack(tagItems.get(index));
+                            if (depletedVape.isDamageableItem()) {
+                                depletedVape.setDamageValue(depletedVape.getMaxDamage());
+                            }
+                            tooltipStack = depletedVape;
+                        }
+                    }
                     graphics.renderTooltip(font, tooltipStack, mouseX, mouseY);
+
                 } else if (mouseX < this.getX() + 42 && mouseX > this.getX() + 25 && !this.costB.isEmpty()) {
 
                     // CostB
@@ -728,6 +766,12 @@ public class VapeCatalogScreen extends Screen {
                             }
                         }
 
+                    }
+
+                    if (offer != null && offer.getTradeLogic() instanceof RecycleDisposableOffer) {
+                        int price = VapeCommonConfigs.PRICE_DISPOSABLE.get();
+                        int refund = Math.max(1, (int)(price * 0.25));
+                        tooltipStack = new ItemStack(VapeCommonConfigs.getCatalogCostItem(), refund);
                     }
 
                     List<Component> tooltip = new ArrayList<>(tooltipStack.getTooltipLines(Minecraft.getInstance().player, TooltipFlag.Default.NORMAL));
