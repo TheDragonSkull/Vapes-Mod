@@ -568,12 +568,16 @@ public class VapeCatalogScreen extends Screen {
             this.result = result.copy();
 
             if (isTagCost(costA)) {
-                this.costATag = getTagFromCostA(costA);
+                this.costATag = getTagFromCostA(this.costA);
 
-                if (!result.isEmpty()) {
-                    CompoundTag tag = result.getOrCreateTag();
-                    tag.putString("TagKey", costATag.location().toString());
+                if (!this.costA.isEmpty()) {
+                    this.costA.getOrCreateTag().putString("TagKey", costATag.location().toString());
                 }
+
+                if (!this.result.isEmpty()) {
+                    this.result.getOrCreateTag().putString("TagKey", costATag.location().toString());
+                }
+
             } else {
                 this.costATag = null;
             }
