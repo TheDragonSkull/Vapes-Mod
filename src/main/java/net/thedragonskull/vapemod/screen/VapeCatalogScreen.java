@@ -1,5 +1,6 @@
 package net.thedragonskull.vapemod.screen;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
@@ -88,6 +89,16 @@ public class VapeCatalogScreen extends Screen {
     public VapeCatalogScreen(BlockPos blockPos) {
         super(Component.literal("Vape Catalog"));
         this.blockPos = blockPos;
+    }
+
+    @Override
+    public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
+        if (Minecraft.getInstance().options.keyInventory.isActiveAndMatches(InputConstants.getKey(pKeyCode, pScanCode))) {
+            this.onClose();
+            return true;
+        }
+
+        return super.keyPressed(pKeyCode, pScanCode, pModifiers);
     }
 
     @Override
@@ -405,7 +416,6 @@ public class VapeCatalogScreen extends Screen {
         int displayCenter = (this.width / 2) + 75 + (54 - vape3DWidth) / 2;
         pGuiGraphics.drawString(this.font, "3D View", displayCenter, labelY, 4210752, false);
     }
-
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
