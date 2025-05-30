@@ -99,6 +99,11 @@ public class VapeCatalogOffers {
                     && VapeCatalogUtil.hasEnoughOf(player, getCostB());
         }
 
+        if (tradeLogic instanceof VapeEffectExtensionOffer) {
+            return VapeCatalogUtil.hasItemInTagWithPartialEnergy(player, getCostATag())
+                    && VapeCatalogUtil.hasEnoughOf(player, getCostB());
+        }
+
         return false;
     }
 

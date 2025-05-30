@@ -24,7 +24,11 @@ public class VapeEffectExtensionOffer implements ISpecialOfferLogic{
                 Optional<IEnergyStorage> cap = stack.getCapability(ForgeCapabilities.ENERGY).resolve();
                 if (cap.isPresent()) {
                     IEnergyStorage energy = cap.get();
-                    if (energy.getEnergyStored() <= 0 && energy.getEnergyStored() < energy.getMaxEnergyStored()) continue;
+                    int stored = energy.getEnergyStored();
+                    int max = energy.getMaxEnergyStored();
+
+                    if (stored <= 0 || stored >= max)
+                        continue;
 
                     int cost = calculateDiamondCost(energy);
                     if (VapeCatalogUtil.hasEnoughOf(player, new ItemStack(Items.DIAMOND, cost))) {

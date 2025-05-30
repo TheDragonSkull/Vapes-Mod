@@ -12,6 +12,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.alchemy.PotionUtils;
+import net.minecraft.world.item.alchemy.Potions;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
@@ -19,6 +21,7 @@ import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
+import java.util.Optional;
 
 
 public class VapeCatalogUtil {
@@ -97,6 +100,25 @@ public class VapeCatalogUtil {
         return false;
     }
 
+    public static boolean hasItemInTagWithPartialEnergy(Player player, TagKey<Item> tag) {
+        for (ItemStack stack : player.getInventory().items) {
+            if (!stack.isEmpty() && stack.is(tag)) {
+
+                if (PotionUtils.getPotion(stack) == Potions.EMPTY) continue;
+
+                Optional<IEnergyStorage> cap = stack.getCapability(ForgeCapabilities.ENERGY).resolve();
+                if (cap.isPresent()) {
+                    IEnergyStorage energy = cap.get();
+                    int stored = energy.getEnergyStored();
+                    int max = energy.getMaxEnergyStored();
+                    if (stored > 0 && stored < max) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     public static void removeCurrency(Player player, ItemStack costA, ItemStack costB) {
         takeFromInventory(player, costA);

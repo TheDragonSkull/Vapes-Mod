@@ -29,6 +29,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.block.custom.VapeCatalog;
@@ -237,13 +238,40 @@ public class VapeCatalogScreen extends Screen {
                         ? getVisualCostAWithTagInfo(offer.getCostATag())
                         : offer.getCostA();
 
+                ItemStack dynamicCostB = offer.getCostB();
+
                 ItemStack visualResult = offer.isResultByTag()
                         ? getVisualResultFromTag(offer.getResultTag())
                         : offer.getResult();
 
+                if (offer.getTradeLogic() instanceof VapeEffectExtensionOffer) {
+                    // Buscar un vape válido en el inventario
+                    for (ItemStack stack : Minecraft.getInstance().player.getInventory().items) {
+                        if (!stack.isEmpty() && stack.is(offer.getCostATag())) {
+                            if (PotionUtils.getPotion(stack) == Potions.EMPTY) continue;
+
+                            Optional<IEnergyStorage> cap = stack.getCapability(ForgeCapabilities.ENERGY).resolve();
+                            if (cap.isPresent()) {
+                                IEnergyStorage energy = cap.get();
+                                int stored = energy.getEnergyStored();
+                                int max = energy.getMaxEnergyStored();
+
+                                if (stored > 0 && stored < max) {
+                                    int missing = max - stored;
+                                    int cost = 1 + (missing / 2);
+
+                                    dynamicCostB = new ItemStack(Items.DIAMOND, cost);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+
                 button.visible = true;
                 button.active = true;
-                button.setItem(offer, visualResult, visualCostA, offer.getCostB());
+                button.setItem(offer, visualResult, visualCostA, dynamicCostB);
                 button.setIndex(index);
             } else {
                 button.visible = false;
@@ -336,16 +364,39 @@ public class VapeCatalogScreen extends Screen {
     }
 
     protected void renderLabels(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY) {
-        int fontWidth = currentTab == TabType.SPECIAL ? this.font.width("Special Offers") : this.font.width("Vape Offers");
-        int labelX = (this.width - GUI_WIDTH) / 2 + 48 - fontWidth / 2;
         int labelY = (this.height - GUI_HEIGHT) / 2 + 6;
+        int labelXLeft = (this.width - GUI_WIDTH) / 2 + 48;
+
+        // === Dynamic Tab Title ===
+        String labelText;
 
         if (currentTab != TabType.SPECIAL) {
-            pGuiGraphics.drawString(this.font, "Vape Offers", labelX, labelY, 4210752, false);
+            labelText = "Vape Offers";
         } else {
-            pGuiGraphics.drawString(this.font, "Special Offers", labelX, labelY, 4210752, false);
+            if (this.selectedOffer != null) {
+                ISpecialOfferLogic logic = this.selectedOffer.getTradeLogic();
+                if (logic instanceof RandomPotionRechargeOffer) {
+                    labelText = "Randomize Offer";
+                } else if (logic instanceof RecycleDisposableOffer) {
+                    labelText = "Recycle Offer";
+                } else if (logic instanceof DisposableRerollOffer) {
+                    labelText = "Reroll Offer";
+                } else if (logic instanceof VapeEffectExtensionOffer) {
+                    labelText = "Extension Offer";
+                } else {
+                    labelText = "Special Offers";
+                }
+            } else {
+                labelText = "Special Offers";
+            }
         }
 
+        int fontWidth = this.font.width(labelText);
+        int labelX = labelXLeft - fontWidth / 2;
+
+        pGuiGraphics.drawString(this.font, labelText, labelX, labelY, 4210752, false);
+
+        // === Right Section ===
         int vapeModelsWidth = this.font.width("Vape Models");
         int centerX = (this.width / 2) + 50;
         pGuiGraphics.drawString(this.font, "Vape Models", centerX - vapeModelsWidth, labelY, 4210752, false);
@@ -354,6 +405,7 @@ public class VapeCatalogScreen extends Screen {
         int displayCenter = (this.width / 2) + 75 + (54 - vape3DWidth) / 2;
         pGuiGraphics.drawString(this.font, "3D View", displayCenter, labelY, 4210752, false);
     }
+
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
@@ -738,13 +790,17 @@ public class VapeCatalogScreen extends Screen {
 
                     } else if (offer != null && offer.getTradeLogic() instanceof VapeEffectExtensionOffer) {
                         List<Component> originalTooltip = tooltipStack.getTooltipLines(Minecraft.getInstance().player, TooltipFlag.Default.NORMAL);
-                        List<Component> modifiable = new ArrayList<>(originalTooltip);
+                        List<Component> modifiable = new ArrayList<>();
 
-                        for (int i = 0; i < modifiable.size(); i++) {
-                            Component line = modifiable.get(i);
-                            if (line.getString().equals("No Effects")) {
-                                modifiable.set(i, Component.literal("Current effect").withStyle(ChatFormatting.BLUE));
-                                break;
+                        for (Component line : originalTooltip) {
+                            String text = line.getString();
+
+                            if (text.equals("No Effects")) {
+                                modifiable.add(Component.literal("Current effect").withStyle(ChatFormatting.BLUE));
+                            } else if (text.startsWith("Capacity:")) {
+                                modifiable.add(Component.literal("Current Capacity").withStyle(ChatFormatting.DARK_AQUA));
+                            } else {
+                                modifiable.add(line);
                             }
                         }
 

@@ -51,13 +51,6 @@ public class VapeOfferRegistry {
         SPECIAL_TRADES.clear();
 
         SPECIAL_TRADES.add(new VapeCatalogOffers(
-                ModTags.Items.VAPES,
-                new ItemStack(Items.DIAMOND, 2),
-                ModTags.Items.VAPES,
-                new RandomPotionRechargeOffer()
-        ));
-
-        SPECIAL_TRADES.add(new VapeCatalogOffers(
                 ModTags.Items.DISPOSABLE_VAPES,
                 new ItemStack(VapeCommonConfigs.getCatalogCostItem(), Math.max(1, (int)(VapeCommonConfigs.PRICE_DISPOSABLE.get() * 0.25))),
                 ModTags.Items.DISPOSABLE_VAPES,
@@ -74,10 +67,16 @@ public class VapeOfferRegistry {
         SPECIAL_TRADES.add(new VapeCatalogOffers(
                 ModTags.Items.VAPES,
                 new ItemStack(Items.DIAMOND, 2),
-                VapeCatalogUtil.getPlaceholderVapeFromTag(ModTags.Items.VAPES),
-                new VapeEffectExtensionOffer()
+                ModTags.Items.VAPES,
+                new RandomPotionRechargeOffer()
         ));
 
+        SPECIAL_TRADES.add(new VapeCatalogOffers(
+                ModTags.Items.VAPES,
+                new ItemStack(Items.DIAMOND),
+                ModTags.Items.VAPES,
+                new VapeEffectExtensionOffer()
+        ));
 
     }
 
