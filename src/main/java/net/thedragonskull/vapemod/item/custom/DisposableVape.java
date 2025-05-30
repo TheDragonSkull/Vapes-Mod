@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
@@ -80,8 +81,11 @@ public class DisposableVape extends Item implements IVape {
     public void inventoryTick(ItemStack pStack, Level pLevel, Entity pEntity, int pSlotId, boolean pIsSelected) { //todo: randomiza el efecto 2 veces
         if (pLevel.isClientSide || !(pEntity instanceof Player)) return;
 
-        if (PotionUtils.getPotion(pStack) == Potions.EMPTY) {
+        CompoundTag tag = pStack.getOrCreateTag();
+        if (tag.getBoolean("RandomizedPotion")) return;
 
+
+        if (PotionUtils.getPotion(pStack) == Potions.EMPTY) {
             List<Potion> potions = BuiltInRegistries.POTION.stream()
                     .filter(p -> !p.getEffects().isEmpty() && p != Potions.EMPTY)
                     .toList();
@@ -89,6 +93,7 @@ public class DisposableVape extends Item implements IVape {
             if (!potions.isEmpty()) {
                 Potion randomPotion = potions.get(pLevel.getRandom().nextInt(potions.size()));
                 PotionUtils.setPotion(pStack, randomPotion);
+                tag.putBoolean("RandomizedPotion", true);
             }
         }
 

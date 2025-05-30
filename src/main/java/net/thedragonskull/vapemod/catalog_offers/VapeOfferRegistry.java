@@ -6,6 +6,7 @@ import net.minecraft.world.item.Items;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.util.ModTags;
+import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +70,14 @@ public class VapeOfferRegistry {
                 new ItemStack(VapeCommonConfigs.getCatalogCostItem(), 1),
                 new RecycleDisposableOffer()
         ));
+
+        SPECIAL_TRADES.add(new VapeCatalogOffers(
+                ModTags.Items.VAPES,
+                new ItemStack(Items.DIAMOND, 2),
+                VapeCatalogUtil.getPlaceholderVapeFromTag(ModTags.Items.VAPES),
+                new VapeEffectExtensionOffer()
+        ));
+
 
     }
 

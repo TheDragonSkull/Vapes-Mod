@@ -33,9 +33,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.block.custom.VapeCatalog;
 import net.thedragonskull.vapemod.capability.VapeEnergy;
-import net.thedragonskull.vapemod.catalog_offers.RandomPotionRechargeOffer;
-import net.thedragonskull.vapemod.catalog_offers.RecycleDisposableOffer;
-import net.thedragonskull.vapemod.catalog_offers.VapeOfferRegistry;
+import net.thedragonskull.vapemod.catalog_offers.*;
 import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.item.custom.DisposableVape;
 import net.thedragonskull.vapemod.item.custom.Vape;
@@ -43,7 +41,6 @@ import net.thedragonskull.vapemod.network.C2SBuyVapePacket;
 import net.thedragonskull.vapemod.network.C2SCloseCatalogPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
 import net.thedragonskull.vapemod.util.ModTags;
-import net.thedragonskull.vapemod.catalog_offers.VapeCatalogOffers;
 import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
 import java.util.ArrayList;
@@ -203,6 +200,8 @@ public class VapeCatalogScreen extends Screen {
                 if (!potions.isEmpty()) {
                     Potion randomPotion = potions.get(this.minecraft.level.getRandom().nextInt(potions.size()));
                     PotionUtils.setPotion(stack, randomPotion);
+                    System.out.println("Potion added: " + randomPotion);
+                    stack.getOrCreateTag().putBoolean("RandomizedPotion", true);
                 }
             }
 
@@ -734,8 +733,35 @@ public class VapeCatalogScreen extends Screen {
                             }
                             tooltipStack = depletedVape;
                         }
+
+                        graphics.renderTooltip(font, tooltipStack, mouseX, mouseY);
+
+                    } else if (offer != null && offer.getTradeLogic() instanceof VapeEffectExtensionOffer) {
+                        List<Component> originalTooltip = tooltipStack.getTooltipLines(Minecraft.getInstance().player, TooltipFlag.Default.NORMAL);
+                        List<Component> modifiable = new ArrayList<>(originalTooltip);
+
+                        for (int i = 0; i < modifiable.size(); i++) {
+                            Component line = modifiable.get(i);
+                            if (line.getString().equals("No Effects")) {
+                                modifiable.set(i, Component.literal("Current effect").withStyle(ChatFormatting.BLUE));
+                                break;
+                            }
+                        }
+
+                        ResourceLocation id = ForgeRegistries.ITEMS.getKey(tooltipStack.getItem());
+                        if (id != null && Minecraft.getInstance().options.advancedItemTooltips) {
+                            modifiable.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
+                        }
+
+                        if (tooltipStack.hasTag() && Minecraft.getInstance().options.advancedItemTooltips) {
+                            modifiable.add(Component.literal("NBT: " + tooltipStack.getTag().getAllKeys().size() + " tag(s)").withStyle(ChatFormatting.DARK_GRAY));
+                        }
+
+                        graphics.renderTooltip(font, modifiable, Optional.empty(), mouseX, mouseY);
+                    } else {
+                        graphics.renderTooltip(font, tooltipStack, mouseX, mouseY);
+
                     }
-                    graphics.renderTooltip(font, tooltipStack, mouseX, mouseY);
 
                 } else if (mouseX < this.getX() + 42 && mouseX > this.getX() + 25 && !this.costB.isEmpty()) {
 
@@ -784,7 +810,11 @@ public class VapeCatalogScreen extends Screen {
                     List<Component> tooltip = new ArrayList<>(tooltipStack.getTooltipLines(Minecraft.getInstance().player, TooltipFlag.Default.NORMAL));
 
                     for (int i = 0; i < tooltip.size(); i++) {
-                        if (currentTab == TabType.SPECIAL && tooltip.get(i).getString().equals("No Effects")) {
+                        String line = tooltip.get(i).getString();
+                        if (offer != null && offer.getTradeLogic() instanceof VapeEffectExtensionOffer && line.equals("No Effects")) {
+                            tooltip.set(i, Component.literal("Refill current effect").withStyle(ChatFormatting.BLUE));
+                            break;
+                        } else if (currentTab == TabType.SPECIAL && line.equals("No Effects")) {
                             tooltip.set(i, Component.literal("Effect: ???").withStyle(ChatFormatting.BLUE));
                             break;
                         }

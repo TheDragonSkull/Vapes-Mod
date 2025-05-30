@@ -206,6 +206,14 @@ public class VapeCatalogUtil {
         return new ItemStack(tagItems.get(index));
     }
 
+    public static ItemStack getPlaceholderVapeFromTag(TagKey<Item> tag) {
+        return ForgeRegistries.ITEMS.getValues().stream()
+                .filter(item -> item.builtInRegistryHolder().is(tag))
+                .findFirst()
+                .map(ItemStack::new)
+                .orElse(ItemStack.EMPTY);
+    }
+
     // Buy Button
     @OnlyIn(Dist.CLIENT)
     public static class TabAndBuyButton extends Button {
