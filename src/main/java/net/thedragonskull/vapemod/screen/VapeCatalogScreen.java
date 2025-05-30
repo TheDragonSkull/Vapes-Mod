@@ -38,6 +38,7 @@ import net.thedragonskull.vapemod.catalog_offers.RecycleDisposableOffer;
 import net.thedragonskull.vapemod.catalog_offers.VapeOfferRegistry;
 import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.item.custom.DisposableVape;
+import net.thedragonskull.vapemod.item.custom.Vape;
 import net.thedragonskull.vapemod.network.C2SBuyVapePacket;
 import net.thedragonskull.vapemod.network.C2SCloseCatalogPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
@@ -391,34 +392,36 @@ public class VapeCatalogScreen extends Screen {
         }
 
         // 3D item
-        if (!this.selectedVape.isEmpty()) {
-            ItemStack vapeToRender = this.selectedVape;
-
-            if (isTagCost(this.selectedVape)) {
-                TagKey<Item> tag = getTagFromCostA(this.selectedVape);
-                vapeToRender = getCycledItemFromTag(tag);
-            }
+        if (this.selectedOffer != null) {
+            ItemStack itemToRender = this.selectedOffer.isResultByTag()
+                    ? VapeCatalogUtil.getCycledItemFromTag(this.selectedOffer.getResultTag())
+                    : this.selectedOffer.getResult().copy();
 
             int centerX = this.width / 2;
             int centerY = this.height / 2;
             int scale = 110;
+            boolean is3d = itemToRender.getItem() instanceof Vape || itemToRender.getItem() instanceof DisposableVape;
+            int yOffset = is3d ? -30 : -23;
 
             PoseStack poseStack = graphics.pose();
             poseStack.pushPose();
 
-            poseStack.translate((centerX + 100) + 1.5F, centerY - 30, 100);
+            poseStack.translate((centerX + 100) + 1.5F, centerY + yOffset, 100);
             poseStack.scale(scale, scale, scale);
 
             poseStack.mulPose(Axis.XP.rotationDegrees(180f));
 
             float rotation = (System.currentTimeMillis() % 3600L) / 10f;
             poseStack.mulPose(Axis.YP.rotationDegrees(-rotation));
-            poseStack.mulPose(Axis.ZP.rotationDegrees(25));
+
+            if (is3d) {
+                poseStack.mulPose(Axis.ZP.rotationDegrees(25));
+            }
 
             RenderSystem.disableCull();
 
             Minecraft.getInstance().getItemRenderer().renderStatic(
-                    vapeToRender,
+                    itemToRender,
                     ItemDisplayContext.GROUND,
                     15728880,
                     OverlayTexture.NO_OVERLAY,
@@ -574,7 +577,7 @@ public class VapeCatalogScreen extends Screen {
                     this.costA.getOrCreateTag().putString("TagKey", costATag.location().toString());
                 }
 
-                if (!this.result.isEmpty()) {
+                if (!this.result.isEmpty() && offer.isResultByTag()) {
                     this.result.getOrCreateTag().putString("TagKey", costATag.location().toString());
                 }
 
@@ -635,13 +638,13 @@ public class VapeCatalogScreen extends Screen {
                 }
             }
             graphics.renderItem(toRenderA, x + 2, y + 1);
-            graphics.renderItemDecorations(Minecraft.getInstance().font, toRenderA, x + 2, y);
+            graphics.renderItemDecorations(Minecraft.getInstance().font, toRenderA, x + 2, y + 1);
 
 
             //Render costB
             if (!this.costB.isEmpty()) {
-                graphics.renderItem(this.costB, x + 24, y);
-                graphics.renderItemDecorations(Minecraft.getInstance().font, this.costB, x + 24, y);
+                graphics.renderItem(this.costB, x + 24, y + 1);
+                graphics.renderItemDecorations(Minecraft.getInstance().font, this.costB, x + 24, y + 1);
             }
 
             // Render result

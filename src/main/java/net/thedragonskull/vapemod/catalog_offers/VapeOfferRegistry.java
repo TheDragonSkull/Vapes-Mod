@@ -65,6 +65,8 @@ public class VapeOfferRegistry {
 
         SPECIAL_TRADES.add(new VapeCatalogOffers(
                 ModTags.Items.DISPOSABLE_VAPES,
+                ItemStack.EMPTY,
+                new ItemStack(VapeCommonConfigs.getCatalogCostItem(), 1),
                 new RecycleDisposableOffer()
         ));
 

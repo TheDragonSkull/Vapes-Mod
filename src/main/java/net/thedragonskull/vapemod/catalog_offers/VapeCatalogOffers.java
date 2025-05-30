@@ -33,11 +33,11 @@ public class VapeCatalogOffers {
         this.tradeLogic = logic;
     }
 
-    public VapeCatalogOffers(TagKey<Item> costATag, ISpecialOfferLogic logic) {
+    public VapeCatalogOffers(TagKey<Item> costATag, ItemStack costB, ItemStack visualResult, ISpecialOfferLogic logic) {
         this.costA = ItemStack.EMPTY;
         this.costATag = costATag;
-        this.costB = ItemStack.EMPTY;
-        this.result = ItemStack.EMPTY;
+        this.costB = costB;
+        this.result = visualResult;
         this.resultTag = null;
         this.tradeLogic = logic;
     }
