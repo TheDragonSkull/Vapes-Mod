@@ -40,6 +40,7 @@ import net.thedragonskull.vapemod.item.custom.Vape;
 import net.thedragonskull.vapemod.network.C2SBuyVapePacket;
 import net.thedragonskull.vapemod.network.C2SCloseCatalogPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
+import net.thedragonskull.vapemod.sound.ModSounds;
 import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
 import java.util.ArrayList;
@@ -215,6 +216,11 @@ public class VapeCatalogScreen extends Screen {
 
             if (this.selectedTradeIndex >= 0) {
                 PacketHandler.sendToServer(new C2SBuyVapePacket(this.selectedTradeIndex, this.currentTab.ordinal()));
+
+                VapeCatalogOffers offer = selectedOffer;
+                if (offer != null && offer.getTradeLogic() instanceof RerollDisposableOffer) {
+                    Minecraft.getInstance().player.playSound(ModSounds.CATALOG_BUY.get(), 1.0F, 1.0F);
+                }
             }
 
         }).pos(centerX + 75, height + 83).size(54, 20).build();

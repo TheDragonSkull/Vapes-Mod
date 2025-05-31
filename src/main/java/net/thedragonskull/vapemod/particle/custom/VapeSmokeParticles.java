@@ -16,9 +16,6 @@ import net.thedragonskull.vapemod.item.ModItems;
 import net.thedragonskull.vapemod.item.custom.Vape;
 
 public class VapeSmokeParticles extends TextureSheetParticle {
-    private boolean hasColorGradient = false;
-    private static final int[] GRADIENT_START = {220, 164, 224};
-    private static final int[] GRADIENT_END = {130, 217, 192};
 
     protected VapeSmokeParticles(ClientLevel pLevel, double pX, double pY, double pZ, SpriteSet spriteSet,
                                  double pXSpeed, double pYSpeed, double pZSpeed) {

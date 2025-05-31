@@ -31,11 +31,16 @@ public class S2CVapeParticlesPacket {
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
         contextSupplier.get().enqueueWork(() -> {
-            Level level = Minecraft.getInstance().level;
-            if (level == null) return;
+            Minecraft mc = Minecraft.getInstance();
+            Level level = mc.level;
+            Player localPlayer = mc.player;
 
-            Player player = level.getPlayerByUUID(this.playerId);
-            if (player == null) return;
+            if (level == null || localPlayer == null) return;
+
+            if (localPlayer.getUUID().equals(this.playerId)) return;
+
+            Player target = level.getPlayerByUUID(this.playerId);
+            if (target == null) return;
 
             int color = this.color;
             double red = ((color >> 16) & 0xFF) / 255.0;
@@ -44,16 +49,16 @@ public class S2CVapeParticlesPacket {
 
             for (int i = 0; i < 10; i++) {
                 double distance = -0.5D;
-                double horizontalAngle = Math.toRadians(player.getYRot());
-                double verticalAngle = Math.toRadians(player.getXRot());
+                double horizontalAngle = Math.toRadians(target.getYRot());
+                double verticalAngle = Math.toRadians(target.getXRot());
                 double xOffset = distance * Math.sin(horizontalAngle) * Math.cos(verticalAngle);
                 double yOffset = distance * Math.sin(verticalAngle);
                 double zOffset = -distance * Math.cos(horizontalAngle) * Math.cos(verticalAngle);
-                double x = player.getX() + xOffset;
-                double y = player.getEyeY() + yOffset;
-                double z = player.getZ() + zOffset;
+                double x = target.getX() + xOffset;
+                double y = target.getEyeY() + yOffset;
+                double z = target.getZ() + zOffset;
 
-                player.level().addParticle(
+                target.level().addParticle(
                         ModParticles.VAPE_SMOKE_PARTICLES.get(),
                         x, y, z,
                         red, green, blue

@@ -155,26 +155,21 @@ public class DisposableVape extends Item implements IVape {
 
             VapeUtil.applyCooldownToVapes(player, 100);
 
-            int color = 0xFFFFFF;
-            Potion contents = PotionUtils.getPotion(item);
-            if (contents != null && contents.equals(Potions.WATER)) {
-                color = PotionUtils.getColor(item);
-            }
-
-            if (player instanceof ServerPlayer serverPlayer) {
-                PacketHandler.INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> player),
-                        new S2CVapeParticlesPacket(player.getUUID(), color)
-                );
-            } else {
-                VapeUtil.smokeParticles(player);
-            }
-
             if (!level.isClientSide) {
+                if (player instanceof ServerPlayer serverPlayer) {
+                    PacketHandler.INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> serverPlayer),
+                            new S2CVapeParticlesPacket(player.getUUID(), PotionUtils.getColor(item)));
+                }
+
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
                         ModSounds.VAPE_RESISTANCE_END.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
-
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
                         ModSounds.SMOKING_BREATHE_OUT.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+            } else {
+                if (Minecraft.getInstance().player != null &&
+                        Minecraft.getInstance().player.getUUID().equals(player.getUUID())) {
+                    VapeUtil.smokeParticles(player);
+                }
             }
 
         }
