@@ -258,7 +258,7 @@ public class VapeCatalogScreen extends Screen {
                         : offer.getResult();
 
                 if (offer.getTradeLogic() instanceof ExtensionVapeEffectOffer) {
-                    for (ItemStack stack : Minecraft.getInstance().player.getInventory().items) {
+                    for (ItemStack stack : VapeCatalogUtil.getAllRelevantStacks(Minecraft.getInstance().player)) {
                         if (!stack.isEmpty() && stack.is(offer.getCostATag())) {
                             if (PotionUtils.getPotion(stack) == Potions.EMPTY) continue;
 

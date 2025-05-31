@@ -8,7 +8,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionUtils;
 import net.minecraft.world.item.alchemy.Potions;
-import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
 import java.util.List;
@@ -27,7 +26,7 @@ public class RerollDisposableOffer implements ISpecialOfferLogic{
     public void removeCost(ServerPlayer player, VapeCatalogOffers offer) {
         int rerolled = 0;
 
-        for (ItemStack stack : player.getInventory().items) {
+        for (ItemStack stack : VapeCatalogUtil.getAllRelevantStacks(player)) {
             if (!stack.isEmpty() && stack.is(offer.getCostATag()) && isNewVape(stack)) {
                 List<Potion> potions = BuiltInRegistries.POTION.stream()
                         .filter(p -> !p.getEffects().isEmpty() && p != Potions.EMPTY)

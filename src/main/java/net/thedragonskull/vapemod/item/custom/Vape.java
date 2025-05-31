@@ -225,6 +225,13 @@ public class Vape extends Item implements VapeEnergyContainer, IVape {
 
                     VapeUtil.applyCooldownToVapes(player, 100);
 
+                    if (!player.getAbilities().instabuild) {
+                        storage.extractEnergy(1, false);
+                        if (storage.getEnergyStored() <= 0) {
+                            PotionUtils.setPotion(item, Potions.EMPTY);
+                        }
+                    }
+
                     if (!level.isClientSide) {
                         if (player instanceof ServerPlayer serverPlayer) {
                             PacketHandler.INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> serverPlayer),

@@ -62,7 +62,7 @@ public class ExtensionVapeEffectOffer implements ISpecialOfferLogic{
 
     @Nullable
     private ItemStack getValidStack(Player player, VapeCatalogOffers offer) {
-        for (ItemStack stack : player.getInventory().items) {
+        for (ItemStack stack : VapeCatalogUtil.getAllRelevantStacks(player)) {
             if (!stack.isEmpty() && stack.is(offer.getCostATag())) {
                 if (PotionUtils.getPotion(stack) == Potions.EMPTY) continue;
 
@@ -82,7 +82,7 @@ public class ExtensionVapeEffectOffer implements ISpecialOfferLogic{
     }
 
     public int getDiamondCostFor(Player player, VapeCatalogOffers offer) {
-        for (ItemStack stack : player.getInventory().items) {
+        for (ItemStack stack : VapeCatalogUtil.getAllRelevantStacks(player)) {
             if (!stack.isEmpty() && stack.is(offer.getCostATag())) {
                 if (PotionUtils.getPotion(stack) == Potions.EMPTY) continue;
 

@@ -20,11 +20,30 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 
 public class VapeCatalogUtil {
+
+    public static List<ItemStack> getAllRelevantStacks(Player player) {
+        List<ItemStack> stacks = new ArrayList<>(player.getInventory().items);
+
+        ItemStack mainHand = player.getMainHandItem();
+        ItemStack offHand = player.getOffhandItem();
+
+        if (!stacks.contains(mainHand)) {
+            stacks.add(mainHand);
+        }
+
+        if (!stacks.contains(offHand)) {
+            stacks.add(offHand);
+        }
+
+        return stacks;
+    }
+
 
     public static boolean hasEnoughCurrency(Player player, ItemStack costA, ItemStack costB) {
         boolean costAOk = isTagCost(costA)
@@ -51,7 +70,7 @@ public class VapeCatalogUtil {
         int requiredCount = required.getCount();
         int found = 0;
 
-        for (ItemStack stack : player.getInventory().items) {
+        for (ItemStack stack : getAllRelevantStacks(player)) {
             if (stack.getItem() == required.getItem()) {
                 found += stack.getCount();
                 if (found >= requiredCount) {
@@ -64,7 +83,7 @@ public class VapeCatalogUtil {
     }
 
     public static boolean hasItemInTagWithZeroEnergy(Player player, TagKey<Item> tag) {
-        for (ItemStack stack : player.getInventory().items) {
+        for (ItemStack stack : getAllRelevantStacks(player)) {
             if (!stack.isEmpty() && stack.is(tag)) {
                 if (stack.getCapability(ForgeCapabilities.ENERGY).isPresent()) {
                     IEnergyStorage energy = stack.getCapability(ForgeCapabilities.ENERGY).orElse(null);
@@ -78,7 +97,7 @@ public class VapeCatalogUtil {
     }
 
     public static boolean hasItemInTagWithZeroDurability(Player player, TagKey<Item> tag) {
-        for (ItemStack stack : player.getInventory().items) {
+        for (ItemStack stack : getAllRelevantStacks(player)) {
             if (!stack.isEmpty() && stack.is(tag)) {
                 if (stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage()) {
                     return true;
@@ -90,7 +109,7 @@ public class VapeCatalogUtil {
 
 
     public static boolean hasItemInTagWithFullDurability(Player player, TagKey<Item> tag) {
-        for (ItemStack stack : player.getInventory().items) {
+        for (ItemStack stack : getAllRelevantStacks(player)) {
             if (!stack.isEmpty() && stack.is(tag)) {
                 if (stack.getDamageValue() == 0) {
                     return true;
@@ -101,7 +120,7 @@ public class VapeCatalogUtil {
     }
 
     public static boolean hasItemInTagWithPartialEnergy(Player player, TagKey<Item> tag) {
-        for (ItemStack stack : player.getInventory().items) {
+        for (ItemStack stack : getAllRelevantStacks(player)) {
             if (!stack.isEmpty() && stack.is(tag)) {
 
                 if (PotionUtils.getPotion(stack) == Potions.EMPTY) continue;
@@ -122,12 +141,24 @@ public class VapeCatalogUtil {
 
     public static int countItemsInTagWithFullDurability(Player player, TagKey<Item> tag) {
         int count = 0;
-        for (ItemStack stack : player.getInventory().items) {
+        for (ItemStack stack : getAllRelevantStacks(player)) {
             if (!stack.isEmpty() && stack.is(tag) && stack.getDamageValue() == 0) {
                 count += stack.getCount();
             }
         }
         return count;
+    }
+
+    public static ItemStack getFirstStackInTagWithZeroEnergy(Player player, TagKey<Item> tag) {
+        for (ItemStack stack : getAllRelevantStacks(player)) {
+            if (!stack.isEmpty() && stack.is(tag)) {
+                IEnergyStorage energy = stack.getCapability(ForgeCapabilities.ENERGY).orElse(null);
+                if (energy.getEnergyStored() == 0) {
+                    return stack.copy();
+                }
+            }
+        }
+        return ItemStack.EMPTY;
     }
 
     public static void removeCurrency(Player player, ItemStack costA, ItemStack costB) {
@@ -140,11 +171,13 @@ public class VapeCatalogUtil {
 
         int remaining = required.getCount();
 
+        List<ItemStack> stacks = getAllRelevantStacks(player);
+
         if (isTagCost(required)) {
             TagKey<Item> tag = getTagFromCostA(required);
 
-            for (int i = 0; i < player.getInventory().items.size(); i++) {
-                ItemStack stack = player.getInventory().items.get(i);
+            for (int i = 0; i < stacks.size(); i++) {
+                ItemStack stack = stacks.get(i);
 
                 if (!stack.isEmpty() && stack.is(tag)) {
                     // for ENERGY
@@ -167,8 +200,8 @@ public class VapeCatalogUtil {
                 }
             }
         } else {
-            for (int i = 0; i < player.getInventory().items.size(); i++) {
-                ItemStack stack = player.getInventory().items.get(i);
+            for (int i = 0; i < stacks.size(); i++) {
+                ItemStack stack = stacks.get(i);
 
                 if (stack.getItem() == required.getItem()) {
                     int removed = Math.min(stack.getCount(), remaining);
@@ -210,18 +243,6 @@ public class VapeCatalogUtil {
                 .findFirst()
                 .map(ItemStack::new)
                 .orElse(ItemStack.EMPTY);
-    }
-
-    public static ItemStack getFirstStackInTagWithZeroEnergy(Player player, TagKey<Item> tag) {
-        for (ItemStack stack : player.getInventory().items) {
-            if (!stack.isEmpty() && stack.is(tag)) {
-                IEnergyStorage energy = stack.getCapability(ForgeCapabilities.ENERGY).orElse(null);
-                if (energy.getEnergyStored() == 0) {
-                    return stack.copy();
-                }
-            }
-        }
-        return ItemStack.EMPTY;
     }
 
 
