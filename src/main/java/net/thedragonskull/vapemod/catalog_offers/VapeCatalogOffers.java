@@ -89,7 +89,7 @@ public class VapeCatalogOffers {
                     && VapeCatalogUtil.hasEnoughOf(player, getCostB());
         }
 
-        if (tradeLogic instanceof DisposableRerollOffer) {
+        if (tradeLogic instanceof RerollDisposableOffer) {
             return VapeCatalogUtil.hasItemInTagWithFullDurability(player, getCostATag())
                     && VapeCatalogUtil.hasEnoughOf(player, getCostB());
         }
@@ -99,7 +99,7 @@ public class VapeCatalogOffers {
                     && VapeCatalogUtil.hasEnoughOf(player, getCostB());
         }
 
-        if (tradeLogic instanceof VapeEffectExtensionOffer) {
+        if (tradeLogic instanceof ExtensionVapeEffectOffer) {
             return VapeCatalogUtil.hasItemInTagWithPartialEnergy(player, getCostATag())
                     && VapeCatalogUtil.hasEnoughOf(player, getCostB());
         }

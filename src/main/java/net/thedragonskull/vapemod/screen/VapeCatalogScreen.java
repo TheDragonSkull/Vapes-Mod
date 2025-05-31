@@ -15,11 +15,9 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.*;
@@ -42,14 +40,12 @@ import net.thedragonskull.vapemod.item.custom.Vape;
 import net.thedragonskull.vapemod.network.C2SBuyVapePacket;
 import net.thedragonskull.vapemod.network.C2SCloseCatalogPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
-import net.thedragonskull.vapemod.util.ModTags;
 import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static net.thedragonskull.vapemod.util.VapeCatalogOffersUtil.*;
 import static net.thedragonskull.vapemod.util.VapeCatalogUtil.*;
 
 public class VapeCatalogScreen extends Screen {
@@ -255,8 +251,7 @@ public class VapeCatalogScreen extends Screen {
                         ? getVisualResultFromTag(offer.getResultTag())
                         : offer.getResult();
 
-                if (offer.getTradeLogic() instanceof VapeEffectExtensionOffer) {
-                    // Buscar un vape válido en el inventario
+                if (offer.getTradeLogic() instanceof ExtensionVapeEffectOffer) {
                     for (ItemStack stack : Minecraft.getInstance().player.getInventory().items) {
                         if (!stack.isEmpty() && stack.is(offer.getCostATag())) {
                             if (PotionUtils.getPotion(stack) == Potions.EMPTY) continue;
@@ -279,6 +274,19 @@ public class VapeCatalogScreen extends Screen {
                     }
                 }
 
+                ItemStack visualCostB = offer.getCostB();
+
+                if (offer.getTradeLogic() instanceof ExtensionVapeEffectOffer logic) {
+                    int cost = logic.getDiamondCostFor(Minecraft.getInstance().player, offer);
+                    visualCostB = new ItemStack(Items.DIAMOND, cost);
+                }
+
+                if (offer.getTradeLogic() instanceof RerollDisposableOffer) {
+                    int count = VapeCatalogUtil.countItemsInTagWithFullDurability(Minecraft.getInstance().player, offer.getCostATag());
+                    ItemStack costPer = offer.getCostB().copy();
+                    costPer.setCount(costPer.getCount() * count * 2);
+                    visualCostB = costPer;
+                }
 
                 button.visible = true;
                 button.active = true;
@@ -348,6 +356,8 @@ public class VapeCatalogScreen extends Screen {
         } else {
             this.buyButton.active = false;
         }
+
+        updateVapeList();
     }
 
     private void renderScroller(GuiGraphics graphics, int x, int y) {
@@ -390,9 +400,9 @@ public class VapeCatalogScreen extends Screen {
                     labelText = "Randomize Offer";
                 } else if (logic instanceof RecycleDisposableOffer) {
                     labelText = "Recycle Offer";
-                } else if (logic instanceof DisposableRerollOffer) {
+                } else if (logic instanceof RerollDisposableOffer) {
                     labelText = "Reroll Offer";
-                } else if (logic instanceof VapeEffectExtensionOffer) {
+                } else if (logic instanceof ExtensionVapeEffectOffer) {
                     labelText = "Extension Offer";
                 } else {
                     labelText = "Special Offers";
@@ -628,6 +638,19 @@ public class VapeCatalogScreen extends Screen {
         public void setItem(VapeCatalogOffers offer, ItemStack result, ItemStack costA, ItemStack costB) {
             this.offer = offer;
             this.costA = costA.copy();
+
+            if (offer.getTradeLogic() instanceof RerollDisposableOffer) {
+                int rerollable = VapeCatalogUtil.countItemsInTagWithFullDurability(Minecraft.getInstance().player, offer.getCostATag());
+                int perRerollCost = costB.getCount();
+                int totalCost = rerollable * perRerollCost;
+
+                if (totalCost > 0) {
+                    costB = new ItemStack(costB.getItem(), totalCost);
+                } else {
+                    costB = ItemStack.EMPTY;
+                }
+            }
+
             this.costB = costB.copy();
             this.result = result.copy();
 
@@ -798,7 +821,7 @@ public class VapeCatalogScreen extends Screen {
 
                         graphics.renderTooltip(font, tooltipStack, mouseX, mouseY);
 
-                    } else if (offer != null && offer.getTradeLogic() instanceof VapeEffectExtensionOffer) {
+                    } else if (offer != null && offer.getTradeLogic() instanceof ExtensionVapeEffectOffer) {
                         List<Component> originalTooltip = tooltipStack.getTooltipLines(Minecraft.getInstance().player, TooltipFlag.Default.NORMAL);
                         List<Component> modifiable = new ArrayList<>();
 
@@ -877,7 +900,7 @@ public class VapeCatalogScreen extends Screen {
 
                     for (int i = 0; i < tooltip.size(); i++) {
                         String line = tooltip.get(i).getString();
-                        if (offer != null && offer.getTradeLogic() instanceof VapeEffectExtensionOffer && line.equals("No Effects")) {
+                        if (offer != null && offer.getTradeLogic() instanceof ExtensionVapeEffectOffer && line.equals("No Effects")) {
                             tooltip.set(i, Component.literal("Refill current effect").withStyle(ChatFormatting.BLUE));
                             break;
                         } else if (currentTab == TabType.SPECIAL && line.equals("No Effects")) {

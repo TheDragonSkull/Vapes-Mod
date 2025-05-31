@@ -120,6 +120,16 @@ public class VapeCatalogUtil {
         return false;
     }
 
+    public static int countItemsInTagWithFullDurability(Player player, TagKey<Item> tag) {
+        int count = 0;
+        for (ItemStack stack : player.getInventory().items) {
+            if (!stack.isEmpty() && stack.is(tag) && stack.getDamageValue() == 0) {
+                count += stack.getCount();
+            }
+        }
+        return count;
+    }
+
     public static void removeCurrency(Player player, ItemStack costA, ItemStack costB) {
         takeFromInventory(player, costA);
         takeFromInventory(player, costB);

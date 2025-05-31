@@ -1,6 +1,7 @@
 package net.thedragonskull.vapemod.mixin;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -22,28 +23,33 @@ public class ItemStackMixin {
     private void vapemod$removeDurabilityText(Player pPlayer, TooltipFlag pIsAdvanced, CallbackInfoReturnable<java.util.List<Component>> cir) {
         ItemStack self = (ItemStack)(Object)this;
         List<Component> original = cir.getReturnValue();
+
+        if (!(self.getItem() instanceof DisposableVape)) return;
+
         List<Component> filtered = new ArrayList<>();
+        boolean isFirst = true;
 
-        if (self.getItem() instanceof DisposableVape) {
-            boolean isFirst = true;
+        for (Component line : original) {
+            if (isFirst) {
+                filtered.add(line);
+                isFirst = false;
+                continue;
+            }
 
-            for (Component line : original) {
-                if (isFirst) {
-                    filtered.add(line);
-                    isFirst = false;
-                    continue;
-                }
-
-                String plain = line.getString();
-                if (!plain.startsWith("Durability:") && !plain.matches("\\d+ / \\d+")) {
-                    filtered.add(line);
+            // Check if line is the durability line (translatable key: "item.durability")
+            if (line.getContents() instanceof TranslatableContents contents) {
+                if (contents.getKey().equals("item.durability")) {
+                    continue; // skip it
                 }
             }
 
+            // Also filter generic durability formats like "5 / 100"
+            String plain = line.getString();
+            if (!plain.matches("\\d+ / \\d+")) {
+                filtered.add(line);
+            }
         }
 
-        if (!filtered.isEmpty()) {
-            cir.setReturnValue(filtered);
-        }
+        cir.setReturnValue(filtered);
     }
 }
