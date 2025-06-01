@@ -37,9 +37,11 @@ import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.sound.ClientSoundHandler;
 import net.thedragonskull.vapemod.sound.ModSounds;
 import net.thedragonskull.vapemod.util.ModTags;
+import net.thedragonskull.vapemod.util.VapeUtil;
 
 import java.util.*;
 
+import static net.thedragonskull.vapemod.util.VapeUtil.formatDuration;
 import static org.joml.Math.clamp;
 
 public class Vape extends Item implements VapeEnergyContainer, IVape {
@@ -100,14 +102,6 @@ public class Vape extends Item implements VapeEnergyContainer, IVape {
         }
     }
 
-    private String formatDuration(int ticks) {
-        int seconds = ticks / 20;
-        int minutes = seconds / 60;
-        seconds = seconds % 60;
-
-        return minutes + ":" + String.format("%02d", seconds);
-    }
-
     public String getDescriptionId(ItemStack pStack) {
         return Potion.getName(pStack.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY).potion(), this.getDescriptionId() + ".effect.");
     }
@@ -122,7 +116,9 @@ public class Vape extends Item implements VapeEnergyContainer, IVape {
             if (!effects.isEmpty()) {
                 MobEffectInstance effect = effects.get(0);
                 Component effectName = Component.translatable(effect.getDescriptionId());
-                return Component.literal("").append(baseName).append(" (").append(effectName).append(")");
+                int level = effect.getAmplifier();
+
+                return VapeUtil.formatEffectName(baseName, effectName, level);
             }
         }
 
@@ -223,7 +219,7 @@ public class Vape extends Item implements VapeEnergyContainer, IVape {
                     if (player instanceof ServerPlayer serverPlayer) {
                         PacketDistributor.sendToPlayersTrackingEntity(player, new S2CVapeParticlesPacket(player.getUUID(), color));
                     } else {
-                        smokeParticles(player);
+                        VapeUtil.smokeParticles(player);
                     }
 
                     if (!player.getAbilities().instabuild) {
@@ -266,46 +262,6 @@ public class Vape extends Item implements VapeEnergyContainer, IVape {
             }
         }
         return super.finishUsingItem(stack, level, entity);
-    }
-
-
-
-    public void smokeParticles(Player player) {
-        ItemStack stack = ItemStack.EMPTY;
-
-        if (player.getMainHandItem().getItem() instanceof Vape) {
-            stack = player.getMainHandItem();
-        } else if (player.getOffhandItem().getItem() instanceof Vape) {
-            stack = player.getOffhandItem();
-        }
-
-        int red = 255, green = 255, blue = 255;
-
-        PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
-        if (contents != null && contents.potion().isPresent() && !contents.potion().get().is(Potions.WATER)) {
-            int potionColor = contents.getColor();
-            red = (potionColor >> 16) & 0xFF;
-            green = (potionColor >> 8) & 0xFF;
-            blue = potionColor & 0xFF;
-        }
-
-
-        for (int i = 0; i < 10; i++) {
-            double distance = -0.5D;
-            double horizontalAngle = Math.toRadians(player.getYRot());
-            double verticalAngle = Math.toRadians(player.getXRot());
-            double xOffset = distance * Math.sin(horizontalAngle) * Math.cos(verticalAngle);
-            double yOffset = distance * Math.sin(verticalAngle);
-            double zOffset = -distance * Math.cos(horizontalAngle) * Math.cos(verticalAngle);
-            double x = player.getX() + xOffset;
-            double y = player.getEyeY() + yOffset;
-            double z = player.getZ() + zOffset;
-
-            player.level().addParticle(ModParticles.VAPE_SMOKE_PARTICLES.get(),
-                    x, y, z,
-                    red / 255.0D, green / 255.0D, blue / 255.0D
-            );
-        }
     }
 
     @Override

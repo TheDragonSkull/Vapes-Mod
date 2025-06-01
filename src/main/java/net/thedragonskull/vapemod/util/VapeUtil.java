@@ -47,14 +47,13 @@ public class VapeUtil {
     public static void smokeParticles(Player player) {
         ItemStack stack = ItemStack.EMPTY;
 
-        if (player.getMainHandItem().getItem() instanceof Vape) {
+        if (player.getMainHandItem().getItem() instanceof IVape) {
             stack = player.getMainHandItem();
-        } else if (player.getOffhandItem().getItem() instanceof Vape) {
+        } else if (player.getOffhandItem().getItem() instanceof IVape) {
             stack = player.getOffhandItem();
         }
 
         int red = 255, green = 255, blue = 255;
-
         PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
         if (contents != null && contents.potion().isPresent() && !contents.potion().get().is(Potions.WATER)) {
             int potionColor = contents.getColor();
@@ -80,6 +79,14 @@ public class VapeUtil {
                     red / 255.0D, green / 255.0D, blue / 255.0D
             );
         }
+    }
+
+    public static String formatDuration(int ticks) {
+        int seconds = ticks / 20;
+        int minutes = seconds / 60;
+        seconds = seconds % 60;
+
+        return minutes + ":" + String.format("%02d", seconds);
     }
 
     private static final String[] ROMAN_NUMERALS = {

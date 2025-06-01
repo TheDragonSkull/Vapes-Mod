@@ -29,7 +29,7 @@ public class CommonEvents {
 
             for (Item item : BuiltInRegistries.ITEM) {
                 if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)
-                        && item != ModItems.VAPE_RAINBOW.get()) { //todo: basic
+                        && item != ModItems.VAPE_RAINBOW.get()) { //todo: change
 
                     trades.get(1).add((pTrader, pRandom) -> {
                         ItemStack vape = new ItemStack(item);

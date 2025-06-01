@@ -35,6 +35,8 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
+import static net.thedragonskull.vapemod.util.VapeUtil.formatDuration;
+
 public class DisposableVape extends Item implements IVape {
     private static final String MESSAGE_CANT_SMOKE_UNDERWATER = "message.vapemod.cant_smoke_underwater";
     private static final String MESSAGE_DEPLETED = "message.vapemod.depleted";
@@ -211,7 +213,8 @@ public class DisposableVape extends Item implements IVape {
             int max = stack.getMaxDamage();
 
             if (current < max) {
-                stack.setDamageValue(current + 1);
+                if (!player.isCreative())
+                    stack.setDamageValue(current + 1);
             }
         }
 
@@ -269,14 +272,6 @@ public class DisposableVape extends Item implements IVape {
 
     }
 
-    private String formatDuration(int ticks) {
-        int seconds = ticks / 20;
-        int minutes = seconds / 60;
-        seconds = seconds % 60;
-
-        return minutes + ":" + String.format("%02d", seconds);
-    }
-
     public String getDescriptionId(ItemStack pStack) {
         return Potion.getName(pStack.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY).potion(), this.getDescriptionId() + ".effect.");
     }
@@ -291,7 +286,9 @@ public class DisposableVape extends Item implements IVape {
             if (!effects.isEmpty()) {
                 MobEffectInstance effect = effects.get(0);
                 Component effectName = Component.translatable(effect.getDescriptionId());
-                return Component.literal("").append(baseName).append(" (").append(effectName).append(")");
+                int level = effect.getAmplifier();
+
+                return VapeUtil.formatEffectName(baseName, effectName, level);
             }
         }
 

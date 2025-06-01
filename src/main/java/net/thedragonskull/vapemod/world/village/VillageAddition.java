@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @EventBusSubscriber(modid = VapeMod.MOD_ID)
-public class VillageAddition {
+public class VillageAddition { //TODO, change vape_shop.nbt
 
     private static final ResourceKey<StructureProcessorList> EMPTY_PROCESSOR_LIST_KEY = ResourceKey.create(
             Registries.PROCESSOR_LIST, ResourceLocation.fromNamespaceAndPath("minecraft", "empty"));

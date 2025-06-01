@@ -1,5 +1,6 @@
 package net.thedragonskull.vapemod.event;
 
+import net.minecraft.client.color.item.ItemColor;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
@@ -7,14 +8,17 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
+import net.neoforged.neoforge.registries.DeferredItem;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.animation.VapeAnimation;
 import net.thedragonskull.vapemod.block.entity.ModBlockEntities;
 import net.thedragonskull.vapemod.block.entity.renderer.VapeExpositorBERenderer;
 import net.thedragonskull.vapemod.item.ModItems;
+import net.thedragonskull.vapemod.item.custom.DisposableVape;
 import net.thedragonskull.vapemod.item.custom.IVape;
 import net.thedragonskull.vapemod.item.custom.Vape;
 import net.thedragonskull.vapemod.particle.ModParticles;
@@ -50,5 +54,18 @@ public class ClientModEvents {
         }
     }
 
+    @SubscribeEvent
+    public static void onItemColors(RegisterColorHandlersEvent.Item event) {
+        ItemColor colorHandler = (stack, tintIndex) -> {
+            if (stack.getItem() instanceof DisposableVape vape) {
+                int rgb = vape.getColor().getTextureDiffuseColor();
+                return 0xFF000000 | rgb;
+            }
+            return 0xFFFFFFFF;
+        };
+
+        event.register(colorHandler,
+                ModItems.D_VAPES.values().stream().map(DeferredItem::get).toArray(Item[]::new));
+    }
 
 }
