@@ -42,7 +42,7 @@ import java.util.*;
 
 import static org.joml.Math.clamp;
 
-public class Vape extends Item implements VapeEnergyContainer {
+public class Vape extends Item implements VapeEnergyContainer, IVape {
     private static final String MESSAGE_CANT_SMOKE_UNDERWATER = "message.vapemod.cant_smoke_underwater";
 
     public Vape(Properties pProperties) {
@@ -282,8 +282,8 @@ public class Vape extends Item implements VapeEnergyContainer {
         int red = 255, green = 255, blue = 255;
 
         PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
-        if (!(contents.potion().get() == Potions.WATER)) {
-            int potionColor = stack.get(DataComponents.POTION_CONTENTS).getColor();
+        if (contents != null && contents.potion().isPresent() && !contents.potion().get().is(Potions.WATER)) {
+            int potionColor = contents.getColor();
             red = (potionColor >> 16) & 0xFF;
             green = (potionColor >> 8) & 0xFF;
             blue = potionColor & 0xFF;

@@ -6,6 +6,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.block.ModBlocks;
@@ -23,6 +24,8 @@ public class ModCreativeModeTabs {
                     .title(Component.translatable("creativetab.vaping_tab"))
                     .displayItems((pParameters, pOutput) -> {
 
+                        pOutput.accept(ModBlocks.VAPE_EXPOSITOR.get());
+
                         List<Item> allVapes = List.of(
                                 ModItems.VAPE.get(),
                                 ModItems.VAPE_RED.get(),
@@ -38,7 +41,10 @@ public class ModCreativeModeTabs {
                             pOutput.accept(vapeStack);
                         }
 
-                        pOutput.accept(ModBlocks.VAPE_EXPOSITOR.get());
+                        for (DeferredItem<Item> vape : ModItems.D_VAPES.values()) {
+                            pOutput.accept(new ItemStack(vape.get()));
+                        }
+
                     })
                     .build());
 

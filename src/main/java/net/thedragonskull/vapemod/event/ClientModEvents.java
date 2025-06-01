@@ -15,6 +15,7 @@ import net.thedragonskull.vapemod.animation.VapeAnimation;
 import net.thedragonskull.vapemod.block.entity.ModBlockEntities;
 import net.thedragonskull.vapemod.block.entity.renderer.VapeExpositorBERenderer;
 import net.thedragonskull.vapemod.item.ModItems;
+import net.thedragonskull.vapemod.item.custom.IVape;
 import net.thedragonskull.vapemod.item.custom.Vape;
 import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.particle.custom.VapeSmokeParticles;
@@ -43,7 +44,7 @@ public class ClientModEvents {
     @SubscribeEvent
     public static void registerClientExtensions(RegisterClientExtensionsEvent event) {
         for (Item item : BuiltInRegistries.ITEM) {
-            if (item instanceof Vape) {
+            if (item instanceof IVape) {
                 event.registerItem(new VapeAnimation(), item);
             }
         }

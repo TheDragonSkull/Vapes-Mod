@@ -1,17 +1,23 @@
 package net.thedragonskull.vapemod.item;
 
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.thedragonskull.vapemod.VapeMod;
+import net.thedragonskull.vapemod.item.custom.DisposableVape;
 import net.thedragonskull.vapemod.item.custom.Vape;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 public class ModItems {
 
     public static final DeferredRegister.Items ITEMS =
             DeferredRegister.createItems(VapeMod.MOD_ID);
 
+    // BASIC VAPES
     public static final DeferredItem<Item> VAPE_STEEL = ITEMS.register("vape_steel",
             () -> new Vape(new Item.Properties().stacksTo(1)));
 
@@ -32,6 +38,18 @@ public class ModItems {
 
     public static final DeferredItem<Item> VAPE_METAL = ITEMS.register("vape_metal",
             () -> new Vape(new Item.Properties().stacksTo(1)));
+
+    // DISPOSABLE VAPES
+    public static final Map<DyeColor, DeferredItem<Item>> D_VAPES = new EnumMap<>(DyeColor.class);
+
+    static {
+        for (DyeColor dyeColor : DyeColor.values()) {
+            String name = "d_vape_" + dyeColor.getName();
+            DeferredItem<Item> item = ITEMS.register(name,
+                    () -> new DisposableVape(dyeColor, new Item.Properties().stacksTo(1).durability(25)));
+            D_VAPES.put(dyeColor, item);
+        }
+    }
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

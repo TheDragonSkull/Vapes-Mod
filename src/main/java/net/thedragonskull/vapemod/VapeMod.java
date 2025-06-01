@@ -2,10 +2,13 @@ package net.thedragonskull.vapemod;
 
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
 import net.thedragonskull.vapemod.block.ModBlocks;
 import net.thedragonskull.vapemod.block.entity.ModBlockEntities;
 import net.thedragonskull.vapemod.component.ModDataComponentTypes;
+import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.item.ModCreativeModeTabs;
 import net.thedragonskull.vapemod.item.ModItems;
 import net.thedragonskull.vapemod.particle.ModParticles;
@@ -20,7 +23,7 @@ public class VapeMod {
     public static final String MOD_ID = "vapemod";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public VapeMod(IEventBus modEventBus) {
+    public VapeMod(IEventBus modEventBus, ModContainer container) {
 
         ModItems.register(modEventBus);
         ModCreativeModeTabs.register(modEventBus);
@@ -33,5 +36,6 @@ public class VapeMod {
         ModRecipes.register(modEventBus);
         ModDataComponentTypes.register(modEventBus);
 
+        container.registerConfig(ModConfig.Type.COMMON, VapeCommonConfigs.CONFIG_SPEC, "vapemod-common.toml");
     }
 }
