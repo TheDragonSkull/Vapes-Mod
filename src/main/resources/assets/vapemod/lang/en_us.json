@@ -34,6 +34,6 @@
   "vapemod.update.message": "Your version: %s\nLatest version: %s",
   "vapemod.update.button.close": "Close",
 
-  "message.vapemod.cant_smoke_underwater": "You cant vape under the water!",
+  "message.vapemod.cant_smoke_underwater": "You can't vape under the water!",
   "message.vapemod.depleted": "Vape depleted!"
 }
