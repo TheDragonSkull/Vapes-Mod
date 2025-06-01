@@ -6,10 +6,12 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.thedragonskull.vapemod.VapeMod;
+import net.thedragonskull.vapemod.block.custom.VapeCatalog;
 import net.thedragonskull.vapemod.block.custom.VapeExpositor;
 import net.thedragonskull.vapemod.item.ModItems;
 
@@ -21,6 +23,10 @@ public class ModBlocks {
 
     public static final DeferredBlock<Block> VAPE_EXPOSITOR = registerBlock("vape_expositor",
             () -> new VapeExpositor(BlockBehaviour.Properties.ofFullCopy(Blocks.WHITE_CONCRETE).sound(SoundType.STONE).noOcclusion().requiresCorrectToolForDrops()));
+
+    public static final DeferredBlock<Block> VAPE_CATALOG = registerBlock("vape_catalog",
+            () -> new VapeCatalog(BlockBehaviour.Properties.of().instabreak().mapColor(MapColor.TERRACOTTA_YELLOW)
+                    .sound(SoundType.CHISELED_BOOKSHELF).noOcclusion().ignitedByLava()));
 
 
     private static <T extends Block> DeferredBlock<T> registerBlock(String name, Supplier<T> block) {

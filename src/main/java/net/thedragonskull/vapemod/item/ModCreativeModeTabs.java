@@ -25,6 +25,7 @@ public class ModCreativeModeTabs {
                     .displayItems((pParameters, pOutput) -> {
 
                         pOutput.accept(ModBlocks.VAPE_EXPOSITOR.get());
+                        pOutput.accept(ModBlocks.VAPE_CATALOG.get());
 
                         List<Item> allVapes = List.of(
                                 ModItems.VAPE.get(),

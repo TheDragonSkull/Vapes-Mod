@@ -29,6 +29,15 @@ public class ModSounds {
     public static final Supplier<SoundEvent> SMOKING_BREATHE_OUT =
             registerSoundEvents("smoking_breathe_out");
 
+    public static final Supplier<SoundEvent> CATALOG_BUY =
+            registerSoundEvents("catalog_buy");
+
+    public static final Supplier<SoundEvent> CATALOG_OPEN =
+            registerSoundEvents("catalog_open");
+
+    public static final Supplier<SoundEvent> CATALOG_CLOSE =
+            registerSoundEvents("catalog_close");
+
     public static void register(IEventBus eventBus) {
         SOUND_EVENTS.register(eventBus);
     }

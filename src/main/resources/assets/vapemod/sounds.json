@@ -23,5 +23,23 @@
     "sounds": [
       "vapemod:vape_resistance_end"
     ]
+  },
+  "catalog_buy": {
+    "subtitle": "sounds.vapemod.catalog_buy",
+    "sounds": [
+      "vapemod:catalog_buy"
+    ]
+  },
+  "catalog_open": {
+    "subtitle": "sounds.vapemod.catalog_open",
+    "sounds": [
+      "vapemod:catalog_open"
+    ]
+  },
+  "catalog_close": {
+    "subtitle": "sounds.vapemod.catalog_close",
+    "sounds": [
+      "vapemod:catalog_close"
+    ]
   }
 }
