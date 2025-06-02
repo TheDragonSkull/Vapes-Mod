@@ -13,6 +13,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -22,6 +23,8 @@ import net.thedragonskull.vapemod.component.ModDataComponentTypes;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static net.thedragonskull.vapemod.config.VapeCommonConfigs.CONFIG;
 
 public class VapeCatalogUtil {
 
@@ -229,6 +232,15 @@ public class VapeCatalogUtil {
         }
 
         return stacks;
+    }
+
+    public static Item getCatalogCostItem() {
+        ResourceLocation id = ResourceLocation.parse(CONFIG.CATALOG_COST_ITEM.get());
+        Item item = BuiltInRegistries.ITEM.get(id);
+        if (item == null || item == Items.AIR) {
+            return Items.DIAMOND;
+        }
+        return item;
     }
 
     public static boolean hasEnoughCurrency(Player player, ItemStack costA, ItemStack costB) {
