@@ -3,6 +3,7 @@ package net.thedragonskull.vapemod.catalog_offers;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.util.ModTags;
 import net.thedragonskull.vapemod.util.VapeCatalogUtil;
@@ -49,6 +50,33 @@ public class VapeOfferRegistry {
     public static void registerSpecialTrades() {
         SPECIAL_TRADES.clear();
 
+        SPECIAL_TRADES.add(new VapeCatalogOffers(
+                ModTags.Items.DISPOSABLE_VAPES,
+                new ItemStack(VapeCatalogUtil.getCatalogCostItem(), Math.max(1, (int)(VapeCommonConfigs.CONFIG.PRICE_DISPOSABLE.get() * 0.25))),
+                ModTags.Items.DISPOSABLE_VAPES,
+                new RerollDisposableOffer()
+        ));
+
+        SPECIAL_TRADES.add(new VapeCatalogOffers(
+                ModTags.Items.DISPOSABLE_VAPES,
+                ItemStack.EMPTY,
+                new ItemStack(VapeCatalogUtil.getCatalogCostItem(), 1),
+                new RecycleDisposableOffer()
+        ));
+
+        SPECIAL_TRADES.add(new VapeCatalogOffers(
+                ModTags.Items.VAPES,
+                new ItemStack(Items.DIAMOND, 2),
+                ModTags.Items.VAPES,
+                new RandomPotionRechargeOffer()
+        ));
+
+        SPECIAL_TRADES.add(new VapeCatalogOffers(
+                ModTags.Items.VAPES,
+                new ItemStack(Items.DIAMOND),
+                ModTags.Items.VAPES,
+                new ExtensionVapeEffectOffer()
+        ));
 
     }
 

@@ -32,5 +32,12 @@ public class PayloadRegister {
                 ClientPayloadHandler.getInstance()::handleVapeParticles
         );
 
+        // Client
+        registrar.playToServer(
+                C2SBuyVapePacket.TYPE,
+                C2SBuyVapePacket.STREAM_CODEC,
+                ServerPayloadHandler.getInstance()::handleBuyVape
+        );
+
     }
 }
