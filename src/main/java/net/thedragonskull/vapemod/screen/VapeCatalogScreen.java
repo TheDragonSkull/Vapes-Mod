@@ -1,10 +1,17 @@
 package net.thedragonskull.vapemod.screen;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -13,30 +20,35 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.*;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.thedragonskull.vapemod.VapeMod;
 import net.thedragonskull.vapemod.block.custom.VapeCatalog;
+import net.thedragonskull.vapemod.capability.VapeEnergy;
 import net.thedragonskull.vapemod.catalog_offers.*;
 import net.thedragonskull.vapemod.component.ModDataComponentTypes;
 import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.item.custom.DisposableVape;
+import net.thedragonskull.vapemod.item.custom.Vape;
 import net.thedragonskull.vapemod.network.C2SBuyVapePacket;
+import net.thedragonskull.vapemod.network.C2SCloseCatalogPacket;
 import net.thedragonskull.vapemod.sound.ModSounds;
 import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static net.thedragonskull.vapemod.util.VapeCatalogUtil.getVisualCostAWithTagInfo;
+import static net.thedragonskull.vapemod.util.VapeCatalogUtil.*;
 
 public class VapeCatalogScreen extends Screen {
 
@@ -258,7 +270,7 @@ public class VapeCatalogScreen extends Screen {
                 ItemStack dynamicCostB = offer.getCostB();
 
                 ItemStack visualResult = offer.isResultByTag()
-                        ? getVisualResultFromTag(offer.getResultTag())
+                        ? getVisualCostAWithTagInfo(offer.getResultTag())
                         : offer.getResult();
 
                 if (offer.getTradeLogic() instanceof ExtensionVapeEffectOffer) {
@@ -439,5 +451,504 @@ public class VapeCatalogScreen extends Screen {
         int displayCenter = (this.width / 2) + 75 + (54 - vape3DWidth) / 2;
         pGuiGraphics.drawString(this.font, "3D View", displayCenter, labelY, 4210752, false);
     }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(graphics, mouseX, mouseY, partialTicks);
+
+        int x = (this.width - GUI_WIDTH) / 2;
+        int y = (this.height - GUI_HEIGHT) / 2;
+
+        // Background
+        graphics.blit(BACKGROUND, x, y, 0, 0, GUI_WIDTH, GUI_HEIGHT, 512, 256);
+
+        this.renderScroller(graphics, x, y);
+        this.renderLabels(graphics, mouseX, mouseY);
+        super.render(graphics, mouseX, mouseY, partialTicks);
+
+        // Tooltips
+        for (Renderable widget : this.renderables) {
+            if (widget instanceof VapeTradeButton button) {
+                button.renderToolTip(graphics, mouseX, mouseY, this.font);
+            }
+        }
+
+        if (this.buyButton != null && this.buyButton.isHoveredOrFocused()) {
+            Component tooltip = null;
+
+            if (this.selectedVape.isEmpty()) {
+                if (!this.buyButton.active) {
+                    tooltip = Component.literal("No offer selected").withStyle(ChatFormatting.RED);
+                }
+            }
+
+            if (tooltip != null) {
+                graphics.renderTooltip(this.font, tooltip, mouseX, mouseY);
+            }
+        }
+
+        // 3D item
+        if (this.selectedOffer != null) {
+            ItemStack itemToRender = this.selectedOffer.isResultByTag()
+                    ? VapeCatalogUtil.getCycledItemFromTag(this.selectedOffer.getResultTag())
+                    : this.selectedOffer.getResult().copy();
+
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+            int scale = 110;
+            boolean is3d = itemToRender.getItem() instanceof Vape || itemToRender.getItem() instanceof DisposableVape; //TODO: cambiar por IVape?
+            int yOffset = is3d ? -30 : -23;
+
+            PoseStack poseStack = graphics.pose();
+            poseStack.pushPose();
+
+            poseStack.translate((centerX + 100) + 1.5F, centerY + yOffset, 100);
+            poseStack.scale(scale, scale, scale);
+
+            poseStack.mulPose(Axis.XP.rotationDegrees(180f));
+
+            float rotation = (System.currentTimeMillis() % 3600L) / 10f;
+            poseStack.mulPose(Axis.YP.rotationDegrees(-rotation));
+
+            if (is3d) {
+                poseStack.mulPose(Axis.ZP.rotationDegrees(25));
+            }
+
+            RenderSystem.disableCull();
+
+            Minecraft.getInstance().getItemRenderer().renderStatic(
+                    itemToRender,
+                    ItemDisplayContext.GROUND,
+                    15728880,
+                    OverlayTexture.NO_OVERLAY,
+                    poseStack,
+                    graphics.bufferSource(),
+                    null,
+                    0
+            );
+
+            graphics.bufferSource().endBatch();
+            poseStack.popPose();
+        }
+
+    }
+
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
+    @Override
+    public void onClose() {
+        super.onClose();
+        if (blockPos != null) {
+            PacketDistributor.sendToServer(new C2SCloseCatalogPacket(blockPos));
+        }
+    }
+
+    private boolean canScroll(int pNumOffers) {
+        return currentTab != TabType.SPECIAL && pNumOffers > 7;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        List<VapeCatalogOffers> trades = switch (currentTab) {
+            case SPECIAL -> VapeOfferRegistry.getSpecialTrades();
+            case NORMAL -> VapeOfferRegistry.getNormalTrades();
+            case DISPOSABLES -> VapeOfferRegistry.getDisposableTrades();
+        };
+
+        if (this.canScroll(trades.size())) {
+            int maxScroll = trades.size() - 7;
+            this.scrollOff = Mth.clamp((int)(this.scrollOff - scrollY), 0, maxScroll);
+            this.updateVapeList();
+            this.updateScrollButtons();
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        this.isDragging = false;
+
+        int x = (this.width - GUI_WIDTH) / 2;
+        int y = (this.height - GUI_HEIGHT) / 2;
+
+        List<VapeCatalogOffers> trades = switch (currentTab) {
+            case SPECIAL -> VapeOfferRegistry.getSpecialTrades();
+            case NORMAL -> VapeOfferRegistry.getNormalTrades();
+            case DISPOSABLES -> VapeOfferRegistry.getDisposableTrades();
+        };
+
+        if (this.canScroll(trades.size()) &&
+                mouseX > x + 94 && mouseX < x + 94 + 6 &&
+                mouseY > y + 18 && mouseY <= y + 18 + 139 + 1) {
+            this.isDragging = true;
+            return true;
+        }
+
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (this.isDragging) {
+            int y = (this.height - GUI_HEIGHT) / 2;
+            int top = y + 18;
+            int bottom = top + 139;
+
+            List<VapeCatalogOffers> trades = switch (currentTab) {
+                case SPECIAL -> VapeOfferRegistry.getSpecialTrades();
+                case NORMAL -> VapeOfferRegistry.getNormalTrades();
+                case DISPOSABLES -> VapeOfferRegistry.getDisposableTrades();
+            };
+
+            int maxScroll = Math.max(0, trades.size() - 7);
+            float scrollProgress = ((float)mouseY - top - 13.5F) / ((bottom - top) - 27.0F);
+            scrollProgress = Mth.clamp(scrollProgress, 0.0F, 1.0F);
+
+            this.scrollOff = Mth.clamp((int)(scrollProgress * maxScroll + 0.5F), 0, maxScroll);
+            this.updateVapeList();
+            this.updateScrollButtons();
+            return true;
+        }
+
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public class VapeTradeButton extends Button {
+        private ItemStack result;
+        private ItemStack costA;
+        private ItemStack costB;
+        private TagKey<Item> costATag = null;
+
+        private VapeCatalogOffers offer;
+        private int index;
+
+        public VapeTradeButton(int x, int y, int index, ItemStack costA, ItemStack costB, ItemStack result, OnPress onPress) {
+            super(x, y, 88, 20, Component.empty(), onPress, DEFAULT_NARRATION);
+            this.index = index;
+            this.costA = costA;
+            this.costB = costB;
+            this.result = result;
+        }
+
+        public ItemStack getResult() {
+            return result;
+        }
+
+        public ItemStack getCostA() {
+            return this.costA;
+        }
+
+        public ItemStack getCostB() {
+            return this.costB;
+        }
+
+        public int getIndex() {
+            return this.index;
+        }
+
+        public VapeCatalogOffers getOffer() {
+            return this.offer;
+        }
+
+        public void setIndex(int index) {
+            this.index = index;
+        }
+
+        public void setItem(VapeCatalogOffers offer, ItemStack result, ItemStack costA, ItemStack costB) {
+            this.offer = offer;
+            this.costA = costA.copy();
+
+            if (offer.getTradeLogic() instanceof RerollDisposableOffer) {
+                int rerollable = VapeCatalogUtil.countItemsInTagWithFullDurability(Minecraft.getInstance().player, offer.getCostATag());
+                int perRerollCost = costB.getCount();
+                int totalCost = rerollable * perRerollCost;
+
+                if (totalCost > 0) {
+                    costB = new ItemStack(costB.getItem(), totalCost);
+                } else {
+                    costB = ItemStack.EMPTY;
+                }
+            }
+
+            this.costB = costB.copy();
+            this.result = result.copy();
+
+            if (isTagCost(costA)) {
+                this.costATag = getTagFromCostA(this.costA);
+
+                if (!this.costA.isEmpty()) {
+                    this.costA.set(ModDataComponentTypes.TAG_KEY, costATag.location().toString());
+                }
+
+                if (!this.result.isEmpty() && offer.isResultByTag()) {
+                    this.result.set(ModDataComponentTypes.TAG_KEY, costATag.location().toString());
+                }
+
+            } else {
+                this.costATag = null;
+            }
+
+        }
+
+        private void renderButtonArrows(GuiGraphics pGuiGraphics, int pPosX, int pPosY) {
+            boolean enough = offer != null && offer.clientPlayerHasEnough(Minecraft.getInstance().player);
+            RenderSystem.enableBlend();
+
+            if (enough) {
+                pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35 + 10, pPosY + 4, 0, 15.0F, 171.0F, 10, 9, 512, 256);
+            } else {
+                pGuiGraphics.blit(BACKGROUND, pPosX + 5 + 35 + 10, pPosY + 4, 0, 25.0F, 171.0F, 10, 9, 512, 256);
+            }
+
+        }
+
+        @Override
+        public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+            super.renderWidget(graphics, mouseX, mouseY, partialTicks);
+
+            PoseStack poseStack = graphics.pose();
+            poseStack.pushPose();
+
+            int x = this.getX();
+            int y = this.getY() + 1;
+
+            // Render costA
+            ItemStack toRenderA = this.costA;
+            if (this.costATag != null) {
+                List<Item> tagItems = BuiltInRegistries.ITEM.stream()
+                        .filter(item -> item.builtInRegistryHolder().is(this.costATag))
+                        .toList();
+
+                if (!tagItems.isEmpty()) {
+                    long time = System.currentTimeMillis() / 1000L;
+                    int index = (int)(time % tagItems.size());
+                    toRenderA = new ItemStack(tagItems.get(index));
+                }
+            }
+
+            if (offer != null && offer.getTradeLogic() instanceof RecycleDisposableOffer) {
+                List<Item> tagItems = BuiltInRegistries.ITEM.stream()
+                        .filter(item -> item.builtInRegistryHolder().is(this.costATag))
+                        .toList();
+                if (!tagItems.isEmpty()) {
+                    long time = System.currentTimeMillis() / 1000L;
+                    int index = (int)(time % tagItems.size());
+                    ItemStack depletedVape = new ItemStack(tagItems.get(index));
+                    if (depletedVape.isDamageableItem()) {
+                        depletedVape.setDamageValue(depletedVape.getMaxDamage());
+                    }
+                    toRenderA = depletedVape;
+                }
+            }
+            graphics.renderItem(toRenderA, x + 2, y + 1);
+            graphics.renderItemDecorations(Minecraft.getInstance().font, toRenderA, x + 2, y + 1);
+
+
+            //Render costB
+            if (!this.costB.isEmpty()) {
+                graphics.renderItem(this.costB, x + 24, y + 1);
+                graphics.renderItemDecorations(Minecraft.getInstance().font, this.costB, x + 24, y + 1);
+            }
+
+            // Render result
+            ItemStack resultToRender = this.result;
+            if (this.costATag != null) {
+                List<Item> tagItems = BuiltInRegistries.ITEM.stream()
+                        .filter(item -> item.builtInRegistryHolder().is(this.costATag))
+                        .toList();
+
+                if (!tagItems.isEmpty()) {
+                    long time = System.currentTimeMillis() / 1000L;
+                    int index = (int)(time % tagItems.size());
+                    ItemStack vapeItem = new ItemStack(tagItems.get(index));
+                    IEnergyStorage energy = vapeItem.getCapability(Capabilities.EnergyStorage.ITEM);
+
+                    if (vapeItem != null) {
+                        ItemStack vapeWithEnergy = vapeItem.copy();
+                        if (energy instanceof VapeEnergy energyCap) {
+                            VapeEnergy.setInt(vapeWithEnergy, energyCap.getMaxEnergyStored());
+                        }
+
+                        resultToRender = vapeWithEnergy;
+                    } else {
+                        resultToRender = vapeItem.copy();
+                        if (resultToRender.isDamageableItem()) {
+                            resultToRender.setDamageValue(0);
+                        }
+                    }
+                }
+            }
+
+            if (offer != null && offer.getTradeLogic() instanceof RecycleDisposableOffer) {
+                int price = VapeCommonConfigs.CONFIG.PRICE_DISPOSABLE.get();
+                int refund = Math.max(1, (int)(price * 0.25));
+                resultToRender = new ItemStack(VapeCatalogUtil.getCatalogCostItem(), refund);
+            }
+
+            graphics.renderItem(resultToRender, x + 68, y + 1);
+            graphics.renderItemDecorations(Minecraft.getInstance().font, resultToRender, x + 68, y);
+
+            poseStack.popPose();
+
+            this.renderButtonArrows(graphics, x, y);
+
+            int arrowX = x + 5 + 35 + 10;
+            int arrowY = y + 4;
+            int arrowWidth = 10;
+            int arrowHeight = 9;
+            boolean enough = offer != null && offer.clientPlayerHasEnough(Minecraft.getInstance().player);
+
+            if (!enough) {
+                if (mouseX >= arrowX && mouseX < arrowX + arrowWidth &&
+                        mouseY >= arrowY && mouseY < arrowY + arrowHeight) {
+                    graphics.renderTooltip(font, Component.literal("Not enough currency").withStyle(ChatFormatting.RED), mouseX, mouseY);
+                }
+            }
+        }
+
+        public void renderToolTip(GuiGraphics graphics, int mouseX, int mouseY, Font font) {
+            if (isHovered) {
+                if (mouseX < this.getX() + 20) {
+
+                    // CostA
+                    ItemStack tooltipStack = this.costA;
+                    if (this.costATag != null) {
+                        List<Item> tagItems = BuiltInRegistries.ITEM.stream()
+                                .filter(item -> item.builtInRegistryHolder().is(this.costATag))
+                                .toList();
+                        if (!tagItems.isEmpty()) {
+                            long time = System.currentTimeMillis() / 1000L;
+                            int index = (int)(time % tagItems.size());
+                            tooltipStack = new ItemStack(tagItems.get(index));
+                        }
+                    }
+
+                    if (offer != null && offer.getTradeLogic() instanceof RecycleDisposableOffer) {
+                        List<Item> tagItems = BuiltInRegistries.ITEM.stream()
+                                .filter(item -> item.builtInRegistryHolder().is(this.costATag))
+                                .toList();
+                        if (!tagItems.isEmpty()) {
+                            long time = System.currentTimeMillis() / 1000L;
+                            int index = (int)(time % tagItems.size());
+                            ItemStack depletedVape = new ItemStack(tagItems.get(index));
+                            if (depletedVape.isDamageableItem()) {
+                                depletedVape.setDamageValue(depletedVape.getMaxDamage());
+                            }
+                            tooltipStack = depletedVape;
+                        }
+
+                        graphics.renderTooltip(font, tooltipStack, mouseX, mouseY);
+
+                    } else if (offer != null && offer.getTradeLogic() instanceof ExtensionVapeEffectOffer) {
+                        List<Component> originalTooltip = new ArrayList<>(Minecraft.getInstance().screen.getTooltipFromItem(minecraft, tooltipStack));
+                        List<Component> modifiable = new ArrayList<>();
+
+                        for (Component line : originalTooltip) {
+                            String text = line.getString();
+
+                            if (text.equals("No Effects")) {
+                                modifiable.add(Component.literal("Current effect").withStyle(ChatFormatting.BLUE));
+                            } else if (text.startsWith("Capacity:")) {
+                                modifiable.add(Component.literal("Current Capacity").withStyle(ChatFormatting.DARK_AQUA));
+                            } else {
+                                modifiable.add(line);
+                            }
+                        }
+
+                        ResourceLocation id = BuiltInRegistries.ITEM.getKey(tooltipStack.getItem());
+                        if (id != null && Minecraft.getInstance().options.advancedItemTooltips) {
+                            modifiable.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
+                        }
+
+                        if (!tooltipStack.getComponents().isEmpty() && Minecraft.getInstance().options.advancedItemTooltips) {
+                            int count = tooltipStack.getComponents().size();
+                            modifiable.add(Component.literal("NBT: " + count + " component(s)").withStyle(ChatFormatting.DARK_GRAY));
+                        }
+
+                        graphics.renderTooltip(font, modifiable, Optional.empty(), mouseX, mouseY);
+                    } else {
+                        graphics.renderTooltip(font, tooltipStack, mouseX, mouseY);
+
+                    }
+
+                } else if (mouseX < this.getX() + 42 && mouseX > this.getX() + 25 && !this.costB.isEmpty()) {
+
+                    // CostB
+                    graphics.renderTooltip(font, this.costB, mouseX, mouseY);
+                } else if (mouseX > this.getX() + 65) {
+
+                    // Result
+                    ItemStack tooltipStack = this.result;
+
+                    if (this.costATag != null) {
+                        List<Item> tagItems = BuiltInRegistries.ITEM.stream()
+                                .filter(item -> item.builtInRegistryHolder().is(this.costATag))
+                                .toList();
+
+                        if (!tagItems.isEmpty()) {
+                            long time = System.currentTimeMillis() / 1000L;
+                            int index = (int)(time % tagItems.size());
+                            ItemStack vapeItem = new ItemStack(tagItems.get(index));
+                            IEnergyStorage energy = vapeItem.getCapability(Capabilities.EnergyStorage.ITEM);
+
+                            if (energy != null) {
+                                ItemStack vapeWithEnergy = vapeItem.copy();
+                                if (energy instanceof VapeEnergy energyCap) {
+                                    VapeEnergy.setInt(vapeWithEnergy, energyCap.getMaxEnergyStored());
+                                }
+
+                                tooltipStack = vapeWithEnergy;
+                            } else {
+                                tooltipStack = vapeItem.copy();
+                                if (tooltipStack.isDamageableItem()) {
+                                    tooltipStack.setDamageValue(0);
+                                }
+                            }
+                        }
+
+                    }
+
+                    if (offer != null && offer.getTradeLogic() instanceof RecycleDisposableOffer) {
+                        int price = VapeCommonConfigs.CONFIG.PRICE_DISPOSABLE.get();
+                        int refund = Math.max(1, (int)(price * 0.25));
+                        tooltipStack = new ItemStack(VapeCatalogUtil.getCatalogCostItem(), refund);
+                    }
+
+                    List<Component> tooltip = new ArrayList<>(Minecraft.getInstance().screen.getTooltipFromItem(minecraft, tooltipStack));
+
+                    for (int i = 0; i < tooltip.size(); i++) {
+                        String line = tooltip.get(i).getString();
+                        if (offer != null && offer.getTradeLogic() instanceof ExtensionVapeEffectOffer && line.equals("No Effects")) {
+                            tooltip.set(i, Component.literal("Refill current effect").withStyle(ChatFormatting.BLUE));
+                            break;
+                        } else if (currentTab == TabType.SPECIAL && line.equals("No Effects")) {
+                            tooltip.set(i, Component.literal("Effect: ???").withStyle(ChatFormatting.BLUE));
+                            break;
+                        }
+                    }
+
+                    ResourceLocation id = BuiltInRegistries.ITEM.getKey(tooltipStack.getItem());
+                    if (id != null && Minecraft.getInstance().options.advancedItemTooltips) {
+                        tooltip.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
+                    }
+
+                    if (!tooltipStack.getComponents().isEmpty() && Minecraft.getInstance().options.advancedItemTooltips) {
+                        int count = tooltipStack.getComponents().size();
+                        tooltip.add(Component.literal("NBT: " + count + " component(s)").withStyle(ChatFormatting.DARK_GRAY));
+                    }
+
+                    graphics.renderTooltip(Minecraft.getInstance().font, tooltip, Optional.empty(), mouseX, mouseY);
+                }
+            }
+        }
+
+    }
+
 
 }

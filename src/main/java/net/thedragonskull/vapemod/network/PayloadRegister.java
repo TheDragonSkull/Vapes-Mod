@@ -39,5 +39,11 @@ public class PayloadRegister {
                 ServerPayloadHandler.getInstance()::handleBuyVape
         );
 
+        registrar.playToServer(
+                C2SCloseCatalogPacket.TYPE,
+                C2SCloseCatalogPacket.STREAM_CODEC,
+                ServerPayloadHandler.getInstance()::handleCloseCatalog
+        );
+
     }
 }
