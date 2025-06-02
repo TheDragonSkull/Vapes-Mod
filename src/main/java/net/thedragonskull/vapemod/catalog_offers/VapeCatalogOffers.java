@@ -5,6 +5,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.thedragonskull.vapemod.util.VapeCatalogUtil;
 
 public class VapeCatalogOffers {
@@ -89,9 +90,10 @@ public class VapeCatalogOffers {
                     && VapeCatalogUtil.hasEnoughOf(player, getCostB());
         }
 
-        if (tradeLogic instanceof RerollDisposableOffer) {
-            return VapeCatalogUtil.hasItemInTagWithFullDurability(player, getCostATag())
-                    && VapeCatalogUtil.hasEnoughOf(player, getCostB());
+        if (tradeLogic instanceof RerollDisposableOffer offerLogic) {
+            int cost = offerLogic.getRerollCostFor(player, getCostATag());
+            if (cost == 0) return false;
+            return VapeCatalogUtil.hasEnoughOf(player, new ItemStack(Items.DIAMOND, cost));
         }
 
         if (tradeLogic instanceof RecycleDisposableOffer) {

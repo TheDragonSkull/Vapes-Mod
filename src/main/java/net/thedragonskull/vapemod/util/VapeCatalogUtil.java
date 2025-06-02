@@ -72,14 +72,6 @@ public class VapeCatalogUtil {
         return new ItemStack(tagItems.get(index));
     }
 
-    public static ItemStack getPlaceholderVapeFromTag(TagKey<Item> tag) {
-        return BuiltInRegistries.ITEM.stream()
-                .filter(item -> item.builtInRegistryHolder().is(tag))
-                .findFirst()
-                .map(ItemStack::new)
-                .orElse(ItemStack.EMPTY);
-    }
-
     // ==[ ENERGY STACK QUERIES ]==
 
     public static boolean hasItemInTagWithZeroEnergy(Player player, TagKey<Item> tag) {
@@ -101,17 +93,6 @@ public class VapeCatalogUtil {
         for (ItemStack stack : getAllRelevantStacks(player)) {
             if (!stack.isEmpty() && stack.is(tag)) {
                 if (stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage()) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static boolean hasItemInTagWithFullDurability(Player player, TagKey<Item> tag) {
-        for (ItemStack stack : getAllRelevantStacks(player)) {
-            if (!stack.isEmpty() && stack.is(tag)) {
-                if (stack.getDamageValue() == 0) {
                     return true;
                 }
             }

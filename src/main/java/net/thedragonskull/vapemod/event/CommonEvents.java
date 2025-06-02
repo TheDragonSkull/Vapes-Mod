@@ -13,6 +13,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.village.VillagerTradesEvent;
 import net.neoforged.neoforge.event.village.WandererTradesEvent;
 import net.thedragonskull.vapemod.VapeMod;
+import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.item.ModItems;
 import net.thedragonskull.vapemod.util.ModTags;
 import net.thedragonskull.vapemod.villager.ModVillagers;
@@ -28,31 +29,19 @@ public class CommonEvents {
             Int2ObjectMap<List<VillagerTrades.ItemListing>> trades = event.getTrades();
 
             for (Item item : BuiltInRegistries.ITEM) {
-                if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)
-                        && item != ModItems.VAPE_RAINBOW.get()) { //todo: change
-
-                    trades.get(1).add((pTrader, pRandom) -> {
-                        ItemStack vape = new ItemStack(item);
-
-                        return new MerchantOffer(
-                                new ItemCost(Items.EMERALD, 45),
-                                vape,
-                                10, 20, 0.2f
-                        );
-                    });
+                if (item.builtInRegistryHolder().is(ModTags.Items.DISPOSABLE_VAPES)) {
+                    for (int level = 1; level <= 5; level++) {
+                        trades.get(level).add((pTrader, pRandom) -> {
+                            ItemStack vape = new ItemStack(item);
+                            return new MerchantOffer(
+                                    new ItemCost(Items.EMERALD, 25),
+                                    vape,
+                                    10, 3, 0.0f
+                            );
+                        });
+                    }
                 }
             }
-
-            trades.get(2).add((pTrader, pRandom) -> {
-                ItemStack vape = new ItemStack(ModItems.VAPE_RAINBOW.get());
-
-                return new MerchantOffer(
-                        new ItemCost(Items.EMERALD, 65),
-                        vape,
-                        10, 30, 0.3f
-                );
-            });
-
 
         }
     }
@@ -63,16 +52,33 @@ public class CommonEvents {
         List<VillagerTrades.ItemListing> rareTrades = event.getRareTrades();
 
         for (Item item : BuiltInRegistries.ITEM) {
-            if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)
-                    && item != ModItems.VAPE_RAINBOW.get()) {
+
+            if (item.builtInRegistryHolder().is(ModTags.Items.DISPOSABLE_VAPES)) {
 
                 genericTrades.add((pTrader, pRandom) -> {
                     ItemStack vape = new ItemStack(item);
+                    int basePrice = VapeCommonConfigs.CONFIG.PRICE_DISPOSABLE.get();
+                    int discountedPrice = Math.max(1, Math.round(basePrice * 0.2f));
 
                     return new MerchantOffer(
-                            new ItemCost(Items.EMERALD, 30),
+                            new ItemCost(Items.EMERALD, discountedPrice),
                             vape,
-                            10, 20, 0.2f
+                            1, 4, 0.0f
+                    );
+                });
+            }
+
+            if (item.builtInRegistryHolder().is(ModTags.Items.VAPES)) {
+
+                genericTrades.add((pTrader, pRandom) -> {
+                    ItemStack vape = new ItemStack(item);
+                    int basePrice = VapeCommonConfigs.CONFIG.PRICE_NORMAL.get();
+                    int discountedPrice = Math.max(1, Math.round(basePrice * 0.8f));
+
+                    return new MerchantOffer(
+                            new ItemCost(Items.EMERALD, discountedPrice),
+                            vape,
+                            1, 5, 0.0f
                     );
                 });
             }

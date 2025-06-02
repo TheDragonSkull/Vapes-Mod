@@ -4,7 +4,9 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.Potion;
@@ -17,10 +19,18 @@ public class RerollDisposableOffer implements ISpecialOfferLogic {
 
     @Override
     public boolean canTrade(Player player, VapeCatalogOffers offer) {
-        boolean hasFull = VapeCatalogUtil.hasItemInTagWithFullDurability(player, offer.getCostATag());
-        boolean hasCurrency = VapeCatalogUtil.hasEnoughOf(player, offer.getCostB());
+        int rerollCount = 0;
 
-        return hasFull && hasCurrency;
+        for (ItemStack stack : VapeCatalogUtil.getAllRelevantStacks(player)) {
+            if (!stack.isEmpty() && stack.is(offer.getCostATag()) && isNewVape(stack)) {
+                rerollCount++;
+            }
+        }
+
+        if (rerollCount == 0) return false;
+
+        int totalCost = rerollCount * 2;
+        return VapeCatalogUtil.hasEnoughOf(player, new ItemStack(Items.DIAMOND, totalCost));
     }
 
     @Override
@@ -62,5 +72,16 @@ public class RerollDisposableOffer implements ISpecialOfferLogic {
     private boolean isNewVape(ItemStack stack) {
         return stack.getDamageValue() == 0;
     }
+
+    public int getRerollCostFor(Player player, TagKey<Item> tag) {
+        int count = 0;
+        for (ItemStack stack : VapeCatalogUtil.getAllRelevantStacks(player)) {
+            if (!stack.isEmpty() && stack.is(tag) && stack.getDamageValue() == 0) {
+                count++;
+            }
+        }
+        return count * 2;
+    }
+
 
 }

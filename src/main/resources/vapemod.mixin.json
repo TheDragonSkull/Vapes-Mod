@@ -8,8 +8,7 @@
     "defaultRequire": 1
   },
   "mixins": [
-    "ItemStackMixin",
-    "VillagerOfferCapMixin"
+    "ItemStackMixin"
   ],
   "client": [
   ]
