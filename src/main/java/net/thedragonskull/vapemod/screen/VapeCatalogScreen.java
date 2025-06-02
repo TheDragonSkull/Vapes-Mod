@@ -38,6 +38,7 @@ import net.thedragonskull.vapemod.catalog_offers.*;
 import net.thedragonskull.vapemod.component.ModDataComponentTypes;
 import net.thedragonskull.vapemod.config.VapeCommonConfigs;
 import net.thedragonskull.vapemod.item.custom.DisposableVape;
+import net.thedragonskull.vapemod.item.custom.IVape;
 import net.thedragonskull.vapemod.item.custom.Vape;
 import net.thedragonskull.vapemod.network.C2SBuyVapePacket;
 import net.thedragonskull.vapemod.network.C2SCloseCatalogPacket;
@@ -453,8 +454,12 @@ public class VapeCatalogScreen extends Screen {
     }
 
     @Override
+    protected void renderBlurredBackground(float partialTick) {
+    }
+
+    @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(graphics, mouseX, mouseY, partialTicks);
+        graphics.fill(0, 0, this.width, this.height, 0xC0101010);
 
         int x = (this.width - GUI_WIDTH) / 2;
         int y = (this.height - GUI_HEIGHT) / 2;
@@ -496,7 +501,7 @@ public class VapeCatalogScreen extends Screen {
             int centerX = this.width / 2;
             int centerY = this.height / 2;
             int scale = 110;
-            boolean is3d = itemToRender.getItem() instanceof Vape || itemToRender.getItem() instanceof DisposableVape; //TODO: cambiar por IVape?
+            boolean is3d = itemToRender.getItem() instanceof IVape;
             int yOffset = is3d ? -30 : -23;
 
             PoseStack poseStack = graphics.pose();
@@ -861,16 +866,6 @@ public class VapeCatalogScreen extends Screen {
                             }
                         }
 
-                        ResourceLocation id = BuiltInRegistries.ITEM.getKey(tooltipStack.getItem());
-                        if (id != null && Minecraft.getInstance().options.advancedItemTooltips) {
-                            modifiable.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
-                        }
-
-                        if (!tooltipStack.getComponents().isEmpty() && Minecraft.getInstance().options.advancedItemTooltips) {
-                            int count = tooltipStack.getComponents().size();
-                            modifiable.add(Component.literal("NBT: " + count + " component(s)").withStyle(ChatFormatting.DARK_GRAY));
-                        }
-
                         graphics.renderTooltip(font, modifiable, Optional.empty(), mouseX, mouseY);
                     } else {
                         graphics.renderTooltip(font, tooltipStack, mouseX, mouseY);
@@ -931,16 +926,6 @@ public class VapeCatalogScreen extends Screen {
                             tooltip.set(i, Component.literal("Effect: ???").withStyle(ChatFormatting.BLUE));
                             break;
                         }
-                    }
-
-                    ResourceLocation id = BuiltInRegistries.ITEM.getKey(tooltipStack.getItem());
-                    if (id != null && Minecraft.getInstance().options.advancedItemTooltips) {
-                        tooltip.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
-                    }
-
-                    if (!tooltipStack.getComponents().isEmpty() && Minecraft.getInstance().options.advancedItemTooltips) {
-                        int count = tooltipStack.getComponents().size();
-                        tooltip.add(Component.literal("NBT: " + count + " component(s)").withStyle(ChatFormatting.DARK_GRAY));
                     }
 
                     graphics.renderTooltip(Minecraft.getInstance().font, tooltip, Optional.empty(), mouseX, mouseY);

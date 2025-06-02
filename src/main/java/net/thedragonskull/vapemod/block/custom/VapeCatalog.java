@@ -23,6 +23,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.thedragonskull.vapemod.screen.VapeCatalogScreen;
 import net.thedragonskull.vapemod.sound.ModSounds;
 
 public class VapeCatalog extends Block {
@@ -46,7 +47,7 @@ public class VapeCatalog extends Block {
             level.setBlock(pos, state.setValue(OPEN, true), 3);
             level.playSound(null, pos, ModSounds.CATALOG_OPEN.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
         } else {
-            mc.setScreen(new ChatScreen("ola"));
+            mc.setScreen(new VapeCatalogScreen(pos));
         }
 
         return InteractionResult.sidedSuccess(level.isClientSide());

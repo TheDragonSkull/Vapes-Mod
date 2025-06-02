@@ -84,7 +84,7 @@ public class VapeCatalogOffers {
             return VapeCatalogUtil.hasEnoughCurrency(player, getCostA(), getCostB());
         }
 
-/*        if (tradeLogic instanceof RandomPotionRechargeOffer) {
+        if (tradeLogic instanceof RandomPotionRechargeOffer) {
             return VapeCatalogUtil.hasItemInTagWithZeroEnergy(player, getCostATag())
                     && VapeCatalogUtil.hasEnoughOf(player, getCostB());
         }
@@ -102,7 +102,7 @@ public class VapeCatalogOffers {
         if (tradeLogic instanceof ExtensionVapeEffectOffer) {
             return VapeCatalogUtil.hasItemInTagWithPartialEnergy(player, getCostATag())
                     && VapeCatalogUtil.hasEnoughOf(player, getCostB());
-        }*/
+        }
 
         return false;
     }

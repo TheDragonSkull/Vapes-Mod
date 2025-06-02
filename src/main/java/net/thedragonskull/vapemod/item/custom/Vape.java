@@ -132,7 +132,7 @@ public class Vape extends Item implements VapeEnergyContainer, IVape {
         for (InteractionHand h : InteractionHand.values()) {
             ItemStack held = player.getItemInHand(h);
             if (held.getItem() instanceof Vape vape) {
-                if (player.getCooldowns().isOnCooldown(held.getItem())) {
+                if (player.getCooldowns().isOnCooldown(held.getItem() )) {
                     return InteractionResultHolder.fail(item);
                 }
             }
@@ -140,8 +140,9 @@ public class Vape extends Item implements VapeEnergyContainer, IVape {
 
         var cap = item.getCapability(Capabilities.EnergyStorage.ITEM, null);
         boolean hasEnergy = cap != null && cap.getEnergyStored() > 0;
+        PotionContents potionContents = item.get(DataComponents.POTION_CONTENTS);
 
-        if (!hasEnergy) {
+        if (!hasEnergy || potionContents == null) {
             if (level.isClientSide) {
                 player.displayClientMessage(Component.literal("¡Empty tank, refill!").withStyle(ChatFormatting.DARK_RED), true);
             }

@@ -128,7 +128,7 @@ public class VapeCatalogUtil {
                                 .map(holder -> !holder.value().getEffects().isEmpty())
                                 .orElse(false);
 
-                if (hasEffects) continue;
+                if (!hasEffects) continue;
 
                 IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
                 if (energy != null) {

@@ -96,5 +96,5 @@ public class ExtensionVapeEffectOffer implements ISpecialOfferLogic {
         }
         return null;
     }
-
 }
+
