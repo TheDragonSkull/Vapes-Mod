@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.thedragonskull.vapemod.block.ModBlocks;
 import net.thedragonskull.vapemod.block.entity.VapeExpositorBE;
+import net.thedragonskull.vapemod.item.custom.IVape;
 import net.thedragonskull.vapemod.item.custom.Vape;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,7 +32,7 @@ public class VapeExpositorMenu extends AbstractContainerMenu {
         addPlayerHotbar(inv);
         addPlayerInventory(inv);
     }
-    
+
     @Override
     public ItemStack quickMoveStack(Player pPlayer, int pIndex) {
         ItemStack returnStack = ItemStack.EMPTY;
@@ -75,7 +76,7 @@ public class VapeExpositorMenu extends AbstractContainerMenu {
             this.addSlot(new Slot(blockEntity, i, startX + i * spacing, startY) {
                 @Override
                 public boolean mayPlace(@NotNull ItemStack stack) {
-                    return stack.getItem() instanceof Vape;
+                    return stack.getItem() instanceof IVape;
                 }
             });
         }

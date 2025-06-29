@@ -11,6 +11,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -41,9 +42,11 @@ import net.thedragonskull.vapemod.component.ModDataComponentTypes;
 import net.thedragonskull.vapemod.network.S2CResistanceSoundPacket;
 import net.thedragonskull.vapemod.network.PacketHandler;
 import net.thedragonskull.vapemod.network.S2CStopResistanceSoundPacket;
+import net.thedragonskull.vapemod.network.S2CVapeParticlesPacket;
 import net.thedragonskull.vapemod.particle.ModParticles;
 import net.thedragonskull.vapemod.sound.ClientSoundHandler;
 import net.thedragonskull.vapemod.sound.ModSounds;
+import net.thedragonskull.vapemod.util.VapeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,7 +57,7 @@ import java.util.function.Consumer;
 
 import static org.joml.Math.clamp;
 
-public class Vape extends Item implements VapeEnergyContainer {
+public class Vape extends Item implements VapeEnergyContainer, IVape {
     private static final String MESSAGE_CANT_SMOKE_UNDERWATER = "message.vapemod.cant_smoke_underwater";
 
     public Vape(Properties pProperties) {
@@ -115,7 +118,7 @@ public class Vape extends Item implements VapeEnergyContainer {
 
                     int adjustedDuration = (int)(effect.getDuration() / (float) max);
                     if (adjustedDuration > 20) {
-                        String time = formatDuration(adjustedDuration);
+                        String time = VapeUtil.formatDuration(adjustedDuration);
                         effectName.append(" (").append(Component.literal(time)).append(")");
                     }
 
@@ -125,14 +128,6 @@ public class Vape extends Item implements VapeEnergyContainer {
                 tooltip.add(Component.literal("No Effects").withStyle(ChatFormatting.GRAY));
             }
         });
-    }
-
-    private String formatDuration(int ticks) {
-        int seconds = ticks / 20;
-        int minutes = seconds / 60;
-        seconds = seconds % 60;
-
-        return minutes + ":" + String.format("%02d", seconds);
     }
 
     public String getDescriptionId(ItemStack pStack) {
@@ -159,7 +154,15 @@ public class Vape extends Item implements VapeEnergyContainer {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack item = player.getItemInHand(hand);
-        Minecraft minecraft = Minecraft.getInstance();
+
+        for (InteractionHand h : InteractionHand.values()) {
+            ItemStack held = player.getItemInHand(h);
+            if (held.getItem() instanceof Vape vape) {
+                if (player.getCooldowns().isOnCooldown(held.getItem())) {
+                    return InteractionResultHolder.fail(item);
+                }
+            }
+        }
 
         boolean hasEnergy = item.getCapability(ForgeCapabilities.ENERGY)
                 .map(energy -> energy.getEnergyStored() > 0)
@@ -167,12 +170,15 @@ public class Vape extends Item implements VapeEnergyContainer {
 
         if (!hasEnergy) {
             if (level.isClientSide) {
-                player.displayClientMessage(Component.literal("¡Empty tank, refill!").withStyle(ChatFormatting.DARK_RED), true);
+                player.displayClientMessage(
+                        Component.literal("¡Empty tank, refill!").withStyle(ChatFormatting.DARK_RED),
+                        true
+                );
             }
             return InteractionResultHolder.fail(item);
         }
 
-        if (hand == InteractionHand.MAIN_HAND || hasEnergy) {
+        if (hasEnergy) {
             player.startUsingItem(hand);
         } else {
             player.stopUsingItem();
@@ -217,15 +223,28 @@ public class Vape extends Item implements VapeEnergyContainer {
                         }
                     }
 
-                    player.getCooldowns().addCooldown(this, 100);
+                    VapeUtil.applyCooldownToVapes(player, 100);
+
+                    int color = 0xFFFFFF;
+                    PotionContents contents = item.get(DataComponents.POTION_CONTENTS);
+                    if (contents != null && contents.potion().isPresent() && contents.potion().get() != Potions.WATER) {
+                        color = contents.getColor();
+                    }
+
+                    if (player instanceof ServerPlayer serverPlayer) {
+                        PacketHandler.INSTANCE.send(
+                                new S2CVapeParticlesPacket(player.getUUID(), color),
+                                PacketDistributor.TRACKING_ENTITY.with(player)
+                        );
+                    } else {
+                        VapeUtil.smokeParticles(player);
+                    }
 
                     if (!player.getAbilities().instabuild) {
                         storage.extractEnergy(1, false);
                     }
 
-                    if (level.isClientSide) {
-                        smokeParticles(player);
-                    } else {
+                    if (!level.isClientSide) {
                         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                                 ModSounds.VAPE_RESISTANCE_END.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
 
@@ -267,46 +286,6 @@ public class Vape extends Item implements VapeEnergyContainer {
         return super.finishUsingItem(stack, level, entity);
     }
 
-    public void smokeParticles(Player player) {
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Minecraft.getInstance().execute(() -> {
-
-                    ItemStack stack = player.getMainHandItem();
-                    int red = 255, green = 255, blue = 255;
-
-                    if (stack.getItem() instanceof Vape) {
-                        PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
-                        if (!(contents.potion().get() == Potions.WATER)) {
-                            int potionColor = stack.get(DataComponents.POTION_CONTENTS).getColor();
-                            red = (potionColor >> 16) & 0xFF;
-                            green = (potionColor >> 8) & 0xFF;
-                            blue = potionColor & 0xFF;
-                        }
-                    }
-
-                    for (int i = 0; i < 10; i++) {
-                        double distance = -0.5D;
-                        double horizontalAngle = Math.toRadians(player.getYRot());
-                        double verticalAngle = Math.toRadians(player.getXRot());
-                        double xOffset = distance * Math.sin(horizontalAngle) * Math.cos(verticalAngle);
-                        double yOffset = distance * Math.sin(verticalAngle);
-                        double zOffset = -distance * Math.cos(horizontalAngle) * Math.cos(verticalAngle);
-                        double x = player.getX() + xOffset;
-                        double y = player.getEyeY() + yOffset;
-                        double z = player.getZ() + zOffset;
-
-                        player.level().addParticle(ModParticles.VAPE_SMOKE_PARTICLES.get(),
-                                x, y, z,
-                                red / 255.0D, green / 255.0D, blue / 255.0D
-                        );
-                    }
-                });
-            }
-        }, 300);
-    }
-
     @Override
     public UseAnim getUseAnimation(ItemStack pStack) {
         return UseAnim.CUSTOM;
@@ -328,9 +307,9 @@ public class Vape extends Item implements VapeEnergyContainer {
                         model.rightArm.yRot = (float) Math.toRadians(-30);
                         model.rightArm.zRot = (float) Math.toRadians(20);
                     } else {
-                        model.leftArm.xRot = (float) Math.toRadians(-30);
-                        model.leftArm.yRot = (float) Math.toRadians(-10);
-                        model.leftArm.zRot = (float) Math.toRadians(-15);
+                        model.leftArm.xRot = (float) Math.toRadians(-90);
+                        model.leftArm.yRot = (float) Math.toRadians(30);
+                        model.leftArm.zRot = (float) Math.toRadians(-20);
                     }
                 }
             });

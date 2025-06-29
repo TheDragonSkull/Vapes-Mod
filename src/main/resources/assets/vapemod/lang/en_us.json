@@ -7,11 +7,30 @@
   "item.vapemod.vape_rainbow": "QVape Pen V2 (Enchantment Glint)",
   "item.vapemod.vape_metal": "QVape Pen V2 (Gunpowder)",
 
+  "item.vapemod.d_vape_white": "QVape D Pod (White)",
+  "item.vapemod.d_vape_orange": "QVape D Pod (Orange)",
+  "item.vapemod.d_vape_magenta": "QVape D Pod (Magenta)",
+  "item.vapemod.d_vape_light_blue": "QVape D Pod (Light Blue)",
+  "item.vapemod.d_vape_yellow": "QVape D Pod (Yellow)",
+  "item.vapemod.d_vape_lime": "QVape D Pod (Lime)",
+  "item.vapemod.d_vape_pink": "QVape D Pod (Pink)",
+  "item.vapemod.d_vape_gray": "QVape D Pod (Gray)",
+  "item.vapemod.d_vape_light_gray": "QVape D Pod (Light Gray)",
+  "item.vapemod.d_vape_cyan": "QVape D Pod (Cyan)",
+  "item.vapemod.d_vape_purple": "QVape D Pod (Purple)",
+  "item.vapemod.d_vape_blue": "QVape D Pod (Blue)",
+  "item.vapemod.d_vape_brown": "QVape D Pod (Brown)",
+  "item.vapemod.d_vape_green": "QVape D Pod (Green)",
+  "item.vapemod.d_vape_red": "QVape D Pod (Red)",
+  "item.vapemod.d_vape_black": "QVape D Pod (Black)",
+
   "block.vapemod.vape_expositor": "Vape Expositor",
+  "block.vapemod.vape_catalog": "Vape Catalog",
 
   "entity.minecraft.villager.vapemod.vape_shopkeeper" : "Vape Shopkeeper",
 
   "creativetab.vaping_tab": "Vaping Stuff",
 
-  "message.vapemod.cant_smoke_underwater": "You cant vape under the water!"
+  "message.vapemod.cant_smoke_underwater": "You cant vape under the water!",
+  "message.vapemod.depleted": "Vape depleted!"
 }
