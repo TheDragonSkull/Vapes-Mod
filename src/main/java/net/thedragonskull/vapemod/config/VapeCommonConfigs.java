@@ -10,7 +10,7 @@ public class VapeCommonConfigs {
     public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
     public static final ForgeConfigSpec SPEC;
 
-    public static final ForgeConfigSpec.IntValue DISPOSABLE_VAPE_DURABILITY;
+//    public static final ForgeConfigSpec.IntValue DISPOSABLE_VAPE_DURABILITY;
     public static final ForgeConfigSpec.IntValue NORMAL_VAPE_CAPACITY;
 
     public static final ForgeConfigSpec.ConfigValue<String> CATALOG_COST_ITEM;
@@ -22,8 +22,8 @@ public class VapeCommonConfigs {
     static {
         BUILDER.push("Configs for Vape Mod");
 
-        DISPOSABLE_VAPE_DURABILITY = BUILDER.comment("Durability (puffs) of disposable vapes")
-                .defineInRange("Disposable Vapes durability", 25, 1, 1000);
+//        DISPOSABLE_VAPE_DURABILITY = BUILDER.comment("Durability (puffs) of disposable vapes")
+//                .defineInRange("Disposable Vapes durability", 25, 1, 1000);
 
         NORMAL_VAPE_CAPACITY = BUILDER.comment("Max energy (puffs) for QVape Pen V2 vapes")
                 .defineInRange("QVape Pen V2 Max Energy", 15, 1, 1000);

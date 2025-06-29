@@ -17,6 +17,12 @@ public class ModDataComponentTypes {
     public static final RegistryObject<DataComponentType<Integer>> ENERGY = register("energy",
             builder -> builder.persistent(Codec.INT));
 
+    public static final RegistryObject<DataComponentType<Boolean>> RANDOMIZED_POTION = register("randomized_potion",
+            builder -> builder.persistent(Codec.BOOL));
+
+    public static final RegistryObject<DataComponentType<String>> TAG_KEY = register("tag_key",
+            builder -> builder.persistent(Codec.STRING));
+
     private static <T> RegistryObject<DataComponentType<T>> register(String name, UnaryOperator<DataComponentType.Builder<T>> builderOperator) {
         return DATA_COMPONENT_TYPES.register(name, () -> builderOperator.apply(DataComponentType.builder()).build());
     }
