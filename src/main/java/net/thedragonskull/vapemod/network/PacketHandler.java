@@ -35,6 +35,18 @@ public class PacketHandler {
                 .decoder(S2CVapeParticlesPacket::new)
                 .consumerMainThread(S2CVapeParticlesPacket::handle)
                 .add();
+
+        INSTANCE.messageBuilder(C2SCloseCatalogPacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(C2SCloseCatalogPacket::encode)
+                .decoder(C2SCloseCatalogPacket::new)
+                .consumerMainThread(C2SCloseCatalogPacket::handle)
+                .add();
+
+        INSTANCE.messageBuilder(C2SBuyVapePacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(C2SBuyVapePacket::encode)
+                .decoder(C2SBuyVapePacket::decode)
+                .consumerMainThread(C2SBuyVapePacket::handle)
+                .add();
     }
 
 

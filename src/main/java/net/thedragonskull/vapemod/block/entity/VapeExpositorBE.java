@@ -17,7 +17,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.thedragonskull.vapemod.screen.VapeExpositorMenu;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
